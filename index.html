@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Delivery - Gerenciar Produtos</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍕 Sistema Delivery</h1>
+            <button id="btnNovoProduto" class="btn-primary">Novo Produto</button>
+        </header>
+
+        <main>
+            <div id="listaProdutos" class="produtos-grid">
+                <!-- Produtos serão carregados aqui -->
+            </div>
+        </main>
+    </div>
+
+    <div id="modalProduto" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitulo">Novo Produto</h2>
+            
+            <form id="formProduto">
+                <input type="hidden" id="produtoId">
+                
+                <div class="form-group">
+                    <label for="nome">Nome do Produto:</label>
+                    <input type="text" id="nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descricao">Descrição:</label>
+                    <textarea id="descricao" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="preco">Preço (R$):</label>
+                    <input type="number" id="preco" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoria">Categoria:</label>
+                    <select id="categoria" required>
+                        <option value="">Selecione uma categoria</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="disponivel">Disponível:</label>
+                    <select id="disponivel">
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="foto">Foto do Produto:</label>
+                    <input type="file" id="foto" accept="image/*">
+                    <div id="previewContainer" class="preview-container">
+                        <img id="previewImage" src="" alt="Preview" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" id="btnCancelar">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
