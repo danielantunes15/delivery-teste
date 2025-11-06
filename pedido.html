@@ -102,6 +102,66 @@
         .status-PRONTO, .status-pronto { background-color: #e3f2fd; color: #1565c0; }
         .status-ENTREGUE, .status-entregue { background-color: #e8f5e9; color: #2e7d32; }
         .status-CANCELADO, .status-cancelado { background-color: #ffebee; color: #c62828; }
+
+        /* ============================================== */
+        /* === ADIÇÃO: PLACEHOLDERS DE IMAGEM (CSS) === */
+        /* ============================================== */
+
+        /* Para a lista "Mais Pedidos" (popular-scroll) */
+        .popular-item img {
+            width: 140px;
+            height: 140px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .popular-item-placeholder {
+            width: 140px;
+            height: 140px;
+            border-radius: 10px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #ccc;
+        }
+
+        /* Para a lista principal de produtos (products-list) */
+        .product-image img {
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .product-image-placeholder {
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #ccc;
+            flex-shrink: 0; /* Impede que o ícone seja esmagado */
+        }
+
+        /* Ajuste para a imagem (seja real ou placeholder) não ser esmagada */
+        .product-image {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Garante que o container da imagem na lista principal tenha o tamanho certo */
+        .product-item .product-image {
+            flex-basis: 90px; /* Define o tamanho base */
+            flex-shrink: 0; /* Impede de encolher */
+        }
     </style>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -349,6 +409,9 @@
         <button class="nav-item-app nav-item active" data-view="view-cardapio">
             <i class="fas fa-home"></i> <span>Início</span>
         </button>
+        <button class="nav-item-app nav-item" data-view="view-inicio">
+            <i class="fas fa-receipt"></i> <span>Pedidos</span>
+        </button>
         <button class="nav-item-app nav-item" data-view="view-promocoes">
             <i class="fas fa-tag"></i> <span>Promos</span>
         </button>
@@ -358,12 +421,7 @@
                 <span id="carrinho-badge" class="badge-app-count cart-count" style="display: none;">0</span>
             </span>
         </button>
-        <button class="nav-item-app nav-item" data-view="view-inicio">
-            <i class="fas fa-user"></i> <span>Meu Perfil</span>
-        </button>
     </nav>
-
-
     <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';

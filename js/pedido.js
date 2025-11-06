@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const appContainer = document.getElementById('app-container');
     const authScreen = document.getElementById('auth-screen');
     const mobileNav = document.getElementById('mobile-bottom-nav');
-    const navItems = document.querySelectorAll('.nav-item-app');
+    const navItems = document.querySelectorAll('.nav-item-app'); // Menu antigo (se houver)
     
     // Elementos de Carrinho/Checkout
     const carrinhoBadge = document.getElementById('carrinho-badge'); 
@@ -102,15 +102,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     window.alternarView = function(viewId) {
         // ================================================================
-        // === INÍCIO DA CORREÇÃO (Fluxo de Login) ===
-        // Adiciona "Guardas" para proteger rotas
+        // === INÍCIO DA ALTERAÇÃO (Fluxo de Login - Guarda de Rota) ===
         // ================================================================
+        // Se o usuário tentar acessar 'Pedidos' (view-inicio) ou 'Carrinho' (view-carrinho) sem estar logado...
         if ((viewId === 'view-inicio' || viewId === 'view-carrinho') && !clienteLogado) {
             mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
-            viewId = 'auth-screen'; // Redireciona para o login
+            viewId = 'auth-screen'; // ...redireciona para a tela de login.
         }
         // ================================================================
-        // === FIM DA CORREÇÃO ===
+        // === FIM DA ALTERAÇÃO ===
         // ================================================================
         
         document.querySelectorAll('.app-view').forEach(view => {
@@ -124,18 +124,21 @@ document.addEventListener('DOMContentLoaded', async function() {
              console.error(`❌ ERRO: View com ID "${viewId}" não encontrada.`);
         }
         
-        // Sincroniza os dois menus (o antigo e o novo)
+        // Sincroniza o menu antigo (navItems)
         navItems.forEach(item => {
             if (item) item.classList.toggle('active', item.getAttribute('data-view') === viewId);
         });
+
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO (Sincronização do Menu) ===
+        // ================================================================
+        // Sincroniza o menu novo (bottom-nav) usando data-view, que é mais confiável
         document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-             // Sincroniza o menu do novo design (pelo índice, por enquanto)
-             if(viewId === 'view-cardapio' && item.querySelector('span').textContent === 'Início') item.classList.add('active');
-             else if(viewId === 'view-carrinho' && item.querySelector('span').textContent === 'Carrinho') item.classList.add('active');
-             else if(viewId === 'view-inicio' && item.querySelector('span').textContent === 'Meu Perfil') item.classList.add('active'); // Mapeando 'Pedidos' para 'Meu Perfil'
-             else if(viewId === 'view-promocoes' && item.querySelector('span').textContent === 'Promos') item.classList.add('active');
-             else item.classList.remove('active');
+             item.classList.toggle('active', item.getAttribute('data-view') === viewId);
         });
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
         
         if (viewId === 'view-carrinho') {
             atualizarCarrinhoDisplay();
@@ -426,14 +429,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 popularItem.className = 'popular-item';
 
                 // ================================================================
-                // === INÍCIO DA CORREÇÃO (Imagem dos Mais Pedidos) ===
+                // === INÍCIO DA ALTERAÇÃO (Imagem dos Mais Pedidos) ===
                 // ================================================================
                 // Usa produto.icone (Base64) ou um placeholder CSS
                 const imgTag = produto.icone
                     ? `<img src="${produto.icone}" alt="${produto.nome}">`
                     : `<div class="popular-item-placeholder"><i class="fas fa-cube"></i></div>`;
                 // ================================================================
-                // === FIM DA CORREÇÃO ===
+                // === FIM DA ALTERAÇÃO ===
                 // ================================================================
 
                 popularItem.innerHTML = `
@@ -528,12 +531,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             const catId = produto.categoria_id || 'sem-categoria';
 
             // ================================================================
-            // === INÍCIO DA CORREÇÃO (Busca manual da categoria) ===
+            // === INÍCIO DA ALTERAÇÃO (Busca manual da categoria) ===
             // ================================================================
             const categoriaObj = categorias.find(c => c.id === produto.categoria_id);
             const catNome = categoriaObj?.nome || 'Outros';
             // ================================================================
-            // === FIM DA CORREÇÃO ===
+            // === FIM DA ALTERAÇÃO ===
             // ================================================================
             
             if (!produtosPorCategoria[catId]) {
@@ -567,14 +570,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const esgotado = produto.estoque_atual <= 0;
 
                 // ================================================================
-                // === INÍCIO DA CORREÇÃO (Imagem da Lista de Produtos) ===
+                // === INÍCIO DA ALTERAÇÃO (Imagem da Lista de Produtos) ===
                 // ================================================================
                 // Usa produto.icone (Base64) ou um placeholder CSS
                 const imgTag = produto.icone
                     ? `<img src="${produto.icone}" alt="${produto.nome}">`
                     : `<div class="product-image-placeholder"><i class="fas fa-cube"></i></div>`;
                 // ================================================================
-                // === FIM DA CORREÇÃO ===
+                // === FIM DA ALTERAÇÃO ===
                 // ================================================================
                 
                 productListHtml += `
@@ -1156,30 +1159,23 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         });
         
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO (Lógica de clique do Menu) ===
+        // ================================================================
         // Listeners do Menu Inferior (Novo Design)
         document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                // ================================================================
-                // === INÍCIO DA CORREÇÃO (Fluxo de Login - Guarda) ===
-                // ================================================================
                 const viewTarget = item.getAttribute('data-view');
-                if ((viewTarget === 'view-inicio' || viewTarget === 'view-carrinho') && !clienteLogado) {
-                    mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
-                    window.alternarView('auth-screen'); // Redireciona para o login
-                    return; // Interrompe a navegação
-                }
-                // ================================================================
-                // === FIM DA CORREÇÃO ===
-                // ================================================================
-
-                document.querySelectorAll('.bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
                 
+                // A guarda de rota (que verifica o login) agora está dentro da função alternarView
                 window.alternarView(viewTarget);
             });
         });
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
         
         // Botão de Finalizar (Tela do Carrinho)
         if (finalizarDiretoBtn) finalizarDiretoBtn.addEventListener('click', finalizarPedidoEEnviarWhatsApp);
@@ -1225,21 +1221,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             
             // ================================================================
-            // === INÍCIO DA CORREÇÃO (Fluxo de Login - Inicialização) ===
+            // === INÍCIO DA ALTERAÇÃO (Fluxo de Login na Inicialização) ===
             // ================================================================
-            // O app sempre abre no cardápio
-            authScreen.classList.remove('active');
+            // O app sempre abre no cardápio, independentemente do login
+            authScreen.classList.remove('active'); // Garante que a tela de login não seja a ativa
             mobileNav.style.display = 'flex';
-            window.alternarView('view-cardapio');
+            window.alternarView('view-cardapio'); // Força a visualização do cardápio
             
             if (!clienteEncontrado) {
                 console.log("Nenhum cliente logado, iniciando como convidado.");
-                // Não faz nada, clienteLogado continua null
+                // O usuário está deslogado, mas pode ver o cardápio.
             } else {
                  console.log(`Cliente ${clientePerfil.nome} carregado do localStorage.`);
             }
             // ================================================================
-            // === FIM DA CORREÇÃO ===
+            // === FIM DA ALTERAÇÃO ===
             // ================================================================
             
             // Carrega os dados do cardápio
