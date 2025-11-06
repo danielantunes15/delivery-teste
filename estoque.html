@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Estoque - Confeitaria Doces Criativos</title>
+    
+    <link rel="stylesheet" href="css/style.css"> 
+    <link rel="stylesheet" href="css/responsive.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">Doce Criativo</h1>
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <nav class="nav" id="mainNav">
+                    <a href="index.html" class="nav-link"><i class="fas fa-shopping-cart"></i><span>Vendas</span></a>
+                    <a href="delivery.html" class="nav-link"><i class="fas fa-motorcycle"></i><span>Delivery</span></a>
+                    <a href="caixa-fechamento.html" class="nav-link"><i class="fas fa-cash-register"></i><span>Caixa</span></a>
+                    <a href="encomendas.html" class="nav-link"><i class="fas fa-receipt"></i><span>Encomendas</span></a>
+                    <a href="producao.html" class="nav-link"><i class="fas fa-sitemap"></i><span>Produção</span></a>
+                    <a href="estoque.html" class="nav-link active"><i class="fas fa-boxes"></i><span>Estoque</span></a>
+                    <a href="relatorios.html" class="nav-link"><i class="fas fa-chart-bar"></i><span>Relatórios</span></a>
+                    <a href="administracao.html" class="nav-link"><i class="fas fa-cog"></i><span>Administração</span></a>
+                    <a href="contas-a-pagar.html" class="nav-link"><i class="fas fa-chart-line"></i><span>Gerencial</span></a>
+                    <button id="logout-btn" class="btn-logout"><i class="fas fa-sign-out-alt"></i><span>Sair</span></button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div id="alert-container"></div>
+            
+            <div id="loading" class="card" style="display: none;">
+                <div class="spinner"></div> 
+                <p style="text-align: center;">Carregando...</p>
+            </div>
+
+            <div id="content" style="display: none;">
+                <div class="card">
+                    <h2>Gestão de Estoque</h2>
+
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="lista-produtos">Lista de Produtos</button>
+                        <button class="tab-btn" data-tab="novo-produto">Novo Produto</button>
+                        <button class="tab-btn" data-tab="categorias">Categorias</button>
+                    </div>
+
+                    <div id="lista-produtos" class="tab-content active">
+                        <div class="filtros">
+                            <div class="form-group">
+                                <label for="filtro-categoria">Filtrar por Categoria</label>
+                                <select id="filtro-categoria">
+                                    <option value="">Todas as categorias</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filtro-estoque">Filtrar por Estoque</label>
+                                <select id="filtro-estoque">
+                                    <option value="">Todos</option>
+                                    <option value="baixo">Estoque Baixo</option>
+                                    <option value="zerado">Estoque Zerado</option>
+                                </select>
+                            </div>
+                            <button id="aplicar-filtro" class="btn btn-secondary">Aplicar Filtros</button>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Foto</th> 
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Preço Venda (R$)</th>
+                                        <th>Estoque Atual</th>
+                                        <th>Estoque Mínimo</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="produtos-body">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center;">Carregando produtos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="novo-produto" class="tab-content">
+                        <form id="form-novo-produto" class="form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="produto-nome">Nome do Produto *</label>
+                                    <input id="produto-nome" type="text" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="produto-categoria">Categoria *</label>
+                                    <select id="produto-categoria" required>
+                                        <option value="">Selecione uma categoria</option>
+                                    </select>
+                                    <button type="button" id="nova-categoria-btn" class="btn-link">+ Nova Categoria</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="produto-preco-venda">Preço de Venda (R$) *</label>
+                                    <input id="produto-preco-venda" type="number" step="0.01" min="0" required />
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="foto">Foto do Produto:</label>
+                                    <input type="file" id="foto" accept="image/*">
+                                    <div id="previewContainer" class="preview-container">
+                                        <img id="previewImage" src="" alt="Preview">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="produto-estoque-atual">Estoque Atual *</label>
+                                    <input id="produto-estoque-atual" type="number" min="0" value="0" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="produto-estoque-minimo">Estoque Mínimo *</label>
+                                    <input id="produto-estoque-minimo" type="number" min="0" value="5" required />
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="produto-descricao">Descrição</label>
+                                <textarea id="produto-descricao" rows="3" placeholder="Descrição do produto"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="produto-ativo">
+                                    <input type="checkbox" id="produto-ativo" checked />
+                                    Produto Ativo
+                                </label>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button class="btn btn-primary" type="submit">Salvar Produto</button>
+                                <button class="btn btn-secondary" type="reset">Limpar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="categorias" class="tab-content">
+                        <div class="categorias-header">
+                            <h3>Gerenciar Categorias</h3>
+                            <button id="adicionar-categoria" class="btn btn-primary">Nova Categoria</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nome da Categoria</th>
+                                        <th>Quantidade de Produtos</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categorias-body">
+                                    <tr><td colspan="4" style="text-align: center;">Carregando categorias...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="error-message" class="card" style="display: none;">
+                <h2>Erro de Conexão</h2>
+                <p>Não foi possível conectar ao banco de dados.</p>
+                <button onclick="location.reload()" class="btn btn-primary">Tentar Novamente</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-editar-produto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Produto</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="form-editar-produto">
+                <input type="hidden" id="editar-produto-id" />
+                <input type="hidden" id="editar-icone-atual" /> 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editar-produto-nome">Nome do Produto *</label>
+                        <input id="editar-produto-nome" type="text" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="editar-produto-categoria">Categoria *</label>
+                        <select id="editar-produto-categoria" required>
+                            <option value="">Selecione uma categoria</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editar-produto-preco-venda">Preço de Venda (R$) *</label>
+                        <input id="editar-produto-preco-venda" type="number" step="0.01" min="0" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="foto-editar">Foto do Produto:</label>
+                        <input type="file" id="foto-editar" accept="image/*">
+                        <div id="previewContainer-editar" class="preview-container">
+                            <img id="previewImage-editar" src="" alt="Preview">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editar-produto-estoque-atual">Estoque Atual *</label>
+                        <input id="editar-produto-estoque-atual" type="number" min="0" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="editar-produto-estoque-minimo">Estoque Mínimo *</label>
+                        <input id="editar-produto-estoque-minimo" type="number" min="0" required />
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editar-produto-descricao">Descrição</label>
+                    <textarea id="editar-produto-descricao" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editar-produto-ativo" />
+                        Produto Ativo
+                    </label>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Salvar Alterações</button>
+                    <button class="btn btn-secondary" type="button" id="fechar-modal-produto">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-nova-categoria" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nova Categoria</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="form-nova-categoria">
+                <div class="form-group">
+                    <label for="categoria-nome">Nome da Categoria *</label>
+                    <input id="categoria-nome" type="text" required />
+                </div>
+                <div class="form-group">
+                    <label for="categoria-descricao">Descrição</label>
+                    <textarea id="categoria-descricao" rows="3" placeholder="Descrição da categoria"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="categoria-ativa" checked />
+                        Categoria Ativa
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Salvar Categoria</button>
+                    <button class="btn btn-secondary" type="button" id="fechar-modal-categoria">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-editar-categoria" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Categoria</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="form-editar-categoria">
+                <input type="hidden" id="editar-categoria-id" />
+                <div class="form-group">
+                    <label for="editar-categoria-nome">Nome da Categoria *</label>
+                    <input id="editar-categoria-nome" type="text" required />
+                </div>
+                <div class="form-group">
+                    <label for="editar-categoria-descricao">Descrição</label>
+                    <textarea id="editar-categoria-descricao" rows="3" placeholder="Descrição da categoria"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editar-categoria-ativa" />
+                        Categoria Ativa
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Salvar Alterações</button>
+                    <button class="btn btn-secondary" type="button" id="fechar-modal-editar-categoria">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/supabase-client.js"></script>
+    <script src="js/script.js"></script> 
+    
+    <script>
+    // Script para o menu mobile
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+        
+        if (menuToggle && mainNav) {
+            menuToggle.addEventListener('click', function() {
+                mainNav.classList.toggle('show');
+            });
+        }
+        
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.header-content') && mainNav.classList.contains('show')) {
+                mainNav.classList.remove('show');
+            }
+        });
+    });
+    </script>
+</body>
+</html>
