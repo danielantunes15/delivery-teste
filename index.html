@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Estoque - Confeitaria Doces Criativos</title>
-    <link rel="stylesheet" href="style.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css"> 
+    <link rel="stylesheet" href="css/responsive.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -37,7 +38,8 @@
             <div id="alert-container"></div>
             
             <div id="loading" class="card" style="display: none;">
-                <div class="spinner"></div> <p style="text-align: center;">Carregando...</p>
+                <div class="spinner"></div> 
+                <p style="text-align: center;">Carregando...</p>
             </div>
 
             <div id="content" style="display: none;">
@@ -73,7 +75,8 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Foto</th> <th>Produto</th>
+                                        <th>Foto</th> 
+                                        <th>Produto</th>
                                         <th>Categoria</th>
                                         <th>Preço Venda (R$)</th>
                                         <th>Estoque Atual</th>
@@ -117,10 +120,10 @@
                                     <label for="foto">Foto do Produto:</label>
                                     <input type="file" id="foto" accept="image/*">
                                     <div id="previewContainer" class="preview-container">
-                                        <img id="previewImage" src="" alt="Preview" style="display: none; max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;">
+                                        <img id="previewImage" src="" alt="Preview">
                                     </div>
                                 </div>
-                                </div>
+                            </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
@@ -177,7 +180,10 @@
             </div>
 
             <div id="error-message" class="card" style="display: none;">
-                </div>
+                <h2>Erro de Conexão</h2>
+                <p>Não foi possível conectar ao banco de dados.</p>
+                <button onclick="location.reload()" class="btn btn-primary">Tentar Novamente</button>
+            </div>
         </div>
     </main>
 
@@ -189,7 +195,8 @@
             </div>
             <form id="form-editar-produto">
                 <input type="hidden" id="editar-produto-id" />
-                <input type="hidden" id="editar-icone-atual" /> <div class="form-row">
+                <input type="hidden" id="editar-icone-atual" /> 
+                <div class="form-row">
                     <div class="form-group">
                         <label for="editar-produto-nome">Nome do Produto *</label>
                         <input id="editar-produto-nome" type="text" required />
@@ -212,10 +219,10 @@
                         <label for="foto-editar">Foto do Produto:</label>
                         <input type="file" id="foto-editar" accept="image/*">
                         <div id="previewContainer-editar" class="preview-container">
-                            <img id="previewImage-editar" src="" alt="Preview" style="display: none; max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;">
+                            <img id="previewImage-editar" src="" alt="Preview">
                         </div>
                     </div>
-                    </div>
+                </div>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -307,8 +314,11 @@
         </div>
     </div>
 
-    <script src="supabase-client.js"></script>
-    <script src="script.js"></script> <script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/script.js"></script> 
+    
+    <script>
+    // Script para o menu mobile
     document.addEventListener('DOMContentLoaded', function() {
         const menuToggle = document.getElementById('menuToggle');
         const mainNav = document.getElementById('mainNav');
