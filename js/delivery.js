@@ -160,33 +160,135 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     }
+
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (Card do Pedido Compacto) ===
+    // ================================================================
     
+    /**
+     * Extrai a informação de troco da string de observações.
+     * @param {string} observacoes - A string completa de observações.
+     * @returns {string} - A informação de troco formatada.
+     */
+    function parseTroco(observacoes) {
+        if (!observacoes) return 'Não precisa';
+
+        const trocoMatch = observacoes.match(/TROCO NECESSÁRIO: Sim, para (R\$ \d+[,.]\d{2})/);
+        if (trocoMatch && trocoMatch[1]) {
+            return `Troco p/ ${trocoMatch[1]}`;
+        }
+        
+        if (observacoes.includes('TROCO NECESSÁRIO: Não')) {
+            return 'Não precisa';
+        }
+        
+        // Se a informação de troco não estiver formatada (pedidos antigos)
+        return 'Verificar';
+    }
+
+    /**
+     * Extrai a lista de itens da string de observações.
+     * @param {string} observacoes - A string completa de observações.
+     * @returns {string} - A lista de itens formatada.
+     */
+    function parseItens(observacoes) {
+        if (!observacoes) return 'Nenhum item listado.';
+
+        const linhas = observacoes.split('\n');
+        let itens = [];
+        let capturandoItens = false;
+
+        for (const linha of linhas) {
+            if (linha.startsWith('Itens:')) {
+                capturandoItens = true;
+                continue; // Pula a linha "Itens:"
+            }
+            if (linha.startsWith('Total:') || linha.startsWith('OBSERVAÇÕES ADICIONAIS:')) {
+                capturandoItens = false;
+                break; // Para de capturar ao encontrar o total ou obs
+            }
+            if (capturandoItens && linha.trim() !== '') {
+                // Remove o "*" e espaços extras
+                itens.push(linha.replace('*', '').trim()); 
+            }
+        }
+        if (itens.length === 0) return 'Detalhes no modal.';
+        return itens.join('<br>'); // Retorna os itens com quebra de linha HTML
+    }
+
+    /**
+     * Extrai as observações adicionais do cliente.
+     * @param {string} observacoes - A string completa de observações.
+     * @returns {string} - Apenas as observações adicionais.
+     */
+    function parseObsAdicionais(observacoes) {
+        if (!observacoes) return '';
+        const obsSeparada = observacoes.split('OBSERVAÇÕES ADICIONAIS:');
+        if (obsSeparada.length > 1) {
+            return obsSeparada[1].trim();
+        }
+        return '';
+    }
+
     function criarCardPedido(pedido) {
         const card = document.createElement('div');
         const status = pedido.status || 'novo';
+        // Usa a classe .pedido-card existente, que já tem o fundo branco
         card.className = `pedido-card status-${status}`;
         card.setAttribute('data-id', pedido.id);
         
         const hora = new Date(pedido.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         
+        // Extrai as informações necessárias
+        const trocoInfo = parseTroco(pedido.observacoes);
+        const pagamentoInfo = formatarFormaPagamento(pedido.forma_pagamento);
+        const totalInfo = formatarMoeda(pedido.total);
+
+        // O card inteiro é clicável para abrir o modal
         card.innerHTML = `
-            <div class="pedido-header">
+            <div class="card-novo-header">
                 <strong>Pedido #${pedido.id}</strong>
-                <span class="status-badge badge-${status}">${STATUS_MAP[status].title}</span>
+                <span class="card-novo-hora"><i class="fas fa-clock"></i> ${hora}</span>
             </div>
-            <div class="pedido-info">
-                <p>👤 ${pedido.nome_cliente}</p>
-                <p><i class="fas fa-clock"></i> ${hora}</p>
-                <p class="valor">${formatarMoeda(pedido.total)}</p>
+            <div class="card-novo-body">
+                <div class="card-novo-cliente">
+                    <span class="cliente-nome">
+                        <i class="fas fa-user"></i>
+                        ${pedido.nome_cliente}
+                    </span>
+                    <span class="cliente-fone">
+                        <i class="fas fa-phone"></i>
+                        ${pedido.telefone_cliente}
+                    </span>
+                </div>
+                <div class="card-novo-info">
+                    <div class="info-pagamento">
+                        <span>Total</span>
+                        <strong>${totalInfo}</strong>
+                    </div>
+                    <div class="info-pagamento">
+                        <span>${pagamentoInfo}</span>
+                        <strong class="troco-info">${trocoInfo}</strong>
+                    </div>
+                </div>
+                <div class="card-novo-delivery">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${pedido.endereco_entrega}</span>
+                </div>
             </div>
-            <div class="pedido-items">
-                ${pedido.observacoes.replace('Itens: ', '')}
+            <div class="card-novo-action">
+                <button class="btn-ver-detalhes">
+                    Ver Detalhes &nbsp; <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
         `;
         
         card.addEventListener('click', () => abrirModalDetalhes(pedido.id));
         return card;
     }
+    // ================================================================
+    // === FIM DA ALTERAÇÃO ===
+    // ================================================================
     
     window.abrirModalDetalhes = function(pedidoId) {
         pedidoSelecionado = todosPedidos.find(p => p.id === pedidoId);
@@ -208,6 +310,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Se for o último status, forçar o botão a ser azul
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
         
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO (Exibição no Modal) ===
+        // ================================================================
+        // Separa Observações Adicionais dos Itens
+        const todosItens = parseItens(pedidoSelecionado.observacoes).replace(/\n/g, '<br>'); // Pega itens formatados
+        const obsAdicionais = parseObsAdicionais(pedidoSelecionado.observacoes);
+
         detalhesContent.innerHTML = `
             <p><strong>Status Atual:</strong> <span style="font-weight: bold; color: ${statusInfo.color}">${statusInfo.title}</span></p>
             <p><strong>Cliente:</strong> ${pedidoSelecionado.nome_cliente}</p>
@@ -217,8 +326,16 @@ document.addEventListener('DOMContentLoaded', async function () {
             <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); margin-top: 1rem;">Total: ${formatarMoeda(pedidoSelecionado.total)}</p>
             
             <h4 style="margin-top: 1.5rem; border-top: 1px dashed #ccc; padding-top: 0.5rem;">Itens do Pedido:</h4>
-            <p style="white-space: pre-wrap; font-size: 0.9rem;">${pedidoSelecionado.observacoes.replace('Itens: ', '')}</p>
+            <div style="font-size: 0.9rem; font-family: inherit; background: #f9f9f9; padding: 10px; border-radius: 5px; max-height: 150px; overflow-y: auto;">${todosItens}</div>
+
+            ${obsAdicionais ? `
+                <h4 style="margin-top: 1.5rem;">Observações Adicionais:</h4>
+                <p style="font-size: 0.9rem; font-style: italic; background: #fff8e1; padding: 10px; border-radius: 5px;">${obsAdicionais}</p>
+            ` : ''}
         `;
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
         
         modalDetalhes.style.display = 'flex';
     }

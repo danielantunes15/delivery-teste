@@ -580,7 +580,7 @@ input[type="number"],
 input[type="password"],
 input[type="date"],
 input[type="tel"],
-input[type="file"],
+input[f-remover-pagamentotype="file"],
 select,
 textarea {
     /* Estilos do seu .form-group, mas aplicados a todos */
@@ -854,18 +854,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     margin-top: 8px;
     display: block;
 }
-.pedido-items {
-    font-size: 0.85rem;
-    color: #333;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px dashed var(--border-color);
-    white-space: pre-wrap;
-}
+
+/* ================================================================ */
+/* === INÍCIO DA REMOÇÃO (Estilos Antigos .pedido-items) === */
+/* ================================================================ */
+/* O seletor .pedido-items foi removido daqui, 
+   pois foi substituído pelos novos estilos .card-novo-* abaixo */
+/* ================================================================ */
+/* === FIM DA REMOÇÃO === */
+/* ================================================================ */
+
 
 /* ============================================== */
 /* --- NOVOS ESTILOS - HEADER KANBAN (DELIVERY) --- */
-/* =... ......................................... */
+/* ============================================== */
 
 .delivery-search-bar {
     display: flex;
@@ -931,3 +933,116 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: flex;
     gap: 0.5rem;
 }
+
+
+/* ================================================================ */
+/* === INÍCIO DA ADIÇÃO (Estilos do Novo Card Compacto) === */
+/* ================================================================ */
+
+/* O .pedido-card já é branco e tem sombra (definido na linha 719) */
+/* Vamos estilizar o conteúdo dele */
+
+.card-novo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+.card-novo-header strong {
+    font-size: 1rem;
+    color: var(--text-color);
+}
+.card-novo-hora {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.card-novo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.card-novo-cliente {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.card-novo-cliente .cliente-nome {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.card-novo-cliente .cliente-fone {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.card-novo-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    background-color: var(--bg-light);
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+}
+.info-pagamento {
+    display: flex;
+    flex-direction: column;
+}
+.info-pagamento span {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+}
+.info-pagamento strong {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+.info-pagamento .troco-info {
+    color: var(--error-color);
+    font-weight: 600;
+}
+
+.card-novo-delivery {
+    font-size: 0.85rem;
+    color: var(--text-color);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.card-novo-delivery i {
+    color: var(--primary-color);
+}
+
+.card-novo-action {
+    margin-top: 0.5rem;
+}
+.btn-ver-detalhes {
+    /* Reutiliza o estilo de botão primário */
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    width: 100%;
+    padding: 0.6rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.btn-ver-detalhes:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+/* ================================================================ */
+/* === FIM DA ADIÇÃO === */
+/* ================================================================ */
