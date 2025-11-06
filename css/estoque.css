@@ -328,25 +328,27 @@ tr:hover {
     background-color: rgba(255, 105, 180, 0.05);
 }
 
-/* ESTILO DA IMAGEM NA TABELA (NOVO) */
+/* ESTILO DA IMAGEM NA TABELA (AJUSTADO) */
 .produto-imagem-tabela {
-    width: 60px;
-    height: 60px;
+    width: 45px;  /* Reduzido de 60px */
+    height: 45px; /* Reduzido de 60px */
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 6px; /* Ajustado para o novo tamanho */
     border: 1px solid #eee;
+    vertical-align: middle; /* Garante alinhamento */
 }
 .produto-imagem-tabela-placeholder {
-    width: 60px;
-    height: 60px;
+    width: 45px;  /* Reduzido de 60px */
+    height: 45px; /* Reduzido de 60px */
     background: #f0f0f0;
-    border-radius: 8px;
+    border-radius: 6px; /* Ajustado para o novo tamanho */
     display: flex;
     align-items: center;
     justify-content: center;
     color: #aaa;
-    font-size: 11px;
+    font-size: 10px; /* Fonte menor para o placeholder */
     text-align: center;
+    vertical-align: middle;
 }
 
 /* Badges de status */
@@ -618,4 +620,36 @@ tr:hover {
         width: 95%;
         padding: 1rem;
     }
+}
+
+/* --- AJUSTES DE ORGANIZAÇÃO DA LISTA DE PRODUTOS --- */
+
+/* Alinha o cabeçalho das colunas numéricas e de status/ações */
+table th:nth-child(4), /* Preço */
+table th:nth-child(5), /* Estoque Atual */
+table th:nth-child(6), /* Estoque Mínimo */
+table th:nth-child(7), /* Status */
+table th:nth-child(8) { /* Ações */
+    text-align: center;
+}
+
+/* Alinha o conteúdo das colunas numéricas à direita */
+table td:nth-child(4), /* Preço */
+table td:nth-child(5), /* Estoque Atual */
+table td:nth-child(6) { /* Estoque Mínimo */
+    text-align: right;
+    font-family: monospace; /* Melhora a leitura de números */
+    font-size: 0.95rem;
+}
+
+/* Centraliza o conteúdo de Status e Ações */
+table td:nth-child(7), /* Status */
+table td:nth-child(8) { /* Ações */
+    text-align: center;
+}
+
+/* Garante que a coluna de nome do produto tenha mais espaço */
+table th:nth-child(2),
+table td:nth-child(2) {
+    min-width: 150px;
 }
