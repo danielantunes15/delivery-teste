@@ -10,52 +10,44 @@
     .main {
         padding: 1.5rem 0;
     }
+
+    /* 1. Sidebar Mobile: Off-Canvas Menu */
+    .sidebar {
+        transform: translateX(calc(var(--sidebar-width) * -1)); /* Move para fora da tela */
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    /* 2. Conteúdo principal ocupa toda a largura */
+    .main-content-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* 3. Mostrar o menu toggle no header */
+    .header .menu-toggle {
+        display: block !important;
+        color: var(--primary-dark); 
+    }
+    
+    /* 4. Mostrar o overlay quando o menu estiver aberto */
+    .sidebar.show ~ .sidebar-overlay {
+        display: block;
+    }
 }
 
 
 /* === NAVEGAÇÃO: Otimização do Menu Mobile (767px e abaixo) === */
 @media (max-width: 767px) {
-    /* * Esta seção duplica e reforça as regras de mobile do style.css 
-     * para garantir que a navegação ocupe a largura total
-     */
-    .header-content {
-        flex-direction: row;
-        flex-wrap: wrap; /* Permite que o toggle force a nav para baixo */
-        align-items: center;
+    /* Alinhar a logo e o toggle na top bar */
+    .header .header-content {
+        padding: 0 0.5rem;
     }
     
-    .menu-toggle {
-        display: block;
-        order: 1;
-    }
-
-    .logo {
-        order: 0;
-    }
-    
-    .nav {
-        /* Garante que ocupe a linha inteira quando "show" */
-        width: 100%; 
-        flex-direction: column;
-        align-items: stretch;
-        margin-top: 1rem;
-        display: none; /* Escondido por padrão */
-    }
-    
-    .nav.show {
-        display: flex; /* Exibido quando a classe show está ativa */
-    }
-    
-    .nav-link, .btn-logout {
-        width: 100%;
-        justify-content: center;
-        margin: 0;
-    }
-}
-
-/* === FORMULÁRIOS E BOTÕES: Otimização de Layout === */
-@media (max-width: 768px) {
-    /* Layouts de 2 colunas se tornam 1 coluna (ex: Administração e Estoque) */
+    /* === FORMULÁRIOS E BOTÕES: Otimização de Layout === */
     .form-row {
         grid-template-columns: 1fr;
     }
@@ -65,7 +57,6 @@
         gap: 1rem;
     }
     
-    /* Ajustes específicos para filtros (Administracao, Estoque, Caixa) */
     .table-controls, 
     .filtros {
         flex-direction: column;
@@ -73,47 +64,31 @@
         gap: 1rem;
     }
 
-    /* REMOVIDAS AS REGRAS ABAIXO PARA EVITAR CONFLITO COM relatorios.css:
-    .filtros-avancados,
-    .settings-form {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-    }
-    */
-
     .table-controls .search-box {
         max-width: 100%;
-        flex: auto; /* Permite que a busca ocupe o espaço total */
+        flex: auto; 
     }
-}
 
-/* === TABELAS: Otimização para Telas Pequenas (Scroll Horizontal) === */
-@media (max-width: 768px) {
-    /* Garante que as tabelas sejam sempre roláveis */
+    /* === TABELAS: Otimização para Telas Pequenas (Scroll Horizontal) === */
     .table-container {
         overflow-x: auto;
     }
 
-    /* Otimização de padding e fonte para caber mais informação */
     table th, table td {
         padding: 0.75rem 0.5rem;
         font-size: 0.85rem;
-        white-space: nowrap; /* Impede que o texto quebre em várias linhas */
+        white-space: nowrap; 
     }
     
-    /* Exceção para o conteúdo principal da célula (Nome/Título) */
     table td:nth-child(1), table td:nth-child(2) {
         white-space: normal; 
     }
     
-    /* Reduz o tamanho da fonte para os botões de ação nas tabelas */
     .action-buttons button, .btn-acao {
         padding: 4px 8px;
         font-size: 0.75rem;
     }
     
-    /* Ajuste na tabela de Encomendas */
     .tabela-encomendas th, .tabela-encomendas td {
         padding: 8px;
         font-size: 0.8rem;
@@ -151,12 +126,10 @@
 
 /* === RELATÓRIOS: Otimização da Grade === */
 @media (max-width: 992px) {
-    /* A grade do dashboard (2 colunas) se torna 1 coluna */
     .dashboard-layout {
         grid-template-columns: 1fr;
     }
 
-    /* A grade de cards de resumo (4 colunas) se torna 2 */
     .resumo-grid {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 1rem;

@@ -8,13 +8,13 @@
 :root {
     --primary-color: #ff69b4;
     --primary-light: #ffb6c1;
-    --primary-dark: #db7093;
+    --primary-dark: #9a326c; /* Tom mais escuro para o fundo da sidebar */
     --secondary-color: #ff91c1;
     --accent-color: #ff4081;
     --text-color: #333;
     --text-light: #666;
     --bg-color: #fff;
-    --bg-light: #f5f5f5;
+    --bg-light: #f5f5f5; /* Cor de fundo mais neutra para o main */
     --border-color: #e0e0e0;
     --success-color: #4caf50;
     --warning-color: #ff9800;
@@ -24,15 +24,170 @@
     --radius: 12px;
     --radius-sm: 8px;
     --transition: all 0.3s ease;
+    
+    /* Variáveis para a Sidebar */
+    --sidebar-width: 250px;
+    --header-height: 60px;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    background: linear-gradient(135deg, #fff0f5 0%, #ffe4e9 100%);
+    background: var(--bg-light); /* Cor de fundo mais neutra para o main */
     min-height: 100vh;
-    overflow-x: hidden; /* AJUSTE FINAL: Garante que nada quebre horizontalmente */
+    overflow-x: hidden;
+    margin: 0; /* Garante que não haja margem no corpo */
+}
+
+/* 1. LAYOUT PRINCIPAL (para desktop) */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 2. SIDEBAR (Nova Barra Lateral) */
+.sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0; 
+    background: linear-gradient(180deg, var(--primary-dark), #6a1b9a); /* Gradiente Rosa/Roxo para elegância */
+    color: white;
+    position: fixed;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1100;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    padding: 20px 0;
+    transition: transform 0.3s ease-in-out; /* Para animação mobile */
+}
+
+/* Sidebar Header/Logo */
+.sidebar-header {
+    text-align: center;
+    padding: 0 10px 20px 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-header .logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
+}
+
+.sidebar-header p {
+    font-size: 0.85rem;
+    margin: 5px 0 0 0;
+    opacity: 0.8;
+}
+
+/* Overlay para mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1099;
+}
+
+
+/* 3. CONTEÚDO PRINCIPAL (Main Content) */
+.main-content-wrapper {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width); /* Reserva espaço para a sidebar */
+    position: relative;
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* 4. MODIFICAÇÃO DO HEADER (Top Bar) */
+.header {
+    background: white; 
+    color: var(--text-color);
+    padding: 0.5rem 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+}
+
+.header .logo {
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+}
+
+.header .header-content {
+    /* Alinha o toggle (mobile) e o texto no top bar */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* 5. MODIFICAÇÃO DO MAIN */
+.main {
+    padding: 1rem 0;
+    min-height: calc(100vh - var(--header-height));
+}
+
+/* 6. ESTILOS DO MENU LATERAL (Nav) */
+.nav {
+    display: flex; /* Garante que o menu está visível aqui */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+
+.nav-link, .btn-logout {
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 0;
+    transition: background-color 0.3s, border-left 0.3s;
+    justify-content: flex-start; 
+    font-size: 1rem;
+    margin: 0;
+    border-left: 5px solid transparent;
+}
+
+.nav-link i, .btn-logout i {
+    font-size: 1.1rem;
+    width: 25px; 
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left-color: var(--primary-color); /* Detalhe rosa */
+    transform: none; 
+}
+
+.nav-link.active {
+    background-color: rgba(0, 0, 0, 0.15); /* Fundo mais escuro no ativo */
+    font-weight: 600;
+}
+
+.btn-logout {
+    background-color: var(--primary-color);
+    margin-top: 30px; /* Separador */
+    border-left: 5px solid transparent;
+}
+
+.btn-logout:hover {
+    background-color: var(--error-color);
+    border-left-color: var(--error-color);
+}
+
+.menu-toggle {
+    display: none; /* Escondido por padrão no desktop */
+    color: var(--primary-dark) !important;
 }
 
 .container {
@@ -40,92 +195,6 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
-}
-
-/* Header Mobile First - ATUALIZADO PARA CORES ROSA */
-.header {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
-    padding: 1rem 0;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-}
-
-.nav {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.nav-link:hover, .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-}
-
-.btn-logout {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.btn-logout:hover {
-    background-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-}
-
-/* Main content */
-.main {
-    padding: 1rem 0;
-    min-height: calc(100vh - 80px);
 }
 
 .card {
@@ -443,10 +512,6 @@ table tr:hover {
         font-size: 1.8rem;
     }
     
-    .nav {
-        gap: 1rem;
-    }
-    
     .nav-link {
         font-size: 1rem;
     }
@@ -482,20 +547,15 @@ table tr:hover {
     }
     
     .nav {
-        display: none;
-        width: 100%;
+        /* No mobile, o nav é parte do sidebar, então a regra padrão é ignorada */
+        display: flex; 
         flex-direction: column;
-        margin-top: 1rem;
-        gap: 0.5rem;
-    }
-    
-    .nav.show {
-        display: flex;
+        width: 100%;
     }
     
     .nav-link, .btn-logout {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
     }
     
     .form-actions {
@@ -507,71 +567,3 @@ table tr:hover {
         margin: 10% auto;
     }
 }
-
-/* REMOVIDAS AS REGRAS ABAIXO PARA MANTER A ESTRUTURA VERTICAL ORIGINAL */
-/*
-.vendas-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-}
-
-.section-categorias {
-    order: 1;
-}
-
-.section-produtos {
-    order: 2;
-}
-
-.section-lateral {
-    order: 3;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-    .vendas-grid {
-        grid-template-columns: 1fr 2fr;
-        grid-template-areas: 
-            "categorias produtos"
-            "lateral produtos";
-        gap: 1.5rem;
-    }
-    
-    .section-categorias {
-        grid-area: categorias;
-    }
-    
-    .section-produtos {
-        grid-area: produtos;
-        overflow-x: auto; 
-    }
-    
-    .section-lateral {
-        grid-area: lateral;
-        flex-direction: column;
-    }
-}
-
-@media (min-width: 1024px) {
-    .vendas-grid {
-        grid-template-columns: 250px 1fr 350px;
-        grid-template-areas: "categorias produtos lateral";
-    }
-    
-    .section-categorias {
-        grid-area: categorias;
-    }
-    
-    .section-produtos {
-        grid-area: produtos;
-        overflow-x: auto; 
-    }
-    
-    .section-lateral {
-        grid-area: lateral;
-    }
-}
-*/

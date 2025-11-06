@@ -10,169 +10,184 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
+    <div class="app-wrapper">
+        
+        <div id="mainSidebar" class="sidebar">
+             <div class="sidebar-header">
                 <h1 class="logo">Doce Criativo</h1>
-                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-                <nav class="nav" id="mainNav">
-                    <a href="index.html" class="nav-link active">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Vendas</span>
-                    </a>
-                    <a href="delivery.html" class="nav-link">
-                        <i class="fas fa-motorcycle"></i>
-                        <span>Delivery</span>
-                    </a>
-                    <a href="caixa-fechamento.html" class="nav-link">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Caixa</span>
-                    </a>
-                    <a href="encomendas.html" class="nav-link">
-                        <i class="fas fa-receipt"></i>
-                        <span>Encomendas</span>
-                    </a>
-                    <a href="producao.html" class="nav-link">
-                        <i class="fas fa-sitemap"></i>
-                        <span>Produção</span>
-                    </a>
-                    <a href="estoque.html" class="nav-link">
-                        <i class="fas fa-boxes"></i>
-                        <span>Estoque</span>
-                    </a>
-                    <a href="relatorios.html" class="nav-link">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Relatórios</span>
-                    </a>
-                    <a href="administracao.html" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>Administração</span>
-                    </a>
-                    <a href="contas-a-pagar.html" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Gerencial</span>
-                    </a>
-                    <button id="logout-btn" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Sair</span>
-                    </button>
-                </nav>
-            </div>
+                <p>Sistema de Gestão</p>
+             </div>
+             
+             <nav class="nav" id="mainNav">
+                <a href="index.html" class="nav-link active">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Vendas</span>
+                </a>
+                <a href="delivery.html" class="nav-link">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Delivery</span>
+                </a>
+                <a href="caixa-fechamento.html" class="nav-link">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Caixa</span>
+                </a>
+                <a href="encomendas.html" class="nav-link">
+                    <i class="fas fa-receipt"></i>
+                    <span>Encomendas</span>
+                </a>
+                <a href="producao.html" class="nav-link">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Produção</span>
+                </a>
+                <a href="estoque.html" class="nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Estoque</span>
+                </a>
+                <a href="relatorios.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="administracao.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Administração</span>
+                </a>
+                <a href="contas-a-pagar.html" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Gerencial</span>
+                </a>
+                <button id="logout-btn" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
+                </button>
+             </nav>
         </div>
-    </header>
+        
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <main class="main">
-        <div class="container">
-            <div id="alert-container"></div>
+        <div class="main-content-wrapper">
 
-            <section class="categorias">
-                <h2>Categorias</h2>
-                <div class="categorias-botoes" id="categorias-container">
-                </div>
-            </section>
-
-            <section class="produtos">
-                <h2>Produtos</h2>
-                <div class="produtos-grid" id="produtos-container">
-                </div>
-            </section>
-
-            <section class="carrinho">
-                <h2>Seu Pedido</h2>
-                <div class="carrinho-itens" id="carrinho-itens">
-                </div>
-                <div class="carrinho-total">
-                    <strong>Total: R$ <span id="total-carrinho">0,00</span></strong>
-                </div>
-            </section>
-            
-            <section class="desconto-acrescimo">
-                <h2>Desconto / Acréscimo</h2>
-                <div class="form-row-ajuste"> <div class="ajuste-group">
-                        <label for="desconto-input">Desconto</label>
-                        <div class="input-group-ajuste">
-                            <select id="desconto-tipo" class="form-control" style="width: 30%;">
-                                <option value="percentual">%</option>
-                                <option value="valor">R$</option>
-                            </select>
-                            <input type="number" id="desconto-input" min="0" value="0" step="0.01" class="form-control" style="width: 70%;">
-                        </div>
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                        <h1 class="logo">Vendas - Frente de Caixa</h1>
                     </div>
+                </div>
+            </header>
+        
+            <main class="main">
+                <div class="container">
+                    <div id="alert-container"></div>
+        
+                    <section class="categorias">
+                        <h2>Categorias</h2>
+                        <div class="categorias-botoes" id="categorias-container">
+                        </div>
+                    </section>
+        
+                    <section class="produtos">
+                        <h2>Produtos</h2>
+                        <div class="produtos-grid" id="produtos-container">
+                        </div>
+                    </section>
+        
+                    <section class="carrinho">
+                        <h2>Seu Pedido</h2>
+                        <div class="carrinho-itens" id="carrinho-itens">
+                        </div>
+                        <div class="carrinho-total">
+                            <strong>Total: R$ <span id="total-carrinho">0,00</span></strong>
+                        </div>
+                    </section>
                     
-                    <div class="ajuste-group">
-                        <label for="acrescimo-input">Acréscimo</label>
-                        <div class="input-group-ajuste">
-                            <select id="acrescimo-tipo" class="form-control" style="width: 30%;">
-                                <option value="percentual">%</option>
-                                <option value="valor">R$</option>
+                    <section class="desconto-acrescimo">
+                        <h2>Desconto / Acréscimo</h2>
+                        <div class="form-row-ajuste"> <div class="ajuste-group">
+                                <label for="desconto-input">Desconto</label>
+                                <div class="input-group-ajuste">
+                                    <select id="desconto-tipo" class="form-control" style="width: 30%;">
+                                        <option value="percentual">%</option>
+                                        <option value="valor">R$</option>
+                                    </select>
+                                    <input type="number" id="desconto-input" min="0" value="0" step="0.01" class="form-control" style="width: 70%;">
+                                </div>
+                            </div>
+                            
+                            <div class="ajuste-group">
+                                <label for="acrescimo-input">Acréscimo</label>
+                                <div class="input-group-ajuste">
+                                    <select id="acrescimo-tipo" class="form-control" style="width: 30%;">
+                                        <option value="percentual">%</option>
+                                        <option value="valor">R$</option>
+                                    </select>
+                                    <input type="number" id="acrescimo-input" min="0" value="0" step="0.01" class="form-control" style="width: 70%;">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="align-self: flex-end;">
+                                <button id="aplicar-ajuste-btn" class="btn btn-secondary">
+                                    <i class="fas fa-check"></i> Aplicar Ajustes
+                                </button>
+                            </div>
+                        </div>
+                        <p id="total-ajustado" class="saldo-pendente" style="font-weight: bold; margin-top: 10px;">Total Final: R$ <span id="valor-total-ajustado">0,00</span></p>
+                    </section>
+        
+                    <section class="pagamento">
+                        <h2>Pagamento</h2>
+                        
+                        <div id="pagamentos-adicionados-container" class="pagamentos-adicionados">
+                            <p style="text-align: center; color: var(--text-light);" id="mensagem-pagamentos-iniciais">Use a seção abaixo para adicionar uma ou mais formas de pagamento.</p>
+                        </div>
+        
+                        <div class="card-pagamento-misto">
+                            <h3>Adicionar Pagamento</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tipo-pagamento-misto">Forma</label>
+                                    <select id="tipo-pagamento-misto" class="form-control">
+                                        <option value="dinheiro">Dinheiro</option>
+                                        <option value="cartao_credito">Cartão de Crédito</option>
+                                        <option value="cartao_debito">Cartão de Débito</option>
+                                        <option value="pix">PIX</option>
+                                        <option value="crediario">Crediário</option> </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="valor-pagamento-misto">Valor (R$)</label>
+                                    <input type="number" id="valor-pagamento-misto" step="0.01" min="0" placeholder="0.00" class="form-control">
+                                </div>
+                                <div class="form-group" style="align-self: flex-end;">
+                                    <button id="adicionar-pagamento-btn" class="btn btn-primary">
+                                        <i class="fas fa-plus-circle"></i> Adicionar
+                                    </button>
+                                </div>
+                            </div>
+                            <p id="saldo-pendente-misto" class="saldo-pendente" style="font-weight: bold; color: var(--primary-dark); margin-top: 10px;">Saldo a Pagar: R$ 0,00</p>
+                        </div>
+                    </section>
+        
+                    <section class="cliente">
+                        <h2>Dados do Cliente</h2>
+                        <div class="cliente-container">
+                            <label for="cliente-select" style="display: none;">Selecione o Cliente</label>
+                            <select id="cliente-select">
                             </select>
-                            <input type="number" id="acrescimo-input" min="0" value="0" step="0.01" class="form-control" style="width: 70%;">
                         </div>
-                    </div>
-                    
-                    <div class="form-group" style="align-self: flex-end;">
-                        <button id="aplicar-ajuste-btn" class="btn btn-secondary">
-                            <i class="fas fa-check"></i> Aplicar Ajustes
-                        </button>
-                    </div>
+                    </section>
+        
+                    <section class="finalizar">
+                        <button id="finalizar-pedido" class="btn-finalizar" disabled>Finalizar Pedido</button>
+                    </section>
                 </div>
-                <p id="total-ajustado" class="saldo-pendente" style="font-weight: bold; margin-top: 10px;">Total Final: R$ <span id="valor-total-ajustado">0,00</span></p>
-            </section>
-
-            <section class="pagamento">
-                <h2>Pagamento</h2>
-                
-                <div id="pagamentos-adicionados-container" class="pagamentos-adicionados">
-                    <p style="text-align: center; color: var(--text-light);" id="mensagem-pagamentos-iniciais">Use a seção abaixo para adicionar uma ou mais formas de pagamento.</p>
+            </main>
+        
+            <footer class="footer">
+                <div class="container">
+                    <p>Confeitaria Doce Criativo - © 2025 Desenvolvido por Daniel Antunes</p>
                 </div>
-
-                <div class="card-pagamento-misto">
-                    <h3>Adicionar Pagamento</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tipo-pagamento-misto">Forma</label>
-                            <select id="tipo-pagamento-misto" class="form-control">
-                                <option value="dinheiro">Dinheiro</option>
-                                <option value="cartao_credito">Cartão de Crédito</option>
-                                <option value="cartao_debito">Cartão de Débito</option>
-                                <option value="pix">PIX</option>
-                                <option value="crediario">Crediário</option> </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="valor-pagamento-misto">Valor (R$)</label>
-                            <input type="number" id="valor-pagamento-misto" step="0.01" min="0" placeholder="0.00" class="form-control">
-                        </div>
-                        <div class="form-group" style="align-self: flex-end;">
-                            <button id="adicionar-pagamento-btn" class="btn btn-primary">
-                                <i class="fas fa-plus-circle"></i> Adicionar
-                            </button>
-                        </div>
-                    </div>
-                    <p id="saldo-pendente-misto" class="saldo-pendente" style="font-weight: bold; color: var(--primary-dark); margin-top: 10px;">Saldo a Pagar: R$ 0,00</p>
-                </div>
-            </section>
-
-            <section class="cliente">
-                <h2>Dados do Cliente</h2>
-                <div class="cliente-container">
-                    <label for="cliente-select" style="display: none;">Selecione o Cliente</label>
-                    <select id="cliente-select">
-                    </select>
-                </div>
-            </section>
-
-            <section class="finalizar">
-                <button id="finalizar-pedido" class="btn-finalizar" disabled>Finalizar Pedido</button>
-            </section>
+            </footer>
         </div>
-    </main>
-
-    <footer class="footer">
-        <div class="container">
-            <p>Confeitaria Doce Criativo - © 2025 Desenvolvido por Daniel Antunes</p>
-        </div>
-    </footer>
-
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -186,20 +201,24 @@
     <script src="js/supabase-vendas.js"></script> 
     <script src="js/vendas-principal.js" defer></script>
     <script>
-        // Script para o menu mobile
+        // Novo Script para controlar a Sidebar (Substitui o script anterior do menu mobile)
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
-            const mainNav = document.getElementById('mainNav');
-            if (menuToggle && mainNav) {
-                menuToggle.addEventListener('click', function() {
-                    mainNav.classList.toggle('show');
-                });
+            const mainSidebar = document.getElementById('mainSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            const toggleSidebar = () => {
+                mainSidebar.classList.toggle('show');
+                // Se a sidebar estiver visível, mostre o overlay
+                sidebarOverlay.style.display = mainSidebar.classList.contains('show') ? 'block' : 'none';
+            };
+
+            if (menuToggle && mainSidebar && sidebarOverlay) {
+                menuToggle.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar); // Fecha ao clicar no overlay
             }
-            document.addEventListener('click', function(event) {
-                if (!event.target.closest('.header-content') && mainNav.classList.contains('show')) {
-                    mainNav.classList.remove('show');
-                }
-            });
+            
+            // Lógica de destaque da página ativa (mantida)
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
