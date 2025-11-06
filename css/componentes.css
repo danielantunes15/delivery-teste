@@ -580,7 +580,7 @@ input[type="number"],
 input[type="password"],
 input[type="date"],
 input[type="tel"],
-input[f-remover-pagamentotype="file"],
+input[type."file"],
 select,
 textarea {
     /* Estilos do seu .form-group, mas aplicados a todos */
@@ -797,71 +797,188 @@ input[type="date"]::-webkit-calendar-picker-indicator {
      text-align: center;
 }
 
-/* 4. Cards de Pedido (como na imagem) */
+/* ================================================================ */
+/* === INÍCIO DA ATUALIZAÇÃO (Novo Layout do Card de Pedido) === */
+/* ================================================================ */
+
+/* 4. Cards de Pedido (Layout de image_eaae23.png) */
 .pedido-card {
     background-color: white;
     border-radius: var(--radius-sm);
-    padding: 1rem;
+    padding: 0; /* REMOVIDO padding principal */
     box-shadow: var(--shadow);
     cursor: pointer;
-    border-left: none; /* Remove a borda colorida que eu tinha posto */
+    border-left: none;
     transition: var(--transition);
+    overflow: hidden; /* Garante que o botão de ação se ajuste */
 }
-
 .pedido-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
 }
 
-.pedido-header {
+/* -- Seção: Cabeçalho (ID, Hora, Timer) -- */
+.card-novo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Alinha no topo */
+    gap: 0.5rem; 
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.card-novo-header strong {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    font-weight: 700; /* Mais forte */
+}
+
+/* Grupo da Direita (Hora + Timer) */
+.card-novo-hora-grupo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Alinha à direita */
+    flex-shrink: 0; /* Impede que encolha */
+}
+/* Hora que o pedido foi feito */
+.card-novo-hora {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-bottom: 5px; /* Espaço entre a hora e o timer */
+}
+/* Timer de Atraso */
+.card-novo-timer {
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 2px 8px; /* Mais fino */
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.card-novo-timer.no-prazo {
+    background-color: var(--success-color); /* Verde */
+    color: white;
+}
+.card-novo-timer.atrasado {
+    background-color: var(--error-color); /* Vermelho */
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+/* -- Seção: Corpo (Cliente, Info, Endereço) -- */
+.card-novo-body {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.card-novo-cliente {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: #333; /* Cor escura para o texto do card */
+    gap: 0.5rem;
+}
+.card-novo-cliente .cliente-nome {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    /* Impede que o nome quebre o layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.card-novo-cliente .cliente-fone {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    flex-shrink: 0; /* Impede o fone de encolher */
+}
+.card-novo-cliente i {
+    color: var(--text-light);
 }
 
-/* Badge de Status (removido, a imagem não tem) */
-.status-badge {
+.card-novo-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    background-color: #f8f9fa; /* Fundo cinza claro */
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+}
+.info-pagamento {
+    display: flex;
+    flex-direction: column;
+}
+.info-pagamento span {
+    font-size: 0.7rem; /* Label menor */
+    color: var(--text-light);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.info-pagamento strong {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    font-weight: 700;
+}
+.info-pagamento .troco-info {
+    color: var(--error-color);
+    font-weight: 700;
+}
+
+.card-novo-delivery {
+    font-size: 0.85rem;
+    color: var(--text-color);
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.card-novo-delivery i {
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+.card-novo-delivery span {
+    /* Impede que o endereço quebre o layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* -- Seção: Ação (Botão) -- */
+.card-novo-action {
+    margin: 0;
+}
+.btn-ver-detalhes {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    width: 100%;
+    padding: 0.6rem;
+    border: none;
+    /* Remove borda do botão, deixa só a do card */
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm); 
+    font-size: 0.9rem;
+    font-weight: 700; /* Mais forte */
+    cursor: pointer;
+    transition: var(--transition);
+}
+.btn-ver-detalhes:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Remove os estilos antigos que não são mais usados */
+.pedido-header,
+.pedido-info,
+.pedido-items {
     display: none;
 }
-/* Re-exibe o badge APENAS no cabeçalho do card */
-.pedido-header .status-badge {
-    display: inline-flex;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.6rem;
-    border-radius: 12px;
-    text-transform: uppercase;
-}
-.badge-novo { background-color: var(--primary-light); color: var(--primary-dark); }
-.badge-preparando { background-color: var(--warning-color); color: white; }
-.badge-pronto { background-color: var(--info-color); color: white; }
-.badge-entregue { background-color: var(--success-color); color: white; }
-.badge-cancelado { background-color: var(--error-color); color: white; }
-
-
-.pedido-info p {
-    font-size: 0.9rem;
-    color: var(--text-light);
-    margin: 2px 0;
-}
-.pedido-info .valor {
-    font-size: 1.1rem; /* Maior */
-    font-weight: bold;
-    color: var(--text-color); /* Cor escura */
-    margin-top: 8px;
-    display: block;
-}
-
 /* ================================================================ */
-/* === INÍCIO DA REMOÇÃO (Estilos Antigos .pedido-items) === */
-/* ================================================================ */
-/* O seletor .pedido-items foi removido daqui, 
-   pois foi substituído pelos novos estilos .card-novo-* abaixo */
-/* ================================================================ */
-/* === FIM DA REMOÇÃO === */
+/* === FIM DA ATUALIZAÇÃO (Novo Layout do Card de Pedido) === */
 /* ================================================================ */
 
 
@@ -935,160 +1052,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 
-/* ================================================================ */
-/* === INÍCIO DA ADIÇÃO (Estilos do Novo Card Compacto) === */
-/* ================================================================ */
-
-/* O .pedido-card já é branco e tem sombra (definido na linha 719) */
-/* Vamos estilizar o conteúdo dele */
-
-.card-novo-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-bottom: 1px dashed var(--border-color);
-}
-.card-novo-header strong {
-    font-size: 1rem;
-    color: var(--text-color);
-}
-.card-novo-hora {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    font-weight: 600;
-}
-
-.card-novo-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.card-novo-cliente {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.card-novo-cliente .cliente-nome {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-.card-novo-cliente .cliente-fone {
-    font-size: 0.8rem;
-    color: var(--text-light);
-}
-
-.card-novo-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    background-color: var(--bg-light);
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-}
-.info-pagamento {
-    display: flex;
-    flex-direction: column;
-}
-.info-pagamento span {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    text-transform: uppercase;
-}
-.info-pagamento strong {
-    font-size: 0.9rem;
-    color: var(--text-color);
-}
-.info-pagamento .troco-info {
-    color: var(--error-color);
-    font-weight: 600;
-}
-
-.card-novo-delivery {
-    font-size: 0.85rem;
-    color: var(--text-color);
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-.card-novo-delivery i {
-    color: var(--primary-color);
-}
-
-.card-novo-action {
-    margin-top: 0.5rem;
-}
-.btn-ver-detalhes {
-    /* Reutiliza o estilo de botão primário */
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
-    width: 100%;
-    padding: 0.6rem;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.btn-ver-detalhes:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-}
-
-/* ============================================== */
-/* --- ESTILOS DO MODAL DE CONFIGURAÇÕES (DELIVERY) --- */
-/* ============================================== */
-
-.config-horarios-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Uma coluna em mobile */
-    gap: 1rem;
-    margin-top: 1rem;
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
-}
-
-.dia-horario-group {
-    display: grid;
-    grid-template-columns: 100px 1fr 1fr; /* Label | Input | Input */
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-light);
-}
-
-.dia-horario-group label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--text-color);
-}
-
-/* Inputs de hora dentro do modal */
-.dia-horario-group input[type="time"] {
-    width: 100%;
-    height: 40px; /* Menor que o padrão */
-    padding: 0.5rem;
-    font-size: 0.9rem;
-}
-
-/* Responsividade para o grid de horários */
-@media (min-width: 600px) {
-    .config-horarios-grid {
-        /* Duas colunas em telas maiores */
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
 /* ============================================== */
 /* --- ESTILOS DO MODAL DE CONFIGURAÇÕES (DELIVERY) --- */
 /* ============================================== */
@@ -1198,164 +1161,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     position: relative; /* Necessário para o timer se posicionar */
 }
 
-.card-novo-timer {
-    position: absolute;
-    top: -8px; /* Puxa para cima do card */
-    right: -8px; /* Puxa para a direita do card */
-    
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+/* Oculta o timer antigo que ficava no topo */
+.card-novo-header > .card-novo-timer {
+    display: none;
 }
 
-/* Estado: No Prazo */
-.card-novo-timer.no-prazo {
-    background-color: var(--success-color); /* Verde */
-    color: white;
-}
-
-/* Estado: Atrasado */
-.card-novo-timer.atrasado {
-    background-color: var(--error-color); /* Vermelho */
-    color: white;
-    animation: pulse 1.5s infinite; /* Faz o timer atrasado piscar */
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* Ajuste no botão de fechar do modal (para não ser coberto pelo timer) */
-.card-novo-header .close-button-placeholder {
-    /* Se você tiver um botão de fechar no card, 
-       descomente isso, mas seu exemplo não tinha */
-    /* position: relative; */
-    /* z-index: 5; */
-}
-
-/* ============================================== */
-/* --- ESTILOS DO MODAL DE CONFIGURAÇÕES (DELIVERY) --- */
-/* ============================================== */
-
-.config-horarios-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Uma coluna em mobile */
-    gap: 0.5rem; /* Espaçamento menor */
-    margin-top: 1rem;
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
-}
-
-.dia-horario-header {
-    display: grid;
-    /* Colunas: Dia | Abertura | Fechamento | Checkbox */
-    grid-template-columns: 110px 1fr 1fr 60px; 
-    gap: 0.5rem;
-    padding: 0 0.5rem;
-    margin-bottom: 0.25rem;
-}
-.dia-horario-header label {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: var(--text-light);
-    text-transform: uppercase;
-}
-.dia-horario-header label:last-child {
-    text-align: center; /* Alinha "Fechado?" */
-}
-
-
-.dia-horario-group {
-    display: grid;
-    /* Colunas: Dia | Abertura | Fechamento | Checkbox */
-    grid-template-columns: 110px 1fr 1fr 60px; 
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-light);
-}
-
-.dia-horario-group label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--text-color);
-    padding-left: 0.25rem;
-}
-
-/* Inputs de hora dentro do modal */
-.dia-horario-group input[type="time"] {
-    width: 100%;
-    height: 40px; /* Menor que o padrão */
-    padding: 0.5rem;
-    font-size: 0.9rem;
-}
-
-/* Checkbox "Fechado?" */
-.dia-horario-group input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    justify-self: center; /* Centraliza o checkbox na célula do grid */
-}
-
-/* Responsividade para o grid de horários */
-@media (max-width: 600px) {
-    .dia-horario-header {
-        /* Oculta os labels do header em telas pequenas */
-        display: none;
-    }
-    .dia-horario-group {
-        /* Muda para 2 colunas: Label e Inputs agrupados */
-        grid-template-columns: 100px 1fr;
-        gap: 0.5rem;
-    }
-    .dia-horario-group label {
-        /* O label do dia fica na primeira coluna */
-        grid-column: 1 / 2;
-        grid-row: 1 / 3; /* Ocupa duas linhas */
-        display: flex;
-        align-items: center;
-    }
-    .dia-horario-group input[type="time"]:first-of-type {
-        grid-column: 2 / 3;
-        grid-row: 1 / 2;
-    }
-    .dia-horario-group input[type="time"]:last-of-type {
-        grid-column: 2 / 3;
-        grid-row: 2 / 3;
-    }
-    .dia-horario-group input[type="checkbox"] {
-        grid-column: 2 / 3;
-        grid-row: 3 / 4;
-        justify-self: start; /* Alinha à esquerda */
-        margin-top: 5px;
-    }
-}
-
-
-/* ================================================================ */
-/* === INÍCIO DA ADIÇÃO (Estilos do Timer de Atraso) === */
-/* ================================================================ */
-
-.card-novo-header {
-    /* ... estilos existentes ... */
-    position: relative; /* Necessário para o timer se posicionar */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    /* Adicionado para espaçar o Pedido #ID do grupo de hora/timer */
-    gap: 0.5rem; 
-}
-
-/* NOVO: Grupo para alinhar a hora e o timer */
+/* Novo grupo para Hora e Timer */
 .card-novo-hora-grupo {
     display: flex;
     flex-direction: column;
@@ -1363,6 +1174,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     position: relative;
     top: -5px; /* Puxa levemente para cima */
     right: -5px; /* Puxa levemente para a direita */
+    flex-shrink: 0;
 }
 
 /* Hora original do pedido */
@@ -1370,10 +1182,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 0.85rem;
     color: var(--text-light);
     font-weight: 600;
+    margin-bottom: 5px; /* Espaço entre a hora e o timer */
 }
-
+/* Timer de Atraso */
 .card-novo-timer {
-    /* Posição relativa dentro do grupo */
     font-size: 0.8rem;
     font-weight: 700;
     padding: 2px 8px; /* Mais fino */
@@ -1382,16 +1194,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    margin-top: 4px; /* Espaço entre a hora e o timer */
 }
-
-/* Estado: No Prazo */
 .card-novo-timer.no-prazo {
     background-color: var(--success-color); /* Verde */
     color: white;
 }
-
-/* Estado: Atrasado */
 .card-novo-timer.atrasado {
     background-color: var(--error-color); /* Vermelho */
     color: white;
