@@ -705,20 +705,27 @@ table tr:hover {
 /* ============================================== */
 
 /* 1. O Board (O Painel Principal) */
-/* Estas regras serão aplicadas quando o JS adicionar display: flex */
 .delivery-board {
-    display: flex; /* MUDANÇA: de grid para flex */
-    flex-wrap: nowrap; /* Garante que não quebre a linha */
+    display: flex;
+    flex-wrap: nowrap;
     width: 100%;
     gap: 1.5rem;
-    padding: 0 1.5rem 1.5rem 1.5rem; /* Espaçamento nas laterais e embaixo */
-    box-sizing: border-box; /* Garante que o padding não quebre a largura */
+    padding: 0 1.5rem 1.5rem 1.5rem; 
+    box-sizing: border-box; 
+    /* Adiciona scroll horizontal se as colunas não couberem */
+    overflow-x: auto; 
 }
 
+/* ================================================================ */
+/* === INÍCIO DA ALTERAÇÃO (Largura das Colunas) === */
+/* ================================================================ */
 /* 2. As Colunas */
 .delivery-column {
-    flex: 1; /* Faz as 3 colunas dividirem o espaço igualmente */
-    min-width: 0; /* Impede que as colunas encolham demais */
+    flex-grow: 1; /* Permite crescer */
+    flex-shrink: 0; /* NÃO permite encolher menos que a base */
+    flex-basis: 340px; /* Largura base de cada coluna */
+    min-width: 320px;  /* Largura mínima absoluta */
+    
     border-radius: var(--radius-sm);
     padding: 1rem;
     min-height: 70vh;
@@ -728,6 +735,10 @@ table tr:hover {
     box-shadow: none;
     border: none;
 }
+/* ================================================================ */
+/* === FIM DA ALTERAÇÃO === */
+/* ================================================================ */
+
 
 /* Cores de fundo das colunas (como na imagem) */
 #col-novo {
@@ -797,6 +808,7 @@ table tr:hover {
     gap: 0.5rem; 
     padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border-color);
+    position: relative; /* Adicionado na última correção */
 }
 .card-novo-header strong {
     font-size: 1.1rem;
