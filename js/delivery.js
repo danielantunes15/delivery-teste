@@ -13,32 +13,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     const modalPedidoId = document.getElementById('modal-pedido-id');
     const btnAvancarStatus = document.getElementById('btn-avancar-status');
     const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
+    
+    // ==================================
+    // === NOVO ELEMENTO (IMPRIMIR) ===
+    // ==================================
+    const btnImprimirCanhoto = document.getElementById('btn-imprimir-canhoto');
+    // ==================================
 
-    // ==================================
-    // === NOVOS ELEMENTOS (CONFIGURAÇÕES) ===
-    // ==================================
+    // Elementos de Configurações
     const btnAbrirConfig = document.getElementById('btn-abrir-config');
     const modalConfig = document.getElementById('modal-configuracoes');
     const formConfig = document.getElementById('form-config-delivery');
     const btnFecharConfig = document.getElementById('fechar-modal-config');
-    // ==================================
 
     let todosPedidos = [];
     let pedidoSelecionado = null;
     
-    // ==================================
-    // === NOVAS VARIÁVEIS GLOBAIS (TIMER E CONFIG) ===
-    // ==================================
-    // Cache para guardar as configurações da loja (tempo de entrega, etc.)
+    // Cache de configurações da loja
     let configLoja = { tempo_entrega: 60 }; // Padrão de 60 minutos
-    // Variável para controlar o intervalo de atualização dos timers
     let timerInterval = null;
-    // Canal do Supabase Realtime
     let supabaseChannel = null;
-    // Áudio de notificação (Base64 para não depender de arquivos externos)
-    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/Et");
-    // ==================================
-
+    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
+    
     const STATUS_MAP = {
         'novo': { title: 'Novo', icon: 'fas fa-box-open', next: 'preparando', nextText: 'Iniciar Preparo', color: 'var(--primary-color)' },
         'preparando': { title: 'Preparando', icon: 'fas fa-fire-alt', next: 'pronto', nextText: 'Marcar como Pronto', color: 'var(--warning-color)' },
@@ -126,6 +122,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (btnCancelarPedido) {
             btnCancelarPedido.addEventListener('click', () => atualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
         }
+
+        // ==================================
+        // === NOVO LISTENER (IMPRIMIR) ===
+        // ==================================
+        if (btnImprimirCanhoto) {
+            btnImprimirCanhoto.addEventListener('click', imprimirCanhotoDelivery);
+        }
+        // ==================================
 
         // Listeners do Modal de Configurações
         if (btnAbrirConfig) {
@@ -232,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async function () {
      * @param {string} observacoes - A string completa de observações.
      * @returns {string} - A lista de itens formatada.
      */
-    function parseItens(observacoes) {
+    function parseItens(observacoes, formatAsHtml = false) {
         if (!observacoes) return 'Nenhum item listado.';
 
         const linhas = observacoes.split('\n');
@@ -254,7 +258,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
         if (itens.length === 0) return 'Detalhes no modal.';
-        return itens.join('<br>'); // Retorna os itens com quebra de linha HTML
+        
+        // Retorna com quebra de linha HTML ou de texto
+        return formatAsHtml ? itens.join('<br>') : itens.join('\n');
     }
 
     /**
@@ -271,6 +277,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         return '';
     }
 
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (Adicionar Hora Original ao Card) ===
+    // ================================================================
     function criarCardPedido(pedido) {
         const card = document.createElement('div');
         const status = pedido.status || 'novo';
@@ -289,10 +298,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         card.innerHTML = `
             <div class="card-novo-header">
                 <strong>Pedido #${pedido.id}</strong>
-                <span class="card-novo-timer no-prazo" id="timer-pedido-${pedido.id}">
-                    <i class="fas fa-clock"></i> ${hora}
-                </span>
+                <div class="card-novo-hora-grupo">
+                    <span class="card-novo-hora"><i class="fas fa-clock"></i> ${hora}</span>
+                    <span class="card-novo-timer no-prazo" id="timer-pedido-${pedido.id}">
+                        (Carregando...)
+                    </span>
                 </div>
+            </div>
             <div class="card-novo-body">
                 <div class="card-novo-cliente">
                     <span class="cliente-nome">
@@ -329,6 +341,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         card.addEventListener('click', () => abrirModalDetalhes(pedido.id));
         return card;
     }
+    // ================================================================
+    // === FIM DA ALTERAÇÃO ===
+    // ================================================================
     
     window.abrirModalDetalhes = function(pedidoId) {
         pedidoSelecionado = todosPedidos.find(p => p.id === pedidoId);
@@ -351,13 +366,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
         
         // Separa Observações Adicionais dos Itens
-        const todosItens = parseItens(pedidoSelecionado.observacoes).replace(/\n/g, '<br>'); // Pega itens formatados
+        const todosItens = parseItens(pedidoSelecionado.observacoes, true); // true = formatar como HTML
         const obsAdicionais = parseObsAdicionais(pedidoSelecionado.observacoes);
 
         detalhesContent.innerHTML = `
             <p><strong>Status Atual:</strong> <span style="font-weight: bold; color: ${statusInfo.color}">${statusInfo.title}</span></p>
             <p><strong>Cliente:</strong> ${pedidoSelecionado.nome_cliente}</p>
-            <p><strong>Telefone:</strong> <a href="[https://wa.me/55$](https://wa.me/55$){pedidoSelecionado.telefone_cliente.replace(/\D/g,'')}" target="_blank">${pedidoSelecionado.telefone_cliente}</a></p>
+            <p><strong>Telefone:</strong> <a href="https://wa.me/55${pedidoSelecionado.telefone_cliente.replace(/\D/g,'')}" target="_blank">${pedidoSelecionado.telefone_cliente}</a></p>
             <p><strong>Endereço:</strong> ${pedidoSelecionado.endereco_entrega}</p>
             <p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedidoSelecionado.forma_pagamento)}</p>
             <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); margin-top: 1rem;">Total: ${formatarMoeda(pedidoSelecionado.total)}</p>
@@ -393,7 +408,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             mostrarMensagem(`Status do pedido #${pedidoSelecionado.id} atualizado para "${STATUS_MAP[novoStatus].title}"!`, 'success');
             
             modalDetalhes.style.display = 'none';
-            await carregarPedidosOnline(); // Recarrega o board para mover o card
+            
+            // ==================================
+            // === ATUALIZAÇÃO REALTIME ===
+            // ==================================
+            // Em vez de recarregar tudo, apenas move o card localmente
+            // Isso é mais rápido e funciona com o Realtime
+            const pedidoAtualizado = todosPedidos.find(p => p.id === pedidoSelecionado.id);
+            if(pedidoAtualizado) {
+                pedidoAtualizado.status = novoStatus;
+            }
+            // Se o status for final, remove o pedido da lista ativa
+            if (novoStatus === 'entregue' || novoStatus === 'cancelado') {
+                todosPedidos = todosPedidos.filter(p => p.id !== pedidoSelecionado.id);
+            }
+            exibirPedidosNoBoard(todosPedidos);
+            // ==================================
 
         } catch (error) {
             console.error('❌ Erro ao atualizar status:', error);
@@ -410,7 +440,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const { data, error } = await supabase
                 .from('config_loja')
                 .select('*')
-                .eq('id', 1)
+                .eq('id', 1) // Pega a linha de configuração (ID 1)
                 .single();
             
             if (error) {
@@ -599,16 +629,119 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             const tempoRestante = tempoEntregaPadrao - minutosPassados;
 
+            // ================================================================
+            // === INÍCIO DA ALTERAÇÃO (Lógica do Timer de Atraso) ===
+            // ================================================================
             if (tempoRestante <= 0) {
                 // ATRASADO
-                timerEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${Math.abs(tempoRestante).toFixed(0)} min atrasado`;
+                timerEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${Math.abs(tempoRestante).toFixed(0)} min ATRASADO`;
                 timerEl.className = 'card-novo-timer atrasado';
             } else {
                 // NO PRAZO
-                timerEl.innerHTML = `<i class="fas fa-hourglass-half"></i> ${tempoRestante.toFixed(0)} min restantes`;
+                timerEl.innerHTML = `${tempoRestante.toFixed(0)} min restantes`;
                 timerEl.className = 'card-novo-timer no-prazo';
             }
+            // ================================================================
+            // === FIM DA ALTERAÇÃO ===
+            // ================================================================
         });
+    }
+    
+    // ==================================
+    // === NOVA FUNÇÃO (IMPRIMIR CANHOTO) ===
+    // ==================================
+    function imprimirCanhotoDelivery() {
+        if (!pedidoSelecionado) {
+            mostrarMensagem('Nenhum pedido selecionado', 'error');
+            return;
+        }
+
+        const pedido = pedidoSelecionado;
+        const horaPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
+        const itens = parseItens(pedido.observacoes, false); // false = formatar como texto (com \n)
+        const obsAdicionais = parseObsAdicionais(pedido.observacoes);
+        const troco = parseTroco(pedido.observacoes);
+        const pagamento = formatarFormaPagamento(pedido.forma_pagamento);
+
+        // Estilo otimizado para impressoras térmicas (58mm)
+        const thermalCss = `
+            <style>
+                body {
+                    width: 58mm;
+                    font-family: 'Arial', sans-serif;
+                    font-size: 10px;
+                    margin: 0;
+                    padding: 5px;
+                }
+                h4 {
+                    text-align: center;
+                    margin: 2px 0;
+                    font-size: 12px;
+                }
+                hr {
+                    border: 0;
+                    border-top: 1px dashed #000;
+                    margin: 5px 0;
+                }
+                p {
+                    margin: 2px 0;
+                }
+                .detalhes {
+                    font-size: 9px;
+                    white-space: pre-wrap; /* Mantém quebras de linha dos itens */
+                    margin-bottom: 5px;
+                }
+                .total {
+                    font-weight: bold;
+                    font-size: 12px;
+                    margin-top: 5px;
+                }
+                @page {
+                    margin: 0;
+                }
+            </style>
+        `;
+
+        const canhotoContent = `
+            <div id="canhoto-impressao">
+                <h4>Confeitaria Doces Criativos</h4>
+                <p><strong>Pedido:</strong> #${pedido.id}</p>
+                <p><strong>Data/Hora:</strong> ${horaPedido}</p>
+                <hr>
+                <p><strong>Cliente:</strong> ${pedido.nome_cliente}</p>
+                <p><strong>Telefone:</strong> ${pedido.telefone_cliente}</p>
+                <p><strong>Endereço:</strong> ${pedido.endereco_entrega}</p>
+                <hr>
+                <p><strong>Itens do Pedido:</strong></p>
+                <div class="detalhes">${itens}</div>
+                <hr>
+                ${obsAdicionais ? `<p><strong>Obs:</strong> ${obsAdicionais}</p><hr>` : ''}
+                <p><strong>Pagamento:</strong> ${pagamento}</p>
+                <p><strong>Troco:</strong> ${troco}</p>
+                <p class="total"><strong>TOTAL: ${formatarMoeda(pedido.total)}</strong></p>
+                <hr>
+                <p style="text-align: center; font-size: 9px;">Obrigado pela preferência!</p>
+            </div>`;
+
+        const printWindow = window.open('', 'PrintCanhoto', 'height=600,width=400');
+        
+        printWindow.document.write('<html><head><title>Canhoto do Pedido</title>' + thermalCss + '</head><body>');
+        printWindow.document.write(canhotoContent);
+        
+        // Script de impressão e fechamento
+        const fixScript = `
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 1000); 
+                };
+            </script>
+        `;
+        printWindow.document.write(fixScript);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
     }
     
     // ==================================

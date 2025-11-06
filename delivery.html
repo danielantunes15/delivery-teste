@@ -6,10 +6,8 @@
     <title>Delivery - Acompanhamento de Pedidos</title>
     <link rel="stylesheet" href="css/layout.css?v=7">
     <link rel="stylesheet" href="css/navegacao.css">
-    <link rel="stylesheet" href="css/componentes.css?v=8">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </head>
+    <link rel="stylesheet" href="css/componentes.css?v=9"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 <body>
     <div class="app-wrapper">
         
@@ -156,11 +154,19 @@
                     </div>
                     <div class="modal-body">
                         <div id="detalhes-pedido-content"></div>
-                        <div class="form-actions" style="justify-content: flex-end; border-top: 1px solid #eee; margin-top: 1rem; padding-top: 1rem;">
-                            <button class="btn btn-primary" id="btn-avancar-status"><i class="fas fa-angle-right"></i> Avançar Status</button>
-                            <button class="btn btn-danger" id="btn-cancelar-pedido"><i class="fas fa-trash-alt"></i> Cancelar</button>
+                        
+                        <div class="form-actions modal-actions-split" style="border-top: 1px solid #eee; margin-top: 1rem; padding-top: 1rem;">
+                            <div>
+                                <button class="btn btn-secondary btn-imprimir" id="btn-imprimir-canhoto">
+                                    <i class="fas fa-print"></i> Imprimir Canhoto
+                                </button>
+                            </div>
+                            <div>
+                                <button class="btn btn-danger" id="btn-cancelar-pedido"><i class="fas fa-trash-alt"></i> Cancelar</button>
+                                <button class="btn btn-primary" id="btn-avancar-status"><i class="fas fa-angle-right"></i> Avançar Status</button>
+                            </div>
                         </div>
-                    </div>
+                        </div>
                 </div>
             </div>
 
@@ -246,6 +252,7 @@
                 </footer>
         </div>
     </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
