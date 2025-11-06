@@ -359,3 +359,36 @@ table tr:hover {
     background-color: #f8d7da;
     color: #c62828;
 }
+
+/* Define um tamanho fixo para a primeira célula (Foto) */
+#produtos-body td:first-child {
+    width: 90px; /* Define uma largura fixa para a coluna */
+    padding: 8px;
+    vertical-align: middle; /* Alinha a imagem no meio */
+}
+
+/* Estilo para a IMAGEM (Base64) */
+.produto-imagem-tabela {
+    width: 60px;
+    height: 60px;
+    object-fit: cover; /* Garante que a imagem preencha o espaço sem distorcer */
+    border-radius: var(--radius-sm, 8px); /* Usa a variável do seu CSS */
+    box-shadow: var(--shadow, 0 2px 10px rgba(0, 0, 0, 0.1));
+    display: block; /* Remove espaços extras */
+}
+
+/* Estilo para o 'Sem Imagem' */
+.produto-imagem-tabela-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: var(--bg-light, #f5f5f5);
+    border: 1px dashed var(--border-color, #e0e0e0);
+    border-radius: var(--radius-sm, 8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-light, #666);
+    text-align: center;
+}
