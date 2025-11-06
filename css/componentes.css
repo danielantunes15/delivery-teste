@@ -1293,3 +1293,78 @@ table tr:hover {
     color: #adb5bd;
     cursor: not-allowed;
 }
+
+/* === Ajuste: colunas distribuídas proporcionalmente === */
+.delivery-board {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between; /* distribui igualmente */
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  overflow-x: hidden; /* remove scroll horizontal */
+}
+
+.delivery-column {
+  flex: 1;                /* mesma proporção para todas */
+  min-width: 0;           /* permite encolher corretamente */
+  background-color: inherit;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* opcional: garante margens laterais */
+.main .delivery-board {
+  padding: 1rem 0;
+}
+
+/* === Ajuste final: colunas 100% proporcionais, sem margens extras === */
+.main .container {
+  max-width: 100%;
+  padding: 0; /* remove o espaçamento interno */
+}
+
+.delivery-board {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  width: 100%;
+  margin: 0;           /* remove margens externas */
+  padding: 0 1rem;     /* um leve respiro lateral */
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.delivery-column {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: none;
+  box-shadow: none;
+}
+
+/* opcional: remove sombra de hover no board */
+.delivery-column .pedido-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Responsivo: empilha colunas no celular */
+@media (max-width: 900px) {
+  .delivery-board {
+    flex-wrap: wrap;
+  }
+  .delivery-column {
+    flex: 1 1 100%;
+  }
+}
