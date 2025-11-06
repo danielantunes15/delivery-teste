@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fechamento de Caixa - Confeitaria Doces Criativos</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/caixa-fechamento.css">
+    <link rel="stylesheet" href="css/responsive.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">Doce Criativo</h1>
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <nav class="nav" id="mainNav">
+                    <a href="index.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Vendas</span>
+                    </a>
+                    <a href="delivery.html" class="nav-link">
+                        <i class="fas fa-motorcycle"></i>
+                        <span>Delivery</span>
+                    </a>
+                    <a href="caixa-fechamento.html" class="nav-link active">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Caixa</span>
+                    </a>
+                    <a href="encomendas.html" class="nav-link">
+                        <i class="fas fa-receipt"></i>
+                        <span>Encomendas</span>
+                    </a>
+                    <a href="producao.html" class="nav-link">
+                        <i class="fas fa-sitemap"></i>
+                        <span>Produção</span>
+                    </a>
+                    <a href="estoque.html" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        <span>Estoque</span>
+                    </a>
+                    <a href="relatorios.html" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Relatórios</span>
+                    </a>
+                    <a href="administracao.html" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Administração</span>
+                    </a>
+                    <a href="contas-a-pagar.html" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Gerencial</span>
+                    </a>
+                    <button id="logout-btn" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div id="alert-container"></div>
+            
+            <div id="loading" class="card">
+                <div class="spinner"></div>
+                <p style="text-align: center;">Carregando fechamento...</p>
+            </div>
+
+            <div id="content" style="display: none;">
+                <div class="card">
+                    <div class="fechamento-header">
+                        <h2>Fechamento de Caixa</h2>
+                        <div class="data-selecao">
+                            <label for="data-fechamento">Data do Fechamento:</label>
+                            <input type="date" id="data-fechamento" value="">
+                            <button id="carregar-dados" class="btn btn-primary">Carregar Dados</button>
+                            <button id="gerar-relatorio" class="btn btn-success">Gerar Relatório</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="secoes-caixa">
+                    <div class="tabs-header">
+                        <button class="tab-button active" data-tab="abertura">Abertura de Caixa</button>
+                        <button class="tab-button" data-tab="movimentacoes">Movimentações</button>
+                    </div>
+
+                    <div id="tab-abertura" class="tab-content">
+                        <div class="card admin-only">
+                            <h3>Abertura de Caixa</h3>
+                            <div class="form-container">
+                                <div class="form-group">
+                                    <label for="valor-abertura">Valor Inicial (R$)</label>
+                                    <input type="number" id="valor-abertura" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <button id="abrir-caixa-btn" class="btn btn-primary">Abrir Caixa</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-movimentacoes" class="tab-content" style="display: none;">
+                        <div class="card">
+                            <h3>Movimentações de Caixa (Sangria/Reforço)</h3>
+                            <div class="form-container">
+                                <div class="form-group">
+                                    <label for="valor-movimentacao">Valor (R$)</label>
+                                    <input type="number" id="valor-movimentacao" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="tipo-movimentacao">Tipo</label>
+                                    <select id="tipo-movimentacao">
+                                        <option value="saida">Sangria (Saída)</option>
+                                        <option value="entrada">Reforço (Entrada)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="descricao-movimentacao">Descrição</label>
+                                    <input type="text" id="descricao-movimentacao" placeholder="Ex: Retirada para o banco">
+                                </div>
+                                <button id="registrar-movimentacao-btn" class="btn btn-primary">Registrar Movimentação</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Resumo Financeiro</h3>
+                    <div class="resumo-grid">
+                        <div class="resumo-card dinheiro">
+                            <div class="resumo-icon dinheiro">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <h4>Total Dinheiro</h4>
+                                <span class="valor" id="total-dinheiro">R$ 0,00</span>
+                                <span class="quantidade" id="qtd-dinheiro">0 vendas</span>
+                            </div>
+                        </div>
+                        
+                        <div class="resumo-card cartao-debito">
+                            <div class="resumo-icon cartao-debito">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <h4>Total Débito</h4>
+                                <span class="valor" id="total-debito">R$ 0,00</span>
+                                <span class="quantidade" id="qtd-debito">0 vendas</span>
+                            </div>
+                        </div>
+
+                        <div class="resumo-card cartao-credito">
+                            <div class="resumo-icon cartao-credito">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <h4>Total Crédito</h4>
+                                <span class="valor" id="total-credito">R$ 0,00</span>
+                                <span class="quantidade" id="qtd-credito">0 vendas</span>
+                            </div>
+                        </div>
+                        
+                        <div class="resumo-card pix">
+                            <div class="resumo-icon pix">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <h4>Total PIX</h4>
+                                <span class="valor" id="total-pix">R$ 0,00</span>
+                                <span class="quantidade" id="qtd-pix">0 vendas</span>
+                            </div>
+                        </div>
+                        
+                        <div class="resumo-card total">
+                            <div class="resumo-icon total">
+                                <i class="fas fa-cash-register"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <h4>Total Geral</h4>
+                                <span class="valor" id="total-geral">R$ 0,00</span>
+                                <span class="quantitude" id="qtd-total">0 vendas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Detalhamento das Vendas</h3>
+                        <div class="filtros">
+                            <select id="filtro-pagamento">
+                                <option value="todos">Todos os Pagamentos</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="cartao_debito">Débito</option>
+                                <option value="cartao_credito">Crédito</option>
+                                <option value="pix">PIX</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="tabela-vendas">
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Cliente</th>
+                                    <th>Itens</th>
+                                    <th>Valor Total</th>
+                                    <th>Forma Pagamento</th>
+                                    <th>Vendedor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendas-body">
+                                <tr>
+                                    <td colspan="7" style="text-align: center;">Selecione uma data para visualizar as vendas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" id="movimentacoes-caixa">
+                    <h3>Movimentações de Caixa</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Descrição</th>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th>Usuário</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movimentacoes-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center;">Nenhuma movimentação encontrada</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Relatório de Fechamento</h3>
+                    <div class="relatorio-info">
+                        <div class="info-item admin-only">
+                            <span>Valor de Abertura:</span>
+                            <strong id="relatorio-abertura">R$ 0,00</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>Data do Fechamento:</span>
+                            <strong id="relatorio-data">--/--/----</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>Total em Vendas (Dinheiro):</span>
+                            <strong id="relatorio-total-vendas-dinheiro">R$ 0,00</strong>
+                        </div>
+                         <div class="info-item">
+                            <span>Total em Vendas (Débito):</span>
+                            <strong id="relatorio-total-vendas-debito">R$ 0,00</strong>
+                        </div>
+                         <div class="info-item">
+                            <span>Total em Vendas (Crédito):</span>
+                            <strong id="relatorio-total-vendas-credito">R$ 0,00</strong>
+                        </div>
+                         <div class="info-item">
+                            <span>Total em Vendas (PIX):</span>
+                            <strong id="relatorio-total-vendas-pix">R$ 0,00</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>Quantidade de Vendas (Dinheiro):</span>
+                            <strong id="relatorio-qtd-vendas-dinheiro">0</strong>
+                        </div>
+                         <div class="info-item">
+                            <span>Quantidade de Vendas (Cartão):</span>
+                            <strong id="relatorio-qtd-vendas-cartao">0</strong>
+                        </div>
+                         <div class="info-item">
+                            <span>Quantidade de Vendas (PIX):</span>
+                            <strong id="relatorio-qtd-vendas-pix">0</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>Ticket Médio (Dinheiro):</span>
+                            <strong id="relatorio-ticket-medio">R$ 0,00</strong>
+                        </div>
+                        <div class="info-item admin-only">
+                            <span>Total de Entradas (Reforços):</span>
+                            <strong id="relatorio-entradas">R$ 0,00</strong>
+                        </div>
+                        <div class="info-item admin-only">
+                            <span>Total de Saídas (Sangrias):</span>
+                            <strong id="relatorio-saidas">R$ 0,00</strong>
+                        </div>
+                        <div class="info-item admin-only">
+                            <span>Saldo Calculado do Caixa:</span>
+                            <strong id="relatorio-saldo-final">R$ 0,00</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="assinaturas">
+                        <div class="assinatura">
+                            <p>_________________________________</p>
+                            <p>Vendedor</p>
+                        </div>
+                        <div class="assinatura admin-only">
+                            <p>_________________________________</p>
+                            <p>Gerente/Administrador</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="error-message" class="card" style="display: none;">
+                <h2>Erro de Conexão</h2>
+                <p>Não foi possível conectar ao banco de dados.</p>
+                <button onclick="location.reload()" class="btn btn-primary">Tentar Novamente</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-detalhes-venda" class="modal">
+        <div class="modal-content large">
+            <span class="close">&times;</span>
+            <h3>Detalhes da Venda</h3>
+            <div id="detalhes-venda-content">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
+
+        window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        document.addEventListener('DOMContentLoaded', function() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data-fechamento').value = hoje;
+        });
+    </script>
+    <script src="js/auth.js"></script>
+    <script src="js/caixa-fechamento.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const mainNav = document.getElementById('mainNav');
+            if (menuToggle && mainNav) {
+                menuToggle.addEventListener('click', function() {
+                    mainNav.classList.toggle('show');
+                });
+            }
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.header-content') && mainNav.classList.contains('show')) {
+                    mainNav.classList.remove('show');
+                }
+            });
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === currentPage) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Lógica das abas
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.style.display = 'none');
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(`tab-${tabId}`).style.display = 'block';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
