@@ -10,133 +10,152 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
+    <div class="app-wrapper">
+        
+        <div id="mainSidebar" class="sidebar">
+             <div class="sidebar-header">
                 <h1 class="logo">Doce Criativo</h1>
-                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-                <nav class="nav" id="mainNav">
-                    <a href="index.html" class="nav-link">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Vendas</span>
-                    </a>
-                    <a href="delivery.html" class="nav-link active">
-                        <i class="fas fa-motorcycle"></i>
-                        <span>Delivery</span>
-                    </a>
-                    <a href="caixa-fechamento.html" class="nav-link">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Caixa</span>
-                    </a>
-                    <a href="encomendas.html" class="nav-link">
-                        <i class="fas fa-receipt"></i>
-                        <span>Encomendas</span>
-                    </a>
-                    <a href="producao.html" class="nav-link">
-                        <i class="fas fa-sitemap"></i>
-                        <span>Produção</span>
-                    </a>
-                    <a href="estoque.html" class="nav-link">
-                        <i class="fas fa-boxes"></i>
-                        <span>Estoque</span>
-                    </a>
-                    <a href="relatorios.html" class="nav-link">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Relatórios</span>
-                    </a>
-                    <a href="administracao.html" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>Administração</span>
-                    </a>
-                    <a href="contas-a-pagar.html" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Gerencial</span>
-                    </a>
-                    <button id="logout-btn" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Sair</span>
-                    </button>
-                </nav>
-            </div>
+                <p>Sistema de Gestão</p>
+             </div>
+             
+             <nav class="nav" id="mainNav">
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Vendas</span>
+                </a>
+                <a href="delivery.html" class="nav-link active">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Delivery</span>
+                </a>
+                <a href="caixa-fechamento.html" class="nav-link">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Caixa</span>
+                </a>
+                <a href="encomendas.html" class="nav-link">
+                    <i class="fas fa-receipt"></i>
+                    <span>Encomendas</span>
+                </a>
+                <a href="producao.html" class="nav-link">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Produção</span>
+                </a>
+                <a href="estoque.html" class="nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Estoque</span>
+                </a>
+                <a href="relatorios.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="administracao.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Administração</span>
+                </a>
+                <a href="contas-a-pagar.html" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Gerencial</span>
+                </a>
+                <button id="logout-btn" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
+                </button>
+             </nav>
         </div>
-    </header>
+        
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <main class="main">
-        <div class="container">
-            <div id="alert-container"></div>
+        <div class="main-content-wrapper">
 
-            <header class="card">
-                <h2><i class="fas fa-motorcycle"></i> Painel de Pedidos Online</h2>
-                
-                <div class="header-filters">
-                    <div class="filter-group">
-                        <label for="filtro-data">Filtrar por Data:</label>
-                        <input type="date" id="filtro-data">
-                    </div>
-                    <div class="search-group">
-                        <label for="filtro-busca">Buscar:</label>
-                        <input type="text" id="filtro-busca" placeholder="ID ou Nome do Cliente">
-                    </div>
-                    <div class="header-actions">
-                        <button id="recarregar-pedidos" class="btn btn-secondary">
-                            <i class="fas fa-sync-alt"></i> Recarregar
-                        </button>
-                        <a href="pedido.html" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt"></i> Ver Cardápio Público
-                        </a>
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                        <h1 class="logo">Delivery - Acompanhamento de Pedidos</h1>
                     </div>
                 </div>
             </header>
+
+            <main class="main">
+                <div class="container">
+                    <div id="alert-container"></div>
+
+                    <header class="card">
+                        <h2><i class="fas fa-motorcycle"></i> Painel de Pedidos Online</h2>
+                        
+                        <div class="header-filters">
+                            <div class="filter-group">
+                                <label for="filtro-data">Filtrar por Data:</label>
+                                <input type="date" id="filtro-data">
+                            </div>
+                            <div class="search-group">
+                                <label for="filtro-busca">Buscar:</label>
+                                <input type="text" id="filtro-busca" placeholder="ID ou Nome do Cliente">
+                            </div>
+                            <div class="header-actions">
+                                <button id="recarregar-pedidos" class="btn btn-secondary">
+                                    <i class="fas fa-sync-alt"></i> Recarregar
+                                </button>
+                                <a href="pedido.html" target="_blank" class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt"></i> Ver Cardápio Público
+                                </a>
+                            </div>
+                        </div>
+                    </header>
+                    
+                    <div id="loading" class="card" style="text-align: center;">
+                        <div class="spinner"></div>
+                        <p>Carregando pedidos...</p>
+                    </div>
+
+                    <div id="delivery-board" class="delivery-board" style="display: none;">
+                        <div id="col-novo" class="delivery-column">
+                            <h3><i class="fas fa-box-open"></i> Novo (0)</h3>
+                            <div class="card-list"></div>
+                        </div>
+                        <div id="col-preparando" class="delivery-column">
+                            <h3><i class="fas fa-fire-alt"></i> Preparando (0)</h3>
+                            <div class="card-list"></div>
+                        </div>
+                        <div id="col-pronto" class="delivery-column">
+                            <h3><i class="fas fa-truck-loading"></i> Pronto para Retirada/Envio (0)</h3>
+                            <div class="card-list"></div>
+                        </div>
+                        <div id="col-entregue" class="delivery-column">
+                            <h3><i class="fas fa-check-circle"></i> Entregue/Finalizado (0)</h3>
+                            <div class="card-list"></div>
+                        </div>
+                        <div id="col-cancelado" class="delivery-column" style="display: none;">
+                            <h3><i class="fas fa-times-circle"></i> Cancelado (0)</h3>
+                            <div class="card-list"></div>
+                        </div>
+                    </div>
+
+                    <div id="acesso-negado" class="card" style="display: none; text-align: center; padding: 2rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
+                        <h2 style="color: #dc3545;">Acesso Negado</h2>
+                        <p>Você não tem permissão para visualizar esta área.</p>
+                    </div>
+                </div>
+            </main>
             
-            <div id="loading" class="card" style="text-align: center;">
-                <div class="spinner"></div>
-                <p>Carregando pedidos...</p>
-            </div>
-
-            <div id="delivery-board" class="delivery-board" style="display: none;">
-                <div id="col-novo" class="delivery-column">
-                    <h3><i class="fas fa-box-open"></i> Novo (0)</h3>
-                    <div class="card-list"></div>
-                </div>
-                <div id="col-preparando" class="delivery-column">
-                    <h3><i class="fas fa-fire-alt"></i> Preparando (0)</h3>
-                    <div class="card-list"></div>
-                </div>
-                <div id="col-pronto" class="delivery-column">
-                    <h3><i class="fas fa-truck-loading"></i> Pronto para Retirada/Envio (0)</h3>
-                    <div class="card-list"></div>
-                </div>
-                <div id="col-entregue" class="delivery-column">
-                    <h3><i class="fas fa-check-circle"></i> Entregue/Finalizado (0)</h3>
-                    <div class="card-list"></div>
-                </div>
-                <div id="col-cancelado" class="delivery-column" style="display: none;">
-                    <h3><i class="fas fa-times-circle"></i> Cancelado (0)</h3>
-                    <div class="card-list"></div>
+            <div id="modal-detalhes" class="modal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-clipboard-list"></i> Detalhes do Pedido <span id="modal-pedido-id"></span></h3>
+                        <span class="close" onclick="document.getElementById('modal-detalhes').style.display='none';">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div id="detalhes-pedido-content"></div>
+                        <div class="form-actions" style="justify-content: flex-end; border-top: 1px solid #eee; margin-top: 1rem; padding-top: 1rem;">
+                            <button class="btn btn-primary" id="btn-avancar-status"><i class="fas fa-angle-right"></i> Avançar Status</button>
+                            <button class="btn btn-danger" id="btn-cancelar-pedido"><i class="fas fa-trash-alt"></i> Cancelar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div id="acesso-negado" class="card" style="display: none; text-align: center; padding: 2rem;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
-                <h2 style="color: #dc3545;">Acesso Negado</h2>
-                <p>Você não tem permissão para visualizar esta área.</p>
-            </div>
-        </div>
-    </main>
-    
-    <div id="modal-detalhes" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-clipboard-list"></i> Detalhes do Pedido <span id="modal-pedido-id"></span></h3>
-                <span class="close" onclick="document.getElementById('modal-detalhes').style.display='none';">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="detalhes-pedido-content"></div>
-                <div class="form-actions" style="justify-content: flex-end; border-top: 1px solid #eee; margin-top: 1rem; padding-top: 1rem;">
-                    <button class="btn btn-primary" id="btn-avancar-status"><i class="fas fa-angle-right"></i> Avançar Status</button>
-                    <button class="btn btn-danger" id="btn-cancelar-pedido"><i class="fas fa-trash-alt"></i> Cancelar</button>
-                </div>
-            </div>
+            <footer>
+                </footer>
         </div>
     </div>
 
@@ -146,6 +165,7 @@
         // Configuração do Supabase
         const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
+
 
         window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
@@ -158,21 +178,24 @@
     <script src="js/auth.js"></script>
     <script src="js/supabase-vendas.js"></script>
     <script src="js/delivery.js" defer></script>
+    
     <script>
-        // Script para o menu mobile
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
-            const mainNav = document.getElementById('mainNav');
-            if (menuToggle && mainNav) {
-                menuToggle.addEventListener('click', function() {
-                    mainNav.classList.toggle('show');
-                });
+            const mainSidebar = document.getElementById('mainSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            const toggleSidebar = () => {
+                mainSidebar.classList.toggle('show');
+                sidebarOverlay.style.display = mainSidebar.classList.contains('show') ? 'block' : 'none';
+            };
+
+            if (menuToggle && mainSidebar && sidebarOverlay) {
+                menuToggle.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar); 
             }
-            document.addEventListener('click', function(event) {
-                if (!event.target.closest('.header-content') && mainNav.classList.contains('show')) {
-                    mainNav.classList.remove('show');
-                }
-            });
+            
+            // Lógica de destaque da página ativa (mantida)
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {

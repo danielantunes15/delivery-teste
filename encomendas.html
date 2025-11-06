@@ -11,290 +11,306 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
+    <div class="app-wrapper">
+        
+        <div id="mainSidebar" class="sidebar">
+             <div class="sidebar-header">
                 <h1 class="logo">Doce Criativo</h1>
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
+                <p>Sistema de Gestão</p>
+             </div>
+             
+             <nav class="nav" id="mainNav">
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Vendas</span>
+                </a>
+                <a href="delivery.html" class="nav-link">
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Delivery</span>
+                </a>
+                <a href="caixa-fechamento.html" class="nav-link">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Caixa</span>
+                </a>
+                <a href="encomendas.html" class="nav-link active">
+                    <i class="fas fa-receipt"></i>
+                    <span>Encomendas</span>
+                </a>
+                <a href="producao.html" class="nav-link">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Produção</span>
+                </a>
+                <a href="estoque.html" class="nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Estoque</span>
+                </a>
+                <a href="relatorios.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="administracao.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Administração</span>
+                </a>
+                <a href="contas-a-pagar.html" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Gerencial</span>
+                </a>
+                <button id="logout-btn" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
                 </button>
-                <nav class="nav" id="mainNav">
-                    <a href="index.html" class="nav-link">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Vendas</span>
-                    </a>
-                    <a href="delivery.html" class="nav-link">
-                        <i class="fas fa-motorcycle"></i>
-                        <span>Delivery</span>
-                    </a>
-                    <a href="caixa-fechamento.html" class="nav-link">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Caixa</span>
-                    </a>
-                    <a href="encomendas.html" class="nav-link active">
-                        <i class="fas fa-receipt"></i>
-                        <span>Encomendas</span>
-                    </a>
-                    <a href="producao.html" class="nav-link">
-                        <i class="fas fa-sitemap"></i>
-                        <span>Produção</span>
-                    </a>
-                    <a href="estoque.html" class="nav-link">
-                        <i class="fas fa-boxes"></i>
-                        <span>Estoque</span>
-                    </a>
-                    <a href="relatorios.html" class="nav-link">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Relatórios</span>
-                    </a>
-                    <a href="administracao.html" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>Administração</span>
-                    </a>
-                    <a href="contas-a-pagar.html" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Gerencial</span>
-                    </a>
-                    <button id="logout-btn" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Sair</span>
-                    </button>
-                </nav>
-            </div>
+             </nav>
         </div>
-    </header>
+        
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <main class="main">
-        <div class="container">
-            <div id="alert-container"></div>
-            
-            <h2 class="page-title">Sistema de Encomendas</h2>
+        <div class="main-content-wrapper">
 
-            <div class="encomendas-nav">
-                <button class="encomendas-nav-btn active" data-page="criar-encomenda">
-                    <i class="fas fa-plus-circle"></i> Criar Nova Encomenda
-                </button>
-                <button class="encomendas-nav-btn" data-page="lista-encomendas">
-                    <i class="fas fa-list-alt"></i> Lista de Encomendas
-                </button>
-                <button class="encomendas-nav-btn" data-page="clientes-submenu">
-                    <i class="fas fa-users"></i> Clientes
-                </button>
-            </div>
-
-            <div class="encomendas-content">
-                <div id="page-criar-encomenda" class="page-content active">
-                    <section class="card">
-                        <h3 class="card-title">Detalhes da Encomenda</h3>
-                        <form id="form-encomenda">
-                            <div class="form-group">
-                                <label for="cliente-encomenda-search">Cliente</label>
-                                <input type="text" id="cliente-encomenda-search" placeholder="Buscar cliente por nome ou CPF..." required autocomplete="off">
-                                <div id="cliente-encomenda-results" class="search-results-list"></div>
-                                <input type="hidden" id="cliente-encomenda-id" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="data-entrega">Data de Entrega</label>
-                                <input type="date" id="data-entrega" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="tipo-entrega">Tipo de Entrega</label>
-                                <select id="tipo-entrega" required>
-                                    <option value="retirada">Retirar na Loja</option>
-                                    <option value="entrega">Entrega</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="endereco-entrega-group" style="display: none;">
-                                <label for="endereco-entrega">Endereço de Entrega</label>
-                                <textarea id="endereco-entrega" rows="3" placeholder="Rua, número, bairro, cidade..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="detalhes-encomenda">Detalhes do Pedido</label>
-                                <textarea id="detalhes-encomenda" rows="5" placeholder="Ex: Bolo de chocolate, 2kg, tema de unicórnio, com recheio de brigadeiro e cobertura de chantilly." required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="valor-total-encomenda">Valor Total (R$)</label>
-                                <input type="number" id="valor-total-encomenda" step="0.01" min="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="sinal-encomenda">Sinal/Adiantamento (R$)</label>
-                                <input type="number" id="sinal-encomenda" step="0.01" min="0" value="0">
-                            </div>
-                            <div class="form-group" id="forma-pagamento-sinal-group">
-                                <label for="forma-pagamento-sinal">Forma de Pagamento do Sinal (Se houver)</label>
-                                <select id="forma-pagamento-sinal">
-                                    <option value="dinheiro">Dinheiro</option>
-                                    <option value="pix">PIX</option>
-                                    <option value="cartao_debito">Cartão de Débito</option>
-                                    <option value="cartao_credito">Cartão de Crédito</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn-primary-full">
-                                <i class="fas fa-save"></i> Salvar Encomenda
-                            </button>
-                        </form>
-                    </section>
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                        <h1 class="logo">Encomendas - Sistema de Encomendas</h1>
+                    </div>
                 </div>
+            </header>
 
-                <div id="page-lista-encomendas" class="page-content" style="display: none;">
-                    <section class="card mb-4">
-                        <h3 class="card-title">Encomendas Pendentes</h3>
-                        <div id="encomendas-pendentes-container" class="table-container">
-                            <p class="loading-message">Carregando encomendas pendentes...</p>
-                        </div>
-                    </section>
+            <main class="main">
+                <div class="container">
+                    <div id="alert-container"></div>
                     
-                    <section class="card">
-                        <h3 class="card-title">Encomendas Concluídas</h3>
-                        <div id="encomendas-concluidas-container" class="table-container">
-                            <p class="loading-message">Carregando encomendas concluídas...</p>
-                        </div>
-                    </section>
-                </div>
+                    <h2 class="page-title">Sistema de Encomendas</h2>
 
-                <div id="page-clientes-submenu" class="page-content" style="display: none;">
-                    <div class="submenu-clientes">
-                        <div class="tabs-header">
-                            <button class="tab-button active" data-tab="tab-lista-clientes">
-                                <i class="fas fa-address-book"></i> Lista de Clientes
-                            </button>
-                            <button class="tab-button" data-tab="tab-cadastrar-cliente">
-                                <i class="fas fa-user-plus"></i> Cadastrar Cliente
-                            </button>
+                    <div class="encomendas-nav">
+                        <button class="encomendas-nav-btn active" data-page="criar-encomenda">
+                            <i class="fas fa-plus-circle"></i> Criar Nova Encomenda
+                        </button>
+                        <button class="encomendas-nav-btn" data-page="lista-encomendas">
+                            <i class="fas fa-list-alt"></i> Lista de Encomendas
+                        </button>
+                        <button class="encomendas-nav-btn" data-page="clientes-submenu">
+                            <i class="fas fa-users"></i> Clientes
+                        </button>
+                    </div>
+
+                    <div class="encomendas-content">
+                        <div id="page-criar-encomenda" class="page-content active">
+                            <section class="card">
+                                <h3 class="card-title">Detalhes da Encomenda</h3>
+                                <form id="form-encomenda">
+                                    <div class="form-group">
+                                        <label for="cliente-encomenda-search">Cliente</label>
+                                        <input type="text" id="cliente-encomenda-search" placeholder="Buscar cliente por nome ou CPF..." required autocomplete="off">
+                                        <div id="cliente-encomenda-results" class="search-results-list"></div>
+                                        <input type="hidden" id="cliente-encomenda-id" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="data-entrega">Data de Entrega</label>
+                                        <input type="date" id="data-entrega" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tipo-entrega">Tipo de Entrega</label>
+                                        <select id="tipo-entrega" required>
+                                            <option value="retirada">Retirar na Loja</option>
+                                            <option value="entrega">Entrega</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="endereco-entrega-group" style="display: none;">
+                                        <label for="endereco-entrega">Endereço de Entrega</label>
+                                        <textarea id="endereco-entrega" rows="3" placeholder="Rua, número, bairro, cidade..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="detalhes-encomenda">Detalhes do Pedido</label>
+                                        <textarea id="detalhes-encomenda" rows="5" placeholder="Ex: Bolo de chocolate, 2kg, tema de unicórnio, com recheio de brigadeiro e cobertura de chantilly." required></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="valor-total-encomenda">Valor Total (R$)</label>
+                                        <input type="number" id="valor-total-encomenda" step="0.01" min="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sinal-encomenda">Sinal/Adiantamento (R$)</label>
+                                        <input type="number" id="sinal-encomenda" step="0.01" min="0" value="0">
+                                    </div>
+                                    <div class="form-group" id="forma-pagamento-sinal-group">
+                                        <label for="forma-pagamento-sinal">Forma de Pagamento do Sinal (Se houver)</label>
+                                        <select id="forma-pagamento-sinal">
+                                            <option value="dinheiro">Dinheiro</option>
+                                            <option value="pix">PIX</option>
+                                            <option value="cartao_debito">Cartão de Débito</option>
+                                            <option value="cartao_credito">Cartão de Crédito</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn-primary-full">
+                                        <i class="fas fa-save"></i> Salvar Encomenda
+                                    </button>
+                                </form>
+                            </section>
                         </div>
 
-                        <div id="tab-lista-clientes" class="tab-content active">
-                            <h3 class="card-title">Clientes Cadastrados</h3>
-                            <div class="clientes-list-container">
-                                <table class="tabela-clientes">
-                                    <thead>
-                                        <tr>
-                                            <th>Nome</th>
-                                            <th>Telefone</th>
-                                            <th>CPF</th>
-                                            <th class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="clientes-tabela-body">
-                                        </tbody>
-                                </table>
+                        <div id="page-lista-encomendas" class="page-content" style="display: none;">
+                            <section class="card mb-4">
+                                <h3 class="card-title">Encomendas Pendentes</h3>
+                                <div id="encomendas-pendentes-container" class="table-container">
+                                    <p class="loading-message">Carregando encomendas pendentes...</p>
+                                </div>
+                            </section>
+                            
+                            <section class="card">
+                                <h3 class="card-title">Encomendas Concluídas</h3>
+                                <div id="encomendas-concluidas-container" class="table-container">
+                                    <p class="loading-message">Carregando encomendas concluídas...</p>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div id="page-clientes-submenu" class="page-content" style="display: none;">
+                            <div class="submenu-clientes">
+                                <div class="tabs-header">
+                                    <button class="tab-button active" data-tab="tab-lista-clientes">
+                                        <i class="fas fa-address-book"></i> Lista de Clientes
+                                    </button>
+                                    <button class="tab-button" data-tab="tab-cadastrar-cliente">
+                                        <i class="fas fa-user-plus"></i> Cadastrar Cliente
+                                    </button>
+                                </div>
+
+                                <div id="tab-lista-clientes" class="tab-content active">
+                                    <h3 class="card-title">Clientes Cadastrados</h3>
+                                    <div class="clientes-list-container">
+                                        <table class="tabela-clientes">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nome</th>
+                                                    <th>Telefone</th>
+                                                    <th>CPF</th>
+                                                    <th class="text-center">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="clientes-tabela-body">
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div id="tab-cadastrar-cliente" class="tab-content" style="display: none;">
+                                    <h3 class="card-title">Novo Cadastro</h3>
+                                    <form id="form-cadastro-cliente">
+                                        <input type="hidden" id="cliente-id-edicao">
+                                        <div class="form-group">
+                                            <label for="cliente-nome">Nome do Cliente</label>
+                                            <input type="text" id="cliente-nome" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cliente-telefone">Telefone</label>
+                                            <input type="tel" id="cliente-telefone">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cliente-endereco">Endereço</label>
+                                            <input type="text" id="cliente-endereco">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cliente-cpf">CPF</label>
+                                            <input type="text" id="cliente-cpf">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cliente-data-nascimento">Data de Nascimento</label>
+                                            <input type="date" id="cliente-data-nascimento">
+                                        </div>
+                                        <button type="submit" class="btn-primary-full">
+                                            <i class="fas fa-user-plus"></i> Salvar Cliente
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
-
-                        <div id="tab-cadastrar-cliente" class="tab-content" style="display: none;">
-                            <h3 class="card-title">Novo Cadastro</h3>
-                            <form id="form-cadastro-cliente">
-                                <input type="hidden" id="cliente-id-edicao">
-                                <div class="form-group">
-                                    <label for="cliente-nome">Nome do Cliente</label>
-                                    <input type="text" id="cliente-nome" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="cliente-telefone">Telefone</label>
-                                    <input type="tel" id="cliente-telefone">
-                                </div>
-                                <div class="form-group">
-                                    <label for="cliente-endereco">Endereço</label>
-                                    <input type="text" id="cliente-endereco">
-                                </div>
-                                <div class="form-group">
-                                    <label for="cliente-cpf">CPF</label>
-                                    <input type="text" id="cliente-cpf">
-                                </div>
-                                <div class="form-group">
-                                    <label for="cliente-data-nascimento">Data de Nascimento</label>
-                                    <input type="date" id="cliente-data-nascimento">
-                                </div>
-                                <button type="submit" class="btn-primary-full">
-                                    <i class="fas fa-user-plus"></i> Salvar Cliente
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </main>
+            </main>
 
-    <div id="modal-edicao-encomenda" class="modal-backdrop" style="display: none;">
-        <div class="modal-content">
-            <h3 class="modal-title">Editar Encomenda</h3>
-            <span class="close-modal-btn">&times;</span>
-            <form id="form-edicao-encomenda">
-                <input type="hidden" id="encomenda-id-edicao">
-                <div class="form-group">
-                    <label for="edit-cliente-nome">Cliente</label>
-                    <input type="text" id="edit-cliente-nome" disabled>
+            <div id="modal-edicao-encomenda" class="modal-backdrop" style="display: none;">
+                <div class="modal-content">
+                    <h3 class="modal-title">Editar Encomenda</h3>
+                    <span class="close-modal-btn">&times;</span>
+                    <form id="form-edicao-encomenda">
+                        <input type="hidden" id="encomenda-id-edicao">
+                        <div class="form-group">
+                            <label for="edit-cliente-nome">Cliente</label>
+                            <input type="text" id="edit-cliente-nome" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-data-entrega">Data de Entrega</label>
+                            <input type="date" id="edit-data-entrega" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-tipo-entrega">Tipo de Entrega</label>
+                            <select id="edit-tipo-entrega" required>
+                                <option value="retirada">Retirar na Loja</option>
+                                <option value="entrega">Entrega</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="edit-endereco-entrega-group">
+                            <label for="edit-endereco-entrega">Endereço de Entrega</label>
+                            <textarea id="edit-endereco-entrega" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-detalhes-encomenda">Detalhes do Pedido</label>
+                            <textarea id="edit-detalhes-encomenda" rows="5" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-valor-total-encomenda">Valor Total (R$)</label>
+                            <input type="number" id="edit-valor-total-encomenda" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-sinal-encomenda">Sinal/Adiantamento (R$)</label>
+                            <input type="number" id="edit-sinal-encomenda" step="0.01" min="0">
+                        </div>
+                        <button type="submit" class="btn-primary-full">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label for="edit-data-entrega">Data de Entrega</label>
-                    <input type="date" id="edit-data-entrega" required>
+            </div>
+            
+            <div id="modal-pagamento-encomenda" class="modal-backdrop" style="display: none;">
+                <div class="modal-content" style="max-width: 400px;">
+                    <h3 class="modal-title">Pagamento do Saldo Pendente</h3>
+                    <span class="close-modal-btn" onclick="fecharModalPagamento()">&times;</span>
+                    <form id="form-pagamento-encomenda">
+                        <input type="hidden" id="pagamento-encomenda-id">
+                        <div class="form-group">
+                            <label>Valor Pendente:</label>
+                            <p style="font-size: 1.5rem; font-weight: bold; color: var(--rosa-escuro);" id="pagamento-valor-pendente">R$ 0,00</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="pagamento-forma">Forma de Pagamento *</label>
+                            <select id="pagamento-forma" required>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="pix">PIX</option>
+                                <option value="cartao_debito">Cartão de Débito</option>
+                                <option value="cartao_credito">Cartão de Crédito</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary-full">
+                            <i class="fas fa-check-circle"></i> Confirmar Pagamento
+                        </button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label for="edit-tipo-entrega">Tipo de Entrega</label>
-                    <select id="edit-tipo-entrega" required>
-                        <option value="retirada">Retirar na Loja</option>
-                        <option value="entrega">Entrega</option>
-                    </select>
+            </div>
+
+            <footer class="footer">
+                <div class="container">
+                    <p>Confeitaria Doces Criativos &copy; 2025 - Todos os direitos reservados</p>
                 </div>
-                <div class="form-group" id="edit-endereco-entrega-group">
-                    <label for="edit-endereco-entrega">Endereço de Entrega</label>
-                    <textarea id="edit-endereco-entrega" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-detalhes-encomenda">Detalhes do Pedido</label>
-                    <textarea id="edit-detalhes-encomenda" rows="5" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-valor-total-encomenda">Valor Total (R$)</label>
-                    <input type="number" id="edit-valor-total-encomenda" step="0.01" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-sinal-encomenda">Sinal/Adiantamento (R$)</label>
-                    <input type="number" id="edit-sinal-encomenda" step="0.01" min="0">
-                </div>
-                <button type="submit" class="btn-primary-full">
-                    <i class="fas fa-save"></i> Salvar Alterações
-                </button>
-            </form>
+            </footer>
         </div>
     </div>
-    
-    <div id="modal-pagamento-encomenda" class="modal-backdrop" style="display: none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <h3 class="modal-title">Pagamento do Saldo Pendente</h3>
-            <span class="close-modal-btn" onclick="fecharModalPagamento()">&times;</span>
-            <form id="form-pagamento-encomenda">
-                <input type="hidden" id="pagamento-encomenda-id">
-                <div class="form-group">
-                    <label>Valor Pendente:</label>
-                    <p style="font-size: 1.5rem; font-weight: bold; color: var(--rosa-escuro);" id="pagamento-valor-pendente">R$ 0,00</p>
-                </div>
-                <div class="form-group">
-                    <label for="pagamento-forma">Forma de Pagamento *</label>
-                    <select id="pagamento-forma" required>
-                        <option value="dinheiro">Dinheiro</option>
-                        <option value="pix">PIX</option>
-                        <option value="cartao_debito">Cartão de Débito</option>
-                        <option value="cartao_credito">Cartão de Crédito</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary-full">
-                    <i class="fas fa-check-circle"></i> Confirmar Pagamento
-                </button>
-            </form>
-        </div>
-    </div>
-    <footer class="footer">
-        <div class="container">
-            <p>Confeitaria Doces Criativos &copy; 2025 - Todos os direitos reservados</p>
-        </div>
-    </footer>
 
     <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
+
 
         window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
@@ -302,20 +318,24 @@
     <script src="js/supabase-encomendas.js"></script>
     <script src="js/supabase-vendas.js"></script>
     <script src="js/encomendas-principal.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
-            const mainNav = document.getElementById('mainNav');
-            if (menuToggle && mainNav) {
-                menuToggle.addEventListener('click', function() {
-                    mainNav.classList.toggle('show');
-                });
+            const mainSidebar = document.getElementById('mainSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            const toggleSidebar = () => {
+                mainSidebar.classList.toggle('show');
+                sidebarOverlay.style.display = mainSidebar.classList.contains('show') ? 'block' : 'none';
+            };
+
+            if (menuToggle && mainSidebar && sidebarOverlay) {
+                menuToggle.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar); 
             }
-            document.addEventListener('click', function(event) {
-                if (!event.target.closest('.header-content') && mainNav.classList.contains('show')) {
-                    mainNav.classList.remove('show');
-                }
-            });
+            
+            // Lógica de destaque da página ativa (mantida)
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
