@@ -1043,6 +1043,199 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
 }
+
+/* ============================================== */
+/* --- ESTILOS DO MODAL DE CONFIGURAÇÕES (DELIVERY) --- */
+/* ============================================== */
+
+.config-horarios-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Uma coluna em mobile */
+    gap: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.dia-horario-group {
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr; /* Label | Input | Input */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-light);
+}
+
+.dia-horario-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+/* Inputs de hora dentro do modal */
+.dia-horario-group input[type="time"] {
+    width: 100%;
+    height: 40px; /* Menor que o padrão */
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Responsividade para o grid de horários */
+@media (min-width: 600px) {
+    .config-horarios-grid {
+        /* Duas colunas em telas maiores */
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ============================================== */
+/* --- ESTILOS DO MODAL DE CONFIGURAÇÕES (DELIVERY) --- */
+/* ============================================== */
+
+.config-horarios-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Uma coluna em mobile */
+    gap: 0.5rem; /* Espaçamento menor */
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.dia-horario-header {
+    display: grid;
+    /* Colunas: Dia | Abertura | Fechamento | Checkbox */
+    grid-template-columns: 110px 1fr 1fr 60px; 
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    margin-bottom: 0.25rem;
+}
+.dia-horario-header label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+}
+.dia-horario-header label:last-child {
+    text-align: center; /* Alinha "Fechado?" */
+}
+
+
+.dia-horario-group {
+    display: grid;
+    /* Colunas: Dia | Abertura | Fechamento | Checkbox */
+    grid-template-columns: 110px 1fr 1fr 60px; 
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-light);
+}
+
+.dia-horario-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    padding-left: 0.25rem;
+}
+
+/* Inputs de hora dentro do modal */
+.dia-horario-group input[type="time"] {
+    width: 100%;
+    height: 40px; /* Menor que o padrão */
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Checkbox "Fechado?" */
+.dia-horario-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    justify-self: center; /* Centraliza o checkbox na célula do grid */
+}
+
+/* Responsividade para o grid de horários */
+@media (max-width: 600px) {
+    .dia-horario-header {
+        /* Oculta os labels do header em telas pequenas */
+        display: none;
+    }
+    .dia-horario-group {
+        /* Muda para 2 colunas: Label e Inputs agrupados */
+        grid-template-columns: 100px 1fr;
+        gap: 0.5rem;
+    }
+    .dia-horario-group label {
+        /* O label do dia fica na primeira coluna */
+        grid-column: 1 / 2;
+        grid-row: 1 / 3; /* Ocupa duas linhas */
+        display: flex;
+        align-items: center;
+    }
+    .dia-horario-group input[type="time"]:first-of-type {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+    }
+    .dia-horario-group input[type="time"]:last-of-type {
+        grid-column: 2 / 3;
+        grid-row: 2 / 3;
+    }
+    .dia-horario-group input[type="checkbox"] {
+        grid-column: 2 / 3;
+        grid-row: 3 / 4;
+        justify-self: start; /* Alinha à esquerda */
+        margin-top: 5px;
+    }
+}
+
+
 /* ================================================================ */
-/* === FIM DA ADIÇÃO === */
+/* === INÍCIO DA ADIÇÃO (Estilos do Timer de Atraso) === */
 /* ================================================================ */
+
+.card-novo-header {
+    /* ... estilos existentes ... */
+    position: relative; /* Necessário para o timer se posicionar */
+}
+
+.card-novo-timer {
+    position: absolute;
+    top: -8px; /* Puxa para cima do card */
+    right: -8px; /* Puxa para a direita do card */
+    
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Estado: No Prazo */
+.card-novo-timer.no-prazo {
+    background-color: var(--success-color); /* Verde */
+    color: white;
+}
+
+/* Estado: Atrasado */
+.card-novo-timer.atrasado {
+    background-color: var(--error-color); /* Vermelho */
+    color: white;
+    animation: pulse 1.5s infinite; /* Faz o timer atrasado piscar */
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Ajuste no botão de fechar do modal (para não ser coberto pelo timer) */
+.card-novo-header .close-button-placeholder {
+    /* Se você tiver um botão de fechar no card, 
+       descomente isso, mas seu exemplo não tinha */
+    /* position: relative; */
+    /* z-index: 5; */
+}

@@ -6,9 +6,10 @@
     <title>Delivery - Acompanhamento de Pedidos</title>
     <link rel="stylesheet" href="css/layout.css?v=7">
     <link rel="stylesheet" href="css/navegacao.css">
-    <link rel="stylesheet" href="css/componentes.css?v=7">
+    <link rel="stylesheet" href="css/componentes.css?v=8">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
+    </head>
 <body>
     <div class="app-wrapper">
         
@@ -98,8 +99,11 @@
                                         <i class="fas fa-sync-alt"></i> Recarregar
                                     </button>
                                     <a href="pedido.html" target="_blank" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-external-link-alt"></i> Ver Cardápio Público
+                                        <i class="fas fa-external-link-alt"></i> Ver Cardápio
                                     </a>
+                                    <button id="btn-abrir-config" class="btn btn-secondary btn-sm" style="background-color: #6f42c1; color: white;">
+                                        <i class="fas fa-cog"></i> Configurações
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -160,11 +164,88 @@
                 </div>
             </div>
 
+            <div id="modal-configuracoes" class="modal">
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-cog"></i> Configurações da Loja Delivery</h3>
+                        <span class="close" id="fechar-modal-config">&times;</span>
+                    </div>
+                    <form id="form-config-delivery">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="config-taxa-entrega">Taxa de Entrega (R$)</label>
+                                    <input type="number" id="config-taxa-entrega" step="0.01" min="0" placeholder="5.00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="config-tempo-entrega">Tempo Médio de Entrega (em minutos)</label>
+                                    <input type="number" id="config-tempo-entrega" min="10" placeholder="60">
+                                </div>
+                            </div>
+                            
+                            <h4>Horários de Funcionamento</h4>
+                            <div class="config-horarios-grid">
+                                <div class="dia-horario-header">
+                                    <label>Dia da Semana</label>
+                                    <label>Abertura</label>
+                                    <label>Fechamento</label>
+                                    <label>Fechado?</label>
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Segunda-feira</label>
+                                    <input type="time" id="seg-abertura" title="Abertura Segunda">
+                                    <input type="time" id="seg-fechamento" title="Fechamento Segunda">
+                                    <input type="checkbox" id="seg-fechado" title="Marcar como Fechado">
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Terça-feira</label>
+                                    <input type="time" id="ter-abertura" title="Abertura Terça">
+                                    <input type="time" id="ter-fechamento" title="Fechamento Terça">
+                                    <input type="checkbox" id="ter-fechado" title="Marcar como Fechado">
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Quarta-feira</label>
+                                    <input type="time" id="qua-abertura" title="Abertura Quarta">
+                                    <input type="time" id="qua-fechamento" title="Fechamento Quarta">
+                                    <input type="checkbox" id="qua-fechado" title="Marcar como Fechado">
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Quinta-feira</label>
+                                    <input type="time" id="qui-abertura" title="Abertura Quinta">
+                                    <input type="time" id="qui-fechamento" title="Fechamento Quinta">
+                                    <input type="checkbox" id="qui-fechado" title="Marcar como Fechado">
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Sexta-feira</label>
+                                    <input type="time" id="sex-abertura" title="Abertura Sexta">
+                                    <input type="time" id="sex-fechamento" title="Fechamento Sexta">
+                                    <input type="checkbox" id="sex-fechado" title="Marcar como Fechado">
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Sábado</label>
+                                    <input type="time" id="sab-abertura" title="Abertura Sábado">
+                                    <input type="time" id="sab-fechamento" title="Fechamento Sábado">
+                                    <input type="checkbox" id="sab-fechado" title="Marcar como Fechado">
+                                </div>
+                                <div class="dia-horario-group">
+                                    <label>Domingo</label>
+                                    <input type="time" id="dom-abertura" title="Abertura Domingo">
+                                    <input type="time" id="dom-fechamento" title="Fechamento Domingo">
+                                    <input type="checkbox" id="dom-fechado" title="Marcar como Fechado">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Configurações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
             <footer>
                 </footer>
         </div>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>

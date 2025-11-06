@@ -7,15 +7,38 @@ document.addEventListener('DOMContentLoaded', async function () {
     const acessoNegadoElement = document.getElementById('acesso-negado');
     const recarregarBtn = document.getElementById('recarregar-pedidos');
     
+    // Modal de Detalhes do Pedido
     const modalDetalhes = document.getElementById('modal-detalhes');
     const detalhesContent = document.getElementById('detalhes-pedido-content');
     const modalPedidoId = document.getElementById('modal-pedido-id');
     const btnAvancarStatus = document.getElementById('btn-avancar-status');
     const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
 
+    // ==================================
+    // === NOVOS ELEMENTOS (CONFIGURAÇÕES) ===
+    // ==================================
+    const btnAbrirConfig = document.getElementById('btn-abrir-config');
+    const modalConfig = document.getElementById('modal-configuracoes');
+    const formConfig = document.getElementById('form-config-delivery');
+    const btnFecharConfig = document.getElementById('fechar-modal-config');
+    // ==================================
+
     let todosPedidos = [];
     let pedidoSelecionado = null;
     
+    // ==================================
+    // === NOVAS VARIÁVEIS GLOBAIS (TIMER E CONFIG) ===
+    // ==================================
+    // Cache para guardar as configurações da loja (tempo de entrega, etc.)
+    let configLoja = { tempo_entrega: 60 }; // Padrão de 60 minutos
+    // Variável para controlar o intervalo de atualização dos timers
+    let timerInterval = null;
+    // Canal do Supabase Realtime
+    let supabaseChannel = null;
+    // Áudio de notificação (Base64 para não depender de arquivos externos)
+    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/Et");
+    // ==================================
+
     const STATUS_MAP = {
         'novo': { title: 'Novo', icon: 'fas fa-box-open', next: 'preparando', nextText: 'Iniciar Preparo', color: 'var(--primary-color)' },
         'preparando': { title: 'Preparando', icon: 'fas fa-fire-alt', next: 'pronto', nextText: 'Marcar como Pronto', color: 'var(--warning-color)' },
@@ -48,23 +71,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         return formas[forma] || forma;
     };
     
-    // =================================================================
-    // === CORREÇÃO CRÍTICA DO JAVASCRIPT ===
-    // =================================================================
     const toggleDisplay = (element, show) => { 
         if (!element) return;
-        // O painel principal (#delivery-board) usa 'flex', não 'block'
         if (element.id === 'delivery-board') {
-            // AQUI ESTÁ A MUDANÇA: 'flex' no lugar de 'block'
             element.style.display = show ? 'flex' : 'none';
         } else {
-            // Mantém o comportamento padrão para outros elementos
             element.style.display = show ? 'block' : 'none'; 
         }
     };
-    // =================================================================
-    // === FIM DA CORREÇÃO ===
-    // =================================================================
 
 
     // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
@@ -85,7 +99,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         configurarEventListeners();
+        
+        // Carrega as configurações primeiro
+        await carregarConfiguracoesDaLoja(); 
+        
+        // Depois carrega os pedidos
         await carregarPedidosOnline();
+        
+        // Inicia o ouvinte de novos pedidos (Realtime)
+        iniciarOuvinteDePedidos();
+        
+        // Inicia o relógio que atualiza os timers de atraso
+        iniciarAtualizadorDeTimers();
 
         toggleDisplay(loadingElement, false);
         toggleDisplay(contentElement, true); // Agora vai aplicar 'display: flex'
@@ -101,6 +126,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (btnCancelarPedido) {
             btnCancelarPedido.addEventListener('click', () => atualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
         }
+
+        // Listeners do Modal de Configurações
+        if (btnAbrirConfig) {
+            btnAbrirConfig.addEventListener('click', abrirModalConfiguracoes);
+        }
+        if (btnFecharConfig) {
+            btnFecharConfig.addEventListener('click', fecharModalConfiguracoes);
+        }
+        if (formConfig) {
+            formConfig.addEventListener('submit', salvarConfiguracoes);
+        }
     }
     
     // ----------------------------------------------------------------------
@@ -114,10 +150,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         board.querySelectorAll('.card-list').forEach(list => list.innerHTML = '');
         
         try {
-            // Assume filtro por data de hoje
+            // Pega pedidos de hoje que NÃO ESTÃO entregues ou cancelados
             const { data, error } = await supabase.from('pedidos_online')
                 .select('*')
-                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z') 
+                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z')
+                .neq('status', 'entregue') // Não carrega entregues
+                .neq('status', 'cancelado') // Não carrega cancelados
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
@@ -132,17 +170,21 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function exibirPedidosNoBoard(pedidos) {
-        // Inicializa colunas para todos os status (incluindo cancelado, para visualização)
+        // Inicializa colunas
         const colunas = { novo: [], preparando: [], pronto: [], entregue: [], cancelado: [] };
         
-        pedidos.forEach(p => {
+        // Filtra apenas pedidos não finalizados para o board principal
+        const pedidosAtivos = pedidos.filter(p => p.status !== 'entregue' && p.status !== 'cancelado');
+        
+        pedidosAtivos.forEach(p => {
             const status = p.status || 'novo';
             if (colunas[status]) {
                 colunas[status].push(p);
             }
         });
         
-        Object.keys(STATUS_MAP).forEach(status => {
+        // Atualiza apenas as colunas ativas (Novo, Preparando, Pronto)
+        ['novo', 'preparando', 'pronto'].forEach(status => {
             const colElement = document.getElementById(`col-${status}`);
             if (!colElement) return;
             const listElement = colElement.querySelector('.card-list');
@@ -159,11 +201,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 });
             }
         });
-    }
 
-    // ================================================================
-    // === INÍCIO DA ALTERAÇÃO (Card do Pedido Compacto) ===
-    // ================================================================
+        // Atualiza os timers imediatamente após exibir
+        atualizarTimers();
+    }
     
     /**
      * Extrai a informação de troco da string de observações.
@@ -248,8 +289,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         card.innerHTML = `
             <div class="card-novo-header">
                 <strong>Pedido #${pedido.id}</strong>
-                <span class="card-novo-hora"><i class="fas fa-clock"></i> ${hora}</span>
-            </div>
+                <span class="card-novo-timer no-prazo" id="timer-pedido-${pedido.id}">
+                    <i class="fas fa-clock"></i> ${hora}
+                </span>
+                </div>
             <div class="card-novo-body">
                 <div class="card-novo-cliente">
                     <span class="cliente-nome">
@@ -286,9 +329,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         card.addEventListener('click', () => abrirModalDetalhes(pedido.id));
         return card;
     }
-    // ================================================================
-    // === FIM DA ALTERAÇÃO ===
-    // ================================================================
     
     window.abrirModalDetalhes = function(pedidoId) {
         pedidoSelecionado = todosPedidos.find(p => p.id === pedidoId);
@@ -310,9 +350,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Se for o último status, forçar o botão a ser azul
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
         
-        // ================================================================
-        // === INÍCIO DA ALTERAÇÃO (Exibição no Modal) ===
-        // ================================================================
         // Separa Observações Adicionais dos Itens
         const todosItens = parseItens(pedidoSelecionado.observacoes).replace(/\n/g, '<br>'); // Pega itens formatados
         const obsAdicionais = parseObsAdicionais(pedidoSelecionado.observacoes);
@@ -320,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         detalhesContent.innerHTML = `
             <p><strong>Status Atual:</strong> <span style="font-weight: bold; color: ${statusInfo.color}">${statusInfo.title}</span></p>
             <p><strong>Cliente:</strong> ${pedidoSelecionado.nome_cliente}</p>
-            <p><strong>Telefone:</strong> <a href="https://wa.me/55${pedidoSelecionado.telefone_cliente.replace(/\D/g,'')}" target="_blank">${pedidoSelecionado.telefone_cliente}</a></p>
+            <p><strong>Telefone:</strong> <a href="[https://wa.me/55$](https://wa.me/55$){pedidoSelecionado.telefone_cliente.replace(/\D/g,'')}" target="_blank">${pedidoSelecionado.telefone_cliente}</a></p>
             <p><strong>Endereço:</strong> ${pedidoSelecionado.endereco_entrega}</p>
             <p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedidoSelecionado.forma_pagamento)}</p>
             <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); margin-top: 1rem;">Total: ${formatarMoeda(pedidoSelecionado.total)}</p>
@@ -333,9 +370,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <p style="font-size: 0.9rem; font-style: italic; background: #fff8e1; padding: 10px; border-radius: 5px;">${obsAdicionais}</p>
             ` : ''}
         `;
-        // ================================================================
-        // === FIM DA ALTERAÇÃO ===
-        // ================================================================
         
         modalDetalhes.style.display = 'flex';
     }
@@ -359,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             mostrarMensagem(`Status do pedido #${pedidoSelecionado.id} atualizado para "${STATUS_MAP[novoStatus].title}"!`, 'success');
             
             modalDetalhes.style.display = 'none';
-            await carregarPedidosOnline();
+            await carregarPedidosOnline(); // Recarrega o board para mover o card
 
         } catch (error) {
             console.error('❌ Erro ao atualizar status:', error);
@@ -367,6 +401,217 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    // ==================================
+    // === NOVAS FUNÇÕES (CONFIGURAÇÕES) ===
+    // ==================================
+    
+    async function carregarConfiguracoesDaLoja() {
+        try {
+            const { data, error } = await supabase
+                .from('config_loja')
+                .select('*')
+                .eq('id', 1)
+                .single();
+            
+            if (error) {
+                 if (error.code === 'PGRST116') { // Nenhum registro encontrado
+                    console.warn('Nenhuma configuração de loja encontrada. Usando padrões.');
+                    // configLoja já tem o padrão de 60 minutos
+                 } else {
+                    throw error;
+                 }
+            }
+            
+            if (data) {
+                // Salva a configuração globalmente
+                configLoja = data; 
+                console.log('Configurações da loja carregadas:', configLoja);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar configurações da loja:', error);
+            mostrarMensagem('Não foi possível carregar as config. da loja. Usando tempo padrão (60min).', 'error');
+        }
+    }
+
+    function fecharModalConfiguracoes() {
+        if (modalConfig) {
+            modalConfig.style.display = 'none';
+        }
+    }
+
+    async function abrirModalConfiguracoes() {
+        if (!modalConfig) return;
+        
+        // Usa a configuração global já carregada (configLoja)
+        // Isso evita uma chamada desnecessária ao banco toda vez que abre o modal
+        const data = configLoja;
+        
+        // Preenche o formulário com os dados
+        if (data) {
+            document.getElementById('config-taxa-entrega').value = data.taxa_entrega || '';
+            document.getElementById('config-tempo-entrega').value = data.tempo_entrega || '60';
+            
+            const dias = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+            dias.forEach(dia => {
+                document.getElementById(`${dia}-abertura`).value = data[`${dia}_abertura`] || '';
+                document.getElementById(`${dia}-fechamento`).value = data[`${dia}_fechamento`] || '';
+                document.getElementById(`${dia}-fechado`).checked = data[`${dia}_fechado`] || false;
+            });
+        }
+            
+        modalConfig.style.display = 'flex';
+    }
+
+    async function salvarConfiguracoes(e) {
+        e.preventDefault();
+        mostrarMensagem('Salvando...', 'info');
+
+        try {
+            const dias = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+            const updateData = {
+                id: 1, // Chave primária
+                taxa_entrega: parseFloat(document.getElementById('config-taxa-entrega').value) || 0,
+                tempo_entrega: parseInt(document.getElementById('config-tempo-entrega').value) || 60
+            };
+
+            dias.forEach(dia => {
+                const abertura = document.getElementById(`${dia}-abertura`).value;
+                const fechamento = document.getElementById(`${dia}-fechamento`).value;
+                const fechado = document.getElementById(`${dia}-fechado`).checked;
+
+                updateData[`${dia}_abertura`] = abertura || null;
+                updateData[`${dia}_fechamento`] = fechamento || null;
+                updateData[`${dia}_fechado`] = fechado;
+            });
+
+            // Usar 'upsert' é a forma mais segura
+            const { error } = await supabase
+                .from('config_loja')
+                .upsert(updateData, { onConflict: 'id' });
+
+            if (error) throw error;
+            
+            // Atualiza o cache global de configurações
+            configLoja = updateData; 
+            
+            mostrarMensagem('Configurações salvas com sucesso!', 'success');
+            fecharModalConfiguracoes();
+            atualizarTimers(); // Atualiza os timers com o novo tempo
+
+        } catch (error) {
+            console.error('❌ Erro ao salvar configurações:', error);
+            mostrarMensagem('Erro ao salvar configurações: ' + error.message, 'error');
+        }
+    }
+    
+    // ==================================
+    // === NOVAS FUNÇÕES (REALTIME E TIMER) ===
+    // ==================================
+
+    function tocarNotificacao() {
+        audioNotificacao.play().catch(e => console.warn("Não foi possível tocar o som de notificação:", e.message));
+    }
+
+    /**
+     * Inicia o ouvinte de Realtime do Supabase.
+     */
+    function iniciarOuvinteDePedidos() {
+        // Se já houver um canal, remove a inscrição antiga
+        if (supabaseChannel) {
+            supabase.removeChannel(supabaseChannel);
+        }
+
+        // Cria um novo canal
+        supabaseChannel = supabase.channel('pedidos_online_insert')
+            .on(
+                'postgres_changes', 
+                { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'pedidos_online' 
+                }, 
+                (payload) => {
+                    console.log('Novo pedido recebido via Realtime!', payload.new);
+                    
+                    // Adiciona o novo pedido à lista global
+                    todosPedidos.push(payload.new);
+                    
+                    // Re-desenha o board com o novo pedido
+                    exibirPedidosNoBoard(todosPedidos);
+                    
+                    // Toca o som de notificação
+                    tocarNotificacao();
+                    
+                    // Mostra uma mensagem
+                    mostrarMensagem(`🔔 Novo Pedido #${payload.new.id} de ${payload.new.nome_cliente}!`, 'success');
+                }
+            )
+            .subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ Ouvindo novos pedidos em tempo real!');
+                }
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    console.error('❌ Erro no Realtime:', err);
+                    mostrarMensagem('Erro na conexão em tempo real. Recarregue a página.', 'error');
+                }
+            });
+    }
+
+    /**
+     * Inicia o intervalo que atualiza os timers dos cards.
+     */
+    function iniciarAtualizadorDeTimers() {
+        // Limpa qualquer timer antigo
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        // Atualiza os timers a cada 15 segundos
+        timerInterval = setInterval(atualizarTimers, 15000); 
+        
+        // Executa uma vez imediatamente
+        atualizarTimers();
+    }
+
+    /**
+     * Atualiza todos os timers visíveis no board.
+     */
+    function atualizarTimers() {
+        const agora = new Date();
+        const tempoEntregaPadrao = configLoja.tempo_entrega || 60; // Pega o tempo do cache
+
+        // Itera por todos os pedidos na lista global
+        todosPedidos.forEach(pedido => {
+            const timerEl = document.getElementById(`timer-pedido-${pedido.id}`);
+            
+            // Se o card não estiver na tela, não faz nada
+            if (!timerEl) return;
+            
+            // Se o pedido já foi finalizado, limpa o timer
+            if (pedido.status === 'entregue' || pedido.status === 'cancelado') {
+                timerEl.innerHTML = `<i class="fas fa-check"></i> Finalizado`;
+                timerEl.className = 'card-novo-timer'; // Reseta classe
+                return;
+            }
+
+            const criadoEm = new Date(pedido.created_at);
+            const minutosPassados = (agora - criadoEm) / 60000; // Milissegundos para minutos
+            
+            const tempoRestante = tempoEntregaPadrao - minutosPassados;
+
+            if (tempoRestante <= 0) {
+                // ATRASADO
+                timerEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${Math.abs(tempoRestante).toFixed(0)} min atrasado`;
+                timerEl.className = 'card-novo-timer atrasado';
+            } else {
+                // NO PRAZO
+                timerEl.innerHTML = `<i class="fas fa-hourglass-half"></i> ${tempoRestante.toFixed(0)} min restantes`;
+                timerEl.className = 'card-novo-timer no-prazo';
+            }
+        });
+    }
+    
+    // ==================================
 
     inicializar();
 });
