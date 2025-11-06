@@ -101,17 +101,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     
     window.alternarView = function(viewId) {
-        // ================================================================
-        // === INÍCIO DA ALTERAÇÃO (Fluxo de Login - Guarda de Rota) ===
-        // ================================================================
-        // Se o usuário tentar acessar 'Pedidos' (view-inicio) ou 'Carrinho' (view-carrinho) sem estar logado...
+        // Guarda de Rota: Redireciona para o login se tentar acessar área restrita sem estar logado
         if ((viewId === 'view-inicio' || viewId === 'view-carrinho') && !clienteLogado) {
             mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
-            viewId = 'auth-screen'; // ...redireciona para a tela de login.
+            viewId = 'auth-screen'; // Força a ida para a tela de login
         }
-        // ================================================================
-        // === FIM DA ALTERAÇÃO ===
-        // ================================================================
         
         document.querySelectorAll('.app-view').forEach(view => {
             if (view) view.classList.remove('active');
@@ -129,16 +123,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (item) item.classList.toggle('active', item.getAttribute('data-view') === viewId);
         });
 
-        // ================================================================
-        // === INÍCIO DA ALTERAÇÃO (Sincronização do Menu) ===
-        // ================================================================
-        // Sincroniza o menu novo (bottom-nav) usando data-view, que é mais confiável
+        // Sincroniza o menu novo (bottom-nav)
         document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
              item.classList.toggle('active', item.getAttribute('data-view') === viewId);
         });
-        // ================================================================
-        // === FIM DA ALTERAÇÃO ===
-        // ================================================================
         
         if (viewId === 'view-carrinho') {
             atualizarCarrinhoDisplay();
@@ -159,6 +147,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         return AREA_COBERTURA_INICIAL.includes(prefixo);
     }
     
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (Lógica do CEP) ===
+    // ================================================================
     window.buscarCep = async function(cep) {
         const cepLimpo = cep.replace(/\D/g, ''); 
         if (cepLimpo.length !== 8) return;
@@ -168,29 +159,79 @@ document.addEventListener('DOMContentLoaded', async function() {
             mostrarMensagem('❌ Não entregamos nesse CEP. Por favor, verifique a área de cobertura.', 'error');
             return;
         }
+
+        // Define os campos com base na view ativa (Cadastro ou Modal)
+        const isCadastro = document.getElementById('cadastro-form').style.display === 'block';
+        const isModal = modalEditarEndereco.style.display === 'flex';
+        
+        let campos = {};
+
+        if (isCadastro) {
+            campos = {
+                rua: document.getElementById('cadastro-rua'),
+                bairro: document.getElementById('cadastro-bairro'),
+                cidade: document.getElementById('cadastro-cidade'),
+                estado: document.getElementById('cadastro-estado'),
+                numero: document.getElementById('cadastro-numero')
+            };
+        } else if (isModal) {
+            campos = {
+                rua: document.getElementById('modal-rua'),
+                bairro: document.getElementById('modal-bairro'),
+                numero: document.getElementById('modal-numero')
+                // Modal não tem cidade/estado, então não são definidos
+            };
+        } else {
+            return; // Nenhum formulário ativo
+        }
+
         try {
             const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
             const data = await response.json();
+            
             if (data.erro) {
-                mostrarMensagem('CEP não encontrado ou inválido.', 'error');
+                // CEP inválido ou não encontrado
+                mostrarMensagem('CEP não encontrado. Por favor, digite o endereço manualmente.', 'warning');
+                // Limpa os campos para digitação manual
+                campos.rua.value = '';
+                campos.bairro.value = '';
+                if (isCadastro) {
+                    campos.cidade.value = '';
+                    campos.estado.value = '';
+                }
+                campos.rua.focus(); // Foca na rua para o usuário digitar
                 return;
             }
-            if (document.getElementById('cadastro-form').style.display === 'block') {
-                cadastroRuaInput.value = data.logradouro || '';
-                cadastroBairroInput.value = data.bairro || '';
-                cadastroCidadeInput.value = data.localidade || '';
-                cadastroEstadoInput.value = data.uf || '';
-                cadastroNumeroInput.focus();
-            } else if (modalEditarEndereco.style.display === 'flex') {
-                modalRuaInput.value = data.logradouro || '';
-                modalBairroInput.value = data.bairro || '';
-                modalNumeroInput.focus();
+
+            // CEP VÁLIDO (mesmo que geral)
+            
+            // Preenche o que a API retornou (pode ser "" para CEP geral)
+            campos.rua.value = data.logradouro || '';
+            campos.bairro.value = data.bairro || '';
+            
+            if (isCadastro) {
+                campos.cidade.value = data.localidade || '';
+                campos.estado.value = data.uf || '';
             }
-            mostrarMensagem('Endereço preenchido automaticamente.', 'success');
+
+            // Se a rua veio em branco (CEP geral), foca na RUA.
+            // Se a rua veio preenchida, foca no NÚMERO.
+            if (data.logradouro) {
+                campos.numero.focus();
+            } else {
+                campos.rua.focus();
+            }
+            
+            mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
+
         } catch (error) {
-            mostrarMensagem('Erro ao buscar o CEP. Preencha manually.', 'error');
+            mostrarMensagem('Erro ao buscar o CEP. Preencha manualmente.', 'error');
         }
     }
+    // ================================================================
+    // === FIM DA ALTERAÇÃO (Lógica do CEP) ===
+    // ================================================================
+
 
     // --- FUNÇÕES DO NOVO DESIGN ---
 
@@ -428,16 +469,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const popularItem = document.createElement('div');
                 popularItem.className = 'popular-item';
 
-                // ================================================================
-                // === INÍCIO DA ALTERAÇÃO (Imagem dos Mais Pedidos) ===
-                // ================================================================
                 // Usa produto.icone (Base64) ou um placeholder CSS
                 const imgTag = produto.icone
                     ? `<img src="${produto.icone}" alt="${produto.nome}">`
                     : `<div class="popular-item-placeholder"><i class="fas fa-cube"></i></div>`;
-                // ================================================================
-                // === FIM DA ALTERAÇÃO ===
-                // ================================================================
 
                 popularItem.innerHTML = `
                     ${imgTag}
@@ -461,6 +496,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const categoriaTodos = document.createElement('div');
         categoriaTodos.className = `category-item active`;
         categoriaTodos.textContent = 'Todos';
+        categoriaTodos.setAttribute('data-id', 'todos'); // Adiciona data-id 'todos'
         categoriaTodos.addEventListener('click', () => selecionarCategoria('todos'));
         categoriesScroll.appendChild(categoriaTodos);
 
@@ -477,6 +513,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         setupCategoryNavigationJS();
     }
 
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (Lógica do Scroll de Categoria) ===
+    // ================================================================
     // Lógica de clique da categoria (scroll/filtro)
     function setupCategoryNavigationJS() {
         const categoryItems = document.querySelectorAll('.category-item');
@@ -485,33 +524,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         categoryItems.forEach(item => {
             item.addEventListener('click', () => {
-                const categoryName = item.textContent;
+                const categoryId = item.getAttribute('data-id'); // Usa o data-id
                 
                 categoryItems.forEach(cat => cat.classList.remove('active'));
                 item.classList.add('active');
                 
-                if (categoryName === 'Todos') {
+                let targetSection = null;
+
+                if (categoryId === 'todos') {
+                    // Mostra todas as seções
                     categorySections.forEach(section => section.style.display = 'block');
+                    // Rola para o topo da lista de produtos
                     productsSectionEl.scrollIntoView({ behavior: 'smooth' });
                     return;
                 }
                 
-                let targetSection = null;
+                // Esconde todas as seções
                 categorySections.forEach(section => {
-                    const title = section.querySelector('.category-title').textContent;
-                    if (title === categoryName) {
-                        section.style.display = 'block';
-                        targetSection = section;
-                    } else {
-                        section.style.display = 'none';
-                    }
+                    section.style.display = 'none';
                 });
+
+                // Encontra a seção alvo pelo ID que definimos em exibirProdutos
+                targetSection = document.getElementById(`category-section-${categoryId}`);
                 
                 if (targetSection) {
+                    // Mostra a seção alvo
+                    targetSection.style.display = 'block';
                     // Espera a UI atualizar antes de rolar
                     setTimeout(() => {
                         targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
+                    }, 100); // 100ms de delay
                 }
             });
         });
@@ -530,17 +572,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         produtosAtivos.forEach(produto => {
             const catId = produto.categoria_id || 'sem-categoria';
 
-            // ================================================================
-            // === INÍCIO DA ALTERAÇÃO (Busca manual da categoria) ===
-            // ================================================================
+            // Busca manual da categoria (já corrigido)
             const categoriaObj = categorias.find(c => c.id === produto.categoria_id);
             const catNome = categoriaObj?.nome || 'Outros';
-            // ================================================================
-            // === FIM DA ALTERAÇÃO ===
-            // ================================================================
             
             if (!produtosPorCategoria[catId]) {
                 produtosPorCategoria[catId] = {
+                    id: catId, // Armazena o ID
                     nome: catNome,
                     produtos: []
                 };
@@ -549,8 +587,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         
         // Ordena as categorias (opcional, mas bom)
-        const categoriasOrdenadas = Object.keys(produtosPorCategoria).sort((a, b) => {
-            return produtosPorCategoria[a].nome.localeCompare(produtosPorCategoria[b].nome);
+        const categoriasOrdenadas = Object.values(produtosPorCategoria).sort((a, b) => {
+            return a.nome.localeCompare(b.nome);
         });
 
         if (categoriasOrdenadas.length === 0) {
@@ -559,26 +597,26 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         // Renderiza cada seção de categoria
-        categoriasOrdenadas.forEach(catId => {
-            const categoria = produtosPorCategoria[catId];
+        categoriasOrdenadas.forEach(categoria => {
             
             const categorySectionDiv = document.createElement('div');
             categorySectionDiv.className = 'category-products';
+            // ================================================================
+            // === INÍCIO DA ALTERAÇÃO (Adiciona ID na Seção de Categoria) ===
+            // ================================================================
+            categorySectionDiv.id = `category-section-${categoria.id}`;
+            // ================================================================
+            // === FIM DA ALTERAÇÃO ===
+            // ================================================================
             
             let productListHtml = '';
             categoria.produtos.forEach(produto => {
                 const esgotado = produto.estoque_atual <= 0;
 
-                // ================================================================
-                // === INÍCIO DA ALTERAÇÃO (Imagem da Lista de Produtos) ===
-                // ================================================================
-                // Usa produto.icone (Base64) ou um placeholder CSS
+                // Usa produto.icone (Base64) ou um placeholder CSS (já corrigido)
                 const imgTag = produto.icone
                     ? `<img src="${produto.icone}" alt="${produto.nome}">`
                     : `<div class="product-image-placeholder"><i class="fas fa-cube"></i></div>`;
-                // ================================================================
-                // === FIM DA ALTERAÇÃO ===
-                // ================================================================
                 
                 productListHtml += `
                     <div class="product-item ${esgotado ? 'out-of-stock' : ''}">
@@ -619,6 +657,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         });
     }
+    // ================================================================
+    // === FIM DAS ALTERAÇÕES DO SCROLL ===
+    // ================================================================
     
     // --- FUNÇÕES DE AUTH, CHECKOUT E PERFIL (LÓGICA ANTIGA ADAPTADA) ---
 
@@ -772,6 +813,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         btnIniciarSessao.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar ou Cadastrar';
     }
 
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (Cadastro Manual de Endereço) ===
+    // ================================================================
     async function finalizarCadastro(e) {
         e.preventDefault();
         const nome = cadastroNomeInput.value.trim();
@@ -781,9 +825,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         const rua = cadastroRuaInput.value.trim();
         const numero = cadastroNumeroInput.value.trim();
         const bairro = cadastroBairroInput.value.trim();
-        const cidade = cadastroCidadeInput.value.trim();
-        const estado = cadastroEstadoInput.value.trim();
+        const cidade = cadastroCidadeInput.value.trim(); // Agora é lido do input
+        const estado = cadastroEstadoInput.value.trim(); // Agora é lido do input
 
+        // Endereço completo agora usa os campos manuais
         const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
 
         if (!nome || !rua || !numero || !bairro || !cidade || !estado) {
@@ -827,6 +872,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             btnFinalizarCadastro.innerHTML = 'Finalizar Cadastro';
         }
     }
+    // ================================================================
+    // === FIM DA ALTERAÇÃO ===
+    // ================================================================
     
     function logarClienteManual() {
         localStorage.setItem('clienteTelefone', clientePerfil.telefone);
@@ -1151,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         document.getElementById('abrir-modal-editar-endereco')?.addEventListener('click', abrirModalEditarEndereco);
         
-        // Listeners do Menu Inferior (Antigo)
+        // Listeners do Menu Inferior (Antigo) - Mantido para segurança
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();

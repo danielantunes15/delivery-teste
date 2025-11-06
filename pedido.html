@@ -112,7 +112,7 @@
             width: 140px;
             height: 140px;
             border-radius: 10px;
-            object-fit: cover;
+            object-fit: cover; /* Garante que a imagem preencha */
         }
 
         .popular-item-placeholder {
@@ -126,13 +126,17 @@
             font-size: 3rem;
             color: #ccc;
         }
+        .popular-item-placeholder i {
+            color: #ccc;
+        }
+
 
         /* Para a lista principal de produtos (products-list) */
         .product-image img {
             width: 90px;
             height: 90px;
             border-radius: 8px;
-            object-fit: cover;
+            object-fit: cover; /* Garante que a imagem preencha */
         }
 
         .product-image-placeholder {
@@ -146,6 +150,9 @@
             font-size: 2rem;
             color: #ccc;
             flex-shrink: 0; /* Impede que o ícone seja esmagado */
+        }
+        .product-image-placeholder i {
+            color: #ccc;
         }
 
         /* Ajuste para a imagem (seja real ou placeholder) não ser esmagada */
@@ -219,15 +226,14 @@
                     
                     <div class="form-row-cadastro">
                         <div class="form-group">
-                            <label for="cadastro-cidade">Cidade</label>
-                            <input type="text" id="cadastro-cidade" readonly>
+                            <label for="cadastro-cidade">Cidade *</label>
+                            <input type="text" id="cadastro-cidade" required>
                         </div>
                         <div class="form-group" style="max-width: 100px;">
-                            <label for="cadastro-estado">UF</label>
-                            <input type="text" id="cadastro-estado" readonly>
+                            <label for="cadastro-estado">UF *</label>
+                            <input type="text" id="cadastro-estado" required>
                         </div>
                     </div>
-
                     <button type="submit" id="btn-finalizar-cadastro" class="btn-login-app">
                         Finalizar Cadastro
                     </button>
@@ -422,6 +428,8 @@
             </span>
         </button>
     </nav>
+
+
     <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
