@@ -4,7 +4,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // --- CONFIGURAÇÕES E VARIÁVEIS ---
     const NUMERO_WHATSAPP = '5573991964394'; // SEU NÚMERO DE WHATSAPP AQUI
-    const AREA_COBERTURA_INICIAL = ['45', '46']; // Prefixo de CEP (Ex: Bahia)
+    
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (Remoção da restrição de CEP) ===
+    // ================================================================
+    // A lista foi esvaziada, mas a função foi mantida para aceitar tudo
+    const AREA_COBERTURA_INICIAL = []; 
+    // ================================================================
+    // === FIM DA ALTERAÇÃO ===
+    // ================================================================
     
     let clienteLogado = null;
     let clientePerfil = { nome: null, telefone: null, endereco: null }; 
@@ -141,24 +149,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         return digitos.length >= 12 ? digitos : '55' + digitos;
     }
 
+    // ================================================================
+    // === INÍCIO DA ALTERAÇÃO (validaAreaEntrega) ===
+    // ================================================================
     function validarAreaEntrega(cep) {
+        // A constante AREA_COBERTURA_INICIAL está vazia, então esta função
+        // sempre retornará 'true' se a lista estiver vazia.
+        if (AREA_COBERTURA_INICIAL.length === 0) {
+            return true; // ACEITA TODOS OS CEPS
+        }
         if (!cep) return false;
         const prefixo = cep.substring(0, 2);
         return AREA_COBERTURA_INICIAL.includes(prefixo);
     }
+    // ================================================================
+    // === FIM DA ALTERAÇÃO ===
+    // ================================================================
     
-    // ================================================================
-    // === INÍCIO DA ALTERAÇÃO (Lógica do CEP) ===
-    // ================================================================
     window.buscarCep = async function(cep) {
         const cepLimpo = cep.replace(/\D/g, ''); 
         if (cepLimpo.length !== 8) return;
         mostrarMensagem('Buscando endereço...', 'info');
 
-        if (!validarAreaEntrega(cepLimpo)) {
-            mostrarMensagem('❌ Não entregamos nesse CEP. Por favor, verifique a área de cobertura.', 'error');
-            return;
-        }
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO (Remoção do Bloco de Validação) ===
+        // ================================================================
+        // A validação foi removida daqui, pois a função validarAreaEntrega
+        // agora aceita tudo (ou será checada apenas no final).
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
 
         // Define os campos com base na view ativa (Cadastro ou Modal)
         const isCadastro = document.getElementById('cadastro-form').style.display === 'block';
@@ -225,12 +245,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
 
         } catch (error) {
-            mostrarMensagem('Erro ao buscar o CEP. Preencha manualmente.', 'error');
+            mostrarMensagem('Erro ao buscar o CEP. Preencha manually.', 'error');
         }
     }
-    // ================================================================
-    // === FIM DA ALTERAÇÃO (Lógica do CEP) ===
-    // ================================================================
 
 
     // --- FUNÇÕES DO NOVO DESIGN ---
@@ -489,6 +506,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
+    // ================================================================
+    // === INÍCIO DA CORREÇÃO (Bug "selecionarCategoria") ===
+    // ================================================================
     function exibirCategorias() { 
         if (!categoriesScroll) return;
         categoriesScroll.innerHTML = ''; 
@@ -497,7 +517,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         categoriaTodos.className = `category-item active`;
         categoriaTodos.textContent = 'Todos';
         categoriaTodos.setAttribute('data-id', 'todos'); // Adiciona data-id 'todos'
-        categoriaTodos.addEventListener('click', () => selecionarCategoria('todos'));
         categoriesScroll.appendChild(categoriaTodos);
 
         categorias.forEach(categoria => {
@@ -505,21 +524,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             categoriaBtn.className = `category-item`;
             categoriaBtn.textContent = categoria.nome;
             categoriaBtn.setAttribute('data-id', categoria.id);
-            categoriaBtn.addEventListener('click', () => selecionarCategoria(categoria.id));
             categoriesScroll.appendChild(categoriaBtn);
         });
         
-        // Adiciona a lógica de navegação/scroll
+        // A função abaixo (que é chamada) é que vai adicionar os listeners
         setupCategoryNavigationJS();
     }
 
-    // ================================================================
-    // === INÍCIO DA ALTERAÇÃO (Lógica do Scroll de Categoria) ===
-    // ================================================================
     // Lógica de clique da categoria (scroll/filtro)
     function setupCategoryNavigationJS() {
         const categoryItems = document.querySelectorAll('.category-item');
-        const categorySections = document.querySelectorAll('.category-products');
         const productsSectionEl = document.querySelector('.products-section');
         
         categoryItems.forEach(item => {
@@ -530,6 +544,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 item.classList.add('active');
                 
                 let targetSection = null;
+                // Referencia as seções DE PRODUTO (que são geradas dinamicamente)
+                const categorySections = document.querySelectorAll('.category-products');
 
                 if (categoryId === 'todos') {
                     // Mostra todas as seções
@@ -601,13 +617,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             const categorySectionDiv = document.createElement('div');
             categorySectionDiv.className = 'category-products';
-            // ================================================================
-            // === INÍCIO DA ALTERAÇÃO (Adiciona ID na Seção de Categoria) ===
-            // ================================================================
+            // Adiciona ID na Seção de Categoria (para o scroll funcionar)
             categorySectionDiv.id = `category-section-${categoria.id}`;
-            // ================================================================
-            // === FIM DA ALTERAÇÃO ===
-            // ================================================================
             
             let productListHtml = '';
             categoria.produtos.forEach(produto => {
@@ -658,7 +669,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     // ================================================================
-    // === FIM DAS ALTERAÇÕES DO SCROLL ===
+    // === FIM DAS ALTERAÇÕES (BUG + SCROLL) ===
     // ================================================================
     
     // --- FUNÇÕES DE AUTH, CHECKOUT E PERFIL (LÓGICA ANTIGA ADAPTADA) ---
@@ -757,18 +768,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function buscarClientePorTelefone(telefone) {
         try {
-            // ================================================================
-            // === INÍCIO DA CORREÇÃO (Erro 406) ===
-            // ================================================================
-            // Troca .single() por .limit(1).maybeSingle() para evitar erro com duplicados
+            // Correção Erro 406: Troca .single() por .limit(1).maybeSingle()
             const { data, error } = await supabase.from('clientes_delivery')
                 .select('*')
                 .eq('telefone', telefone)
                 .limit(1) 
                 .maybeSingle(); 
-            // ================================================================
-            // === FIM DA CORREÇÃO ===
-            // ================================================================
             
             if (error && error.code !== 'PGRST116') throw error; // Ignora erro "nenhuma linha"
             
@@ -835,9 +840,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             return mostrarMensagem('Preencha o Nome e todos os campos de Endereço corretamente.', 'error');
         }
         
-        if (!validarAreaEntrega(cep)) {
-            return mostrarMensagem('❌ Não entregamos no CEP fornecido. Favor verificar a área de cobertura.', 'error');
-        }
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO (Remoção da validação de CEP no cadastro) ===
+        // ================================================================
+        // A linha abaixo foi REMOVIDA para aceitar qualquer CEP
+        // if (!validarAreaEntrega(cep)) { ... }
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
         
         btnFinalizarCadastro.disabled = true;
         btnFinalizarCadastro.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando...';
@@ -1084,9 +1094,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!rua || !numero || !bairro || !cep) {
             return mostrarMensagem('Preencha a Rua, Número, Bairro e CEP.', 'error');
         }
-        if (!validarAreaEntrega(cep)) {
-            return mostrarMensagem('❌ Não entregamos no novo CEP fornecido.', 'error');
-        }
+
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO (Remoção da validação de CEP) ===
+        // ================================================================
+        // A linha abaixo foi REMOVIDA
+        // if (!validarAreaEntrega(cep)) { ... }
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
 
         // Busca cidade/estado pelo CEP para endereço completo
         const cepLimpo = cep.replace(/\D/g, '');
@@ -1207,9 +1223,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         });
         
-        // ================================================================
-        // === INÍCIO DA ALTERAÇÃO (Lógica de clique do Menu) ===
-        // ================================================================
         // Listeners do Menu Inferior (Novo Design)
         document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
@@ -1221,9 +1234,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 window.alternarView(viewTarget);
             });
         });
-        // ================================================================
-        // === FIM DA ALTERAÇÃO ===
-        // ================================================================
         
         // Botão de Finalizar (Tela do Carrinho)
         if (finalizarDiretoBtn) finalizarDiretoBtn.addEventListener('click', finalizarPedidoEEnviarWhatsApp);
@@ -1268,9 +1278,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
             
-            // ================================================================
-            // === INÍCIO DA ALTERAÇÃO (Fluxo de Login na Inicialização) ===
-            // ================================================================
             // O app sempre abre no cardápio, independentemente do login
             authScreen.classList.remove('active'); // Garante que a tela de login não seja a ativa
             mobileNav.style.display = 'flex';
@@ -1282,9 +1289,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             } else {
                  console.log(`Cliente ${clientePerfil.nome} carregado do localStorage.`);
             }
-            // ================================================================
-            // === FIM DA ALTERAÇÃO ===
-            // ================================================================
             
             // Carrega os dados do cardápio
             await carregarCategorias(); 
