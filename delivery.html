@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery - Acompanhamento de Pedidos</title>
-    <link rel="stylesheet" href="css/layout.css?v=3">
+    <link rel="stylesheet" href="css/layout.css?v=5">
     <link rel="stylesheet" href="css/navegacao.css">
-    <link rel="stylesheet" href="css/componentes.css?v=3">
+    <link rel="stylesheet" href="css/componentes.css?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -75,8 +75,7 @@
                 </div>
             </header>
 
-            <main class="main">
-                <div class="container">
+            <main class="main" style="padding: 0;"> <div class="container" style="padding-top: 1.5rem; padding-bottom: 1.5rem;">
                     <div id="alert-container"></div>
 
                     <header class="card">
@@ -107,37 +106,41 @@
                         <p>Carregando pedidos...</p>
                     </div>
 
-                    <div id="delivery-board" class="delivery-board" style="display: none;">
-                        <div id="col-novo" class="delivery-column">
-                            <h3><i class="fas fa-box-open"></i> Novo (0)</h3>
-                            <div class="card-list"></div>
-                        </div>
-                        <div id="col-preparando" class="delivery-column">
-                            <h3><i class="fas fa-fire-alt"></i> Preparando (0)</h3>
-                            <div class="card-list"></div>
-                        </div>
-                        <div id="col-pronto" class="delivery-column">
-                            <h3><i class="fas fa-truck-loading"></i> Pronto para Retirada/Envio (0)</h3>
-                            <div class="card-list"></div>
-                        </div>
-                        <div id="col-entregue" class="delivery-column" style="display: none;">
-                            <h3><i class="fas fa-check-circle"></i> Entregue/Finalizado (0)</h3>
-                            <div class="card-list"></div>
-                        </div>
-                        <div id="col-cancelado" class="delivery-column" style="display: none;">
-                            <h3><i class="fas fa-times-circle"></i> Cancelado (0)</h3>
-                            <div class="card-list"></div>
-                        </div>
-                    </div>
-
-                    <div id="acesso-negado" class="card" style="display: none; text-align: center; padding: 2rem;">
+                     <div id="acesso-negado" class="card" style="display: none; text-align: center; padding: 2rem;">
                         <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
                         <h2 style="color: #dc3545;">Acesso Negado</h2>
                         <p>Você não tem permissão para visualizar esta área.</p>
                     </div>
                 </div>
+
+                <div id="delivery-board" class="delivery-board" style="display: none;">
+                    
+                    <div id="col-novo" class="delivery-column">
+                        <h3><i class="fas fa-box-open"></i> Novo (0)</h3>
+                        <div class="card-list"></div>
+                    </div>
+                    
+                    <div id="col-preparando" class="delivery-column">
+                        <h3><i class="fas fa-fire-alt"></i> Preparando (0)</h3>
+                        <div class="card-list"></div>
+                    </div>
+                    
+                    <div id="col-pronto" class="delivery-column">
+                        <h3><i class="fas fa-truck-loading"></i> Pronto para Retirada/Envio (0)</h3>
+                        <div class="card-list"></div>
+                    </div>
+                    
+                    <div id="col-entregue" class="delivery-column" style="display: none;">
+                        <h3><i class="fas fa-check-circle"></i> Entregue/Finalizado (0)</h3>
+                        <div class="card-list"></div>
+                    </div>
+                    <div id="col-cancelado" class="delivery-column" style="display: none;">
+                        <h3><i class="fas fa-times-circle"></i> Cancelado (0)</h3>
+                        <div class="card-list"></div>
+                    </div>
+                </div>
+                
             </main>
-            
             <div id="modal-detalhes" class="modal">
                 <div class="modal-content" style="max-width: 600px;">
                     <div class="modal-header">

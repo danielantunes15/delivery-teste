@@ -48,7 +48,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         return formas[forma] || forma;
     };
     
-    const toggleDisplay = (element, show) => { if (element) element.style.display = show ? 'block' : 'none'; };
+    // =================================================================
+    // === CORREÇÃO CRÍTICA DO JAVASCRIPT ===
+    // =================================================================
+    const toggleDisplay = (element, show) => { 
+        if (!element) return;
+        // O painel principal (#delivery-board) usa 'flex', não 'block'
+        if (element.id === 'delivery-board') {
+            element.style.display = show ? 'flex' : 'none';
+        } else {
+            // Mantém o comportamento padrão para outros elementos
+            element.style.display = show ? 'block' : 'none'; 
+        }
+    };
+    // =================================================================
+    // === FIM DA CORREÇÃO ===
+    // =================================================================
 
 
     // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
@@ -72,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         await carregarPedidosOnline();
 
         toggleDisplay(loadingElement, false);
-        toggleDisplay(contentElement, true);
+        toggleDisplay(contentElement, true); // Agora vai aplicar 'display: flex'
     }
     
     function configurarEventListeners() {
@@ -135,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             listElement.innerHTML = '';
             
             if (colunas[status].length === 0) {
-                 listElement.innerHTML = `<p style="text-align: center; color: var(--text-light); font-style: italic; margin-top: 1rem;">Nenhum pedido</p>`;
+                 listElement.innerHTML = `<p style="text-align: center; color: white; font-style: italic; margin-top: 1rem; opacity: 0.8;">Nenhum pedido</p>`;
             } else {
                 colunas[status].forEach(pedido => {
                     const card = criarCardPedido(pedido);
@@ -161,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             <div class="pedido-info">
                 <p>👤 ${pedido.nome_cliente}</p>
                 <p><i class="fas fa-clock"></i> ${hora}</p>
-                <p class="valor">R$ ${pedido.total.toFixed(2).replace('.', ',')}</p>
+                <p class="valor">${formatarMoeda(pedido.total)}</p>
             </div>
             <div class="pedido-items">
                 ${pedido.observacoes.replace('Itens: ', '')}
