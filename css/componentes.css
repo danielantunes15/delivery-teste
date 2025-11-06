@@ -392,3 +392,175 @@ table tr:hover {
     color: var(--text-light, #666);
     text-align: center;
 }
+
+/* =================================================== */
+/* --- CORREÇÃO: Padronização de Botões do Site --- */
+/* =================================================== */
+
+/* 1. Correção das Abas (Ex: Abertura de Caixa) */
+/* Adiciona .tab-button ao seletor .tab-btn existente */
+.tabs .tab-btn,
+.tabs-header .tab-button {
+    background: none;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    border-radius: 6px 6px 0 0;
+}
+
+.tabs .tab-btn:hover,
+.tabs-header .tab-button:hover {
+    color: var(--primary-dark);
+    background: #f8f9fa;
+}
+
+.tabs .tab-btn.active,
+.tabs-header .tab-button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 700;
+}
+
+
+/* 2. Estilo para Botões de Tabela (Ex: Editar, Excluir, Desativar) */
+/* Estes botões (btn-edit, btn-danger) já têm cores, 
+  mas faltam os estilos base de .btn e .btn-sm 
+*/
+.btn-edit,
+.btn-danger,
+.btn-success,
+.btn-warning,
+.btn-toggle,
+.btn-detalhes,
+.btn-acao,
+.btn-acao-icon {
+    /* Aplicando estilos do .btn e .btn-sm */
+    padding: 0.5rem 0.8rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    justify-content: center;
+    margin: 2px; /* Espaçamento */
+}
+
+/* Cores que já estavam definidas, mas reforçadas */
+.btn-edit { background-color: var(--info-color); color: white; }
+.btn-edit:hover { background-color: #138496; transform: translateY(-1px); }
+
+.btn-danger { background: linear-gradient(135deg, var(--error-color), #d32f2f); color: white; }
+.btn-danger:hover { background: #d32f2f; transform: translateY(-1px); }
+
+.btn-success { background: linear-gradient(135deg, var(--success-color), #388e3c); color: white; }
+.btn-success:hover { background: #388e3c; transform: translateY(-1px); }
+
+.btn-warning { background-color: var(--warning-color); color: white; }
+.btn-warning:hover { background-color: #f57c00; transform: translateY(-1px); }
+
+.btn-toggle { background-color: #6c757d; color: white; }
+.btn-toggle:hover { background-color: #5a6268; transform: translateY(-1px); }
+
+.btn-detalhes { background-color: var(--secondary-color); color: white; }
+.btn-detalhes:hover { background-color: #6f42c1; transform: translateY(-1px); }
+
+/* Botões da tabela de Encomendas */
+.btn-acao { background-color: #6c757d; color: white; }
+.btn-acao:hover { background-color: #5a6268; transform: translateY(-1px); }
+.btn-acao.pago { background-color: var(--success-color); }
+.btn-acao.concluido { background-color: var(--info-color); }
+.btn-acao.editar { background-color: var(--warning-color); color: #333; }
+.btn-acao.excluir { background-color: var(--error-color); }
+.btn-acao.imprimir { background-color: var(--primary-dark); }
+.btn-acao:disabled { background-color: #ccc; opacity: 0.6; cursor: not-allowed; }
+
+/* Botões da tabela de Contas a Pagar (ícones) */
+.btn-acao-icon {
+    padding: 0.5rem;
+    width: 32px;
+    height: 32px;
+}
+.btn-edit-icon { background-color: var(--info-color); }
+.btn-pago-icon { background-color: var(--success-color); }
+.btn-danger-icon { background-color: var(--error-color); }
+
+
+/* 3. Estilo para Botões de Vendas (Ex: Adicionar ao Carrinho) */
+.produto-info .btn-adicionar {
+    /* Aplicando estilos de .btn e .btn-primary */
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+}
+.produto-info .btn-adicionar:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+.produto-info .btn-adicionar:disabled {
+    background: #ccc;
+    color: #777;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 4. Estilo para botões +/- do carrinho (index.html) */
+.carrinho-item-controles .btn-remover,
+.carrinho-item-controles .btn-adicionar-carrinho {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.carrinho-item-controles .btn-remover {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+.carrinho-item-controles .btn-remover:hover {
+    background-color: #f7a0af;
+}
+.carrinho-item-controles .btn-adicionar-carrinho:hover {
+    background-color: var(--primary-dark);
+}
+
+/* 5. Estilo para remover pagamento (index.html) */
+.btn-remover-pagamento {
+    background: none;
+    border: none;
+    color: var(--error-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+.btn-remover-pagamento:hover {
+    color: #d32f2f;
+}
