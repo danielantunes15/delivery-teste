@@ -117,34 +117,123 @@
     font-weight: 600;
     color: var(--text-color);
 }
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
+
+/* =================================================== */
+/* === INÍCIO DA CORREÇÃO DE SINTAXE CSS === */
+/* =================================================== */
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+input[type="tel"],
+input[type="file"], /* Era input[type."file"] */
+select,
+textarea {
+    /* Estilos do seu .form-group, mas aplicados a todos */
     padding: 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     font-size: 1rem;
     transition: var(--transition);
+    background-color: #fff; /* Fundo branco */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Garante a fonte */
+    color: var(--text-color);
+    height: 48px; /* Altura padrão para alinhar tudo */
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+/* =================================================== */
+/* === FIM DA CORREÇÃO DE SINTAXE CSS === */
+/* =================================================== */
+
+
+/* 2. Mantém o width: 100% para itens dentro de .form-group */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%; /* Esta regra AGORA só aplica o width */
+}
+
+/* 3. Estilo de Foco (para TODOS) */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="tel"]:focus, /* Linha com erro removida */
+input[type="file"]:focus,
+select:focus,
+textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--primary-light);
 }
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+
+/* 4. Estilo Específico para <select> (Remove flecha feia) */
+select {
+    /* SVG de flecha (cor rosa) */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%23ff69b4"><path fill-rule="evenodd" d="M8 10.646l-4.323-4.323a.75.75 0 111.06-1.061L8 8.525l3.262-3.262a.75.75 0 111.061 1.06L8 10.646z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.2em;
+    padding-right: 2.5rem; /* Espaço para a flecha */
+}
+
+/* 5. Estilo Específico para <input type="date"> */
+input[type="date"] {
+    position: relative;
+    padding-right: 0.5rem;
+}
+
+/* Tenta esconder o ícone padrão do calendário e substitui (funciona no Chrome) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%23ff69b4"><path fill-rule="evenodd" d="M4.75 0a.75.75 0 00-1.5 0V.75H2A.75.75 0 001.25 1.5V3h13.5V1.5A.75.75 0 0014 .75h-1.25V0a.75.75 0 00-1.5 0V.75H4.75V0zM1.25 4.5V14c0 .414.336.75.75.75h12a.75.75 0 00.75-.75V4.5H1.25z"/></svg>');
+    background-size: 1.2em;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    width: 1.5rem;
+}
+
+/* 6. Correção de Layouts Específicos (para não quebrar) */
+
+/* Caixa de Fechamento (Data) */
+.data-selecao {
+    align-items: center;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
+.data-selecao label {
+    font-weight: 600;
+}
+/* Impede o input date de ficar 100% */
+.data-selecao input[type="date"] {
+    width: auto; 
+}
+
+/* Desconto / Acréscimo (Selects e Inputs) */
+.ajuste-group {
+    margin-bottom: 0.5rem;
+}
+.input-group-ajuste {
+    display: flex;
+}
+.input-group-ajuste select {
+    width: 100px;
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.input-group-ajuste input {
+    flex-grow: 1;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Dados do Cliente (Select) */
+.cliente-container select {
+    width: 100%; /* Aqui queremos 100% */
 }
 
 /* 4. Tabelas (Unificadas) */
@@ -567,123 +656,6 @@ table tr:hover {
 }
 .btn-remover-pagamento:hover {
     color: #d32f2f;
-}
-
-/* =================================================== */
-/* --- CORREÇÃO: Inputs e Selects Modernos --- */
-/* =================================================== */
-
-/* 1. Estilo Base para TODOS os inputs e selects */
-/* Isso aplica a aparência moderna que você deseja */
-input[type="text"],
-input[type="number"],
-input[type="password"],
-input[type="date"],
-input[type="tel"],
-input[type."file"],
-select,
-textarea {
-    /* Estilos do seu .form-group, mas aplicados a todos */
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    font-size: 1rem;
-    transition: var(--transition);
-    background-color: #fff; /* Fundo branco */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Garante a fonte */
-    color: var(--text-color);
-    height: 48px; /* Altura padrão para alinhar tudo */
-    box-sizing: border-box; /* Garante que o padding não quebre o layout */
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-}
-
-/* 2. Mantém o width: 100% para itens dentro de .form-group */
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%; /* Esta regra AGORA só aplica o width */
-}
-
-/* 3. Estilo de Foco (para TODOS) */
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="password"]:focus,
-input[type="date"]:focus,
-input[type="tel"]:custom-file-transparent,
-input[type="file"]:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-light);
-}
-
-/* 4. Estilo Específico para <select> (Remove flecha feia) */
-select {
-    /* SVG de flecha (cor rosa) */
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%23ff69b4"><path fill-rule="evenodd" d="M8 10.646l-4.323-4.323a.75.75 0 111.06-1.061L8 8.525l3.262-3.262a.75.75 0 111.061 1.06L8 10.646z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 1.2em;
-    padding-right: 2.5rem; /* Espaço para a flecha */
-}
-
-/* 5. Estilo Específico para <input type="date"> */
-input[type="date"] {
-    position: relative;
-    padding-right: 0.5rem;
-}
-
-/* Tenta esconder o ícone padrão do calendário e substitui (funciona no Chrome) */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="%23ff69b4"><path fill-rule="evenodd" d="M4.75 0a.75.75 0 00-1.5 0V.75H2A.75.75 0 001.25 1.5V3h13.5V1.5A.75.75 0 0014 .75h-1.25V0a.75.75 0 00-1.5 0V.75H4.75V0zM1.25 4.5V14c0 .414.336.75.75.75h12a.75.75 0 00.75-.75V4.5H1.25z"/></svg>');
-    background-size: 1.2em;
-    background-position: center;
-    background-repeat: no-repeat;
-    cursor: pointer;
-    width: 1.5rem;
-}
-
-/* 6. Correção de Layouts Específicos (para não quebrar) */
-
-/* Caixa de Fechamento (Data) */
-.data-selecao {
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-.data-selecao label {
-    font-weight: 600;
-}
-/* Impede o input date de ficar 100% */
-.data-selecao input[type="date"] {
-    width: auto; 
-}
-
-/* Desconto / Acréscimo (Selects e Inputs) */
-.ajuste-group {
-    margin-bottom: 0.5rem;
-}
-.input-group-ajuste {
-    display: flex;
-}
-.input-group-ajuste select {
-    width: 100px;
-    border-right: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-.input-group-ajuste input {
-    flex-grow: 1;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-}
-
-/* Dados do Cliente (Select) */
-.cliente-container select {
-    width: 100%; /* Aqui queremos 100% */
 }
 
 /* =================================================== */
