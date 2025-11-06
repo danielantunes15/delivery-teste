@@ -727,3 +727,124 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     box-shadow: none;
     opacity: 0.7;
 }
+
+/* ============================================== */
+/* --- ESTILOS KANBAN DELIVERY (SOBRESCRITA) --- */
+/* ============================================== */
+
+/* 1. Força o layout de 3 colunas (sobrescreve layout.css) */
+.delivery-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr !important; /* Força 3 colunas */
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* 2. Estiliza as colunas com as cores */
+.delivery-column {
+    background-color: #f0f0f0; /* Cor de fundo padrão */
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    min-height: 70vh; /* Altura mínima maior */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: none;
+    border: none;
+}
+
+/* Cores de fundo das colunas (como na imagem) */
+#col-novo {
+    background-color: #f39c12; /* Laranja */
+}
+#col-preparando {
+    background-color: #e67e22; /* Laranja Escuro */
+}
+#col-pronto {
+    background-color: #27ae60; /* Verde */
+}
+
+/* 3. Títulos das colunas */
+.delivery-column h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Linha branca */
+    margin-bottom: 0; /* Removido margin */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white; /* Texto do título branco */
+}
+
+.delivery-column .card-list {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Texto "Nenhum pedido" */
+.delivery-column .card-list p {
+     color: white; /* Texto branco */
+     opacity: 0.8;
+     font-style: italic;
+     margin-top: 1rem;
+     text-align: center;
+}
+
+/* 4. Cards de Pedido (como na imagem) */
+.pedido-card {
+    background-color: white;
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    border-left: none; /* Remove a borda colorida que eu tinha posto */
+    transition: var(--transition);
+}
+
+.pedido-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #333; /* Cor escura para o texto do card */
+}
+
+/* Badge de Status (removido, a imagem não tem) */
+.status-badge {
+    display: none;
+}
+/* Re-exibe o badge APENAS no cabeçalho do card */
+.pedido-header .status-badge {
+    display: inline-flex;
+}
+
+
+.pedido-info p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin: 2px 0;
+}
+.pedido-info .valor {
+    font-size: 1.1rem; /* Maior */
+    font-weight: bold;
+    color: var(--text-color); /* Cor escura */
+    margin-top: 8px;
+    display: block;
+}
+.pedido-items {
+    font-size: 0.85rem;
+    color: #333;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-color);
+    white-space: pre-wrap;
+}

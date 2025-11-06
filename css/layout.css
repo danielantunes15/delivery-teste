@@ -191,24 +191,20 @@ footer {
 /* --- Layout: Delivery (delivery.html) --- */
 .delivery-board {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    /* FORÇADO PARA 3 COLUNAS - IGNORA RESPONSIVIDADE */
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 1.5rem;
     margin-top: 1.5rem;
 }
 .delivery-column {
     background-color: var(--bg-light);
     border-radius: var(--radius);
     padding: 1rem;
-    box-shadow: var(--shadow);
-    min-height: 500px;
-}
-.pedido-card {
-    background-color: white;
-    border-radius: var(--radius-sm);
-    padding: 1rem;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    border-left: 5px solid transparent;
+    box-shadow: none; /* Sombra removida da coluna */
+    border: 1px solid var(--border-color);
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* --- Layout: Caixa (caixa-fechamento.html) --- */
