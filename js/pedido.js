@@ -1095,14 +1095,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             return mostrarMensagem('Preencha a Rua, Número, Bairro e CEP.', 'error');
         }
 
-        // ================================================================
-        // === INÍCIO DA ALTERAÇÃO (Remoção da validação de CEP) ===
-        // ================================================================
-        // A linha abaixo foi REMOVIDA
-        // if (!validarAreaEntrega(cep)) { ... }
-        // ================================================================
-        // === FIM DA ALTERAÇÃO ===
-        // ================================================================
+        // Validação de CEP removida daqui
 
         // Busca cidade/estado pelo CEP para endereço completo
         const cepLimpo = cep.replace(/\D/g, '');
@@ -1148,6 +1141,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         try {
             // 1. Criar o pedido_online (para o painel de delivery)
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Erro 400 ao finalizar pedido) ===
+            // ================================================================
+            // A coluna 'itens_pedido' foi removida, pois ela não existe no seu banco.
             const { data: novoPedido, error } = await supabase.from('pedidos_online').insert({
                 nome_cliente: dados.nome,
                 telefone_cliente: dados.telefone,
@@ -1155,9 +1152,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 forma_pagamento: dados.formaPagamento,
                 total: dados.total,
                 status: 'novo',
-                observacoes: dados.observacoes, // Já contém os itens e observações
-                itens_pedido: dados.itens // Salva os itens estruturados (se a coluna existir)
+                observacoes: dados.observacoes // Já contém os itens e observações
             }).select().single();
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
 
             if (error) throw error;
             
