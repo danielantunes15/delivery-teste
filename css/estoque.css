@@ -1,224 +1,6 @@
-/* === PARTE 1: SEU STYLE.CSS ORIGINAL (MODIFICADO) === */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* === PARTE 1: REMOVIDA (Estava em conflito com style.css) === */
 
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-/* Estilos do Header (do estoque.html E CORRIGIDO P/ ROSA) */
-.header {
-    background-color: #fff0f5; /* <-- CORRIGIDO P/ ROSA */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    padding: 10px 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.logo {
-    color: #ff69b4;
-    font-size: 24px;
-    font-weight: bold;
-    text-decoration: none;
-}
-.menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #333;
-}
-.nav {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.nav-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #555;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    transition: background-color 0.3s, color 0.3s;
-}
-.nav-link i {
-    font-size: 18px;
-    margin-bottom: 3px;
-}
-.nav-link:hover, .nav-link.active {
-    background-color: #fff0f5;
-    color: #ff69b4;
-}
-.btn-logout {
-    background: #f44336;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 8px 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-}
-.btn-logout i { margin-right: 5px; }
-
-
-/* Main (do estoque.html) */
-.main {
-    padding-top: 20px;
-}
-.card {
-    background: white;
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #ff69b4;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Botões (Estilo unificado do estoque.css) */
-.btn-primary {
-    background-color: #ff69b4;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-.btn-primary:hover {
-    background-color: #db7093;
-}
-
-.btn-secondary {
-    background-color: #95a5a6;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-.btn-secondary:hover {
-    background-color: #7f8c8d;
-}
-
-.btn-danger {
-    background-color: #f44336;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    margin: 2px;
-    transition: all 0.3s;
-}
-.btn-danger:hover {
-    background-color: #d32f2f;
-    transform: translateY(-2px);
-}
-
-/* Formulários (Estilo base DO SEU ORIGINAL) */
-.form-group {
-    margin-bottom: 20px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #2c3e50;
-}
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group input[type="file"],
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-}
-.form-group textarea {
-    resize: vertical;
-}
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-.form-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 20px;
-}
-
-/* Preview da Imagem (do seu style.css original) */
-.preview-container {
-    margin-top: 10px;
-    text-align: center;
-}
-.preview-container img {
-    max-width: 200px;
-    max-height: 200px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    display: none; /* Escondido por padrão, JS mostra */
-}
-
-/* Status (do seu style.css original) */
-.status-disponivel {
-    color: #27ae60;
-    font-weight: bold;
-}
-.status-indisponivel {
-    color: #e74c3c;
-    font-weight: bold;
-}
-.loading {
-    text-align: center;
-    padding: 20px;
-    color: #7f8c8d;
-}
-
-
-/* === PARTE 2: CONTEÚDO DO 'estoque.css' === */
+/* === PARTE 2: CONTEÚDO DO 'estoque.css' (CORRETO) === */
 .tabs {
     display: flex;
     margin-bottom: 2rem;
@@ -428,6 +210,23 @@ tr:hover {
     background-color: #218838;
     transform: translateY(-2px);
 }
+/* Botão de Perigo (já estava no seu style.css, mas garantindo aqui) */
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin: 2px;
+    transition: all 0.3s;
+}
+.btn-danger:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
 
 /* Modal (Estilo do estoque.css) */
 .modal {
@@ -511,44 +310,15 @@ tr:hover {
 
 /* === NAVEGAÇÃO: Otimização do Menu Mobile (767px e abaixo) === */
 @media (max-width: 767px) {
-    .header-content {
-        flex-direction: row;
-        flex-wrap: wrap; 
-        align-items: center;
-    }
-    
+    /* Estas regras já estão no seu responsive.css, mas garantindo */
     .menu-toggle {
         display: block;
-        order: 1;
     }
-
-    .logo {
-        order: 0;
-    }
-    
     .nav {
-        width: 100%; 
-        flex-direction: column;
-        align-items: stretch;
-        margin-top: 1rem;
-        display: none; /* Escondido por padrão */
+        display: none;
     }
-    
     .nav.show {
-        display: flex; /* Exibido quando a classe show está ativa */
-    }
-    
-    /* CORREÇÃO DO MENU CENTRALIZADO */
-    .nav-link, .btn-logout {
-        width: 100%;
-        justify-content: center;
-        margin: 0;
-        flex-direction: row; /* Para ícone e texto ficarem lado a lado */
-        gap: 15px;
-        padding: 15px;
-    }
-    .nav-link i {
-        margin-bottom: 0; /* Remove margem do ícone */
+        display: flex;
     }
 }
 
