@@ -504,7 +504,7 @@ table tr:hover {
 
 /* 3. Estilo para Botões de Vendas (Ex: Adicionar ao Carrinho) */
 .produto-info .btn-adicionar {
-    /* Aplicando estilos do .btn e .btn-primary */
+    /* Aplicando estilos de .btn e .btn-primary */
     width: 100%;
     margin-top: 0.5rem;
     padding: 0.75rem 1rem;
@@ -729,14 +729,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* ============================================== */
-/* --- ESTILOS KANBAN DELIVERY (CORES E CARDS) --- */
+/* --- ESTILOS KANBAN DELIVERY (VERSÃO FINAL) --- */
 /* ============================================== */
 
-/* 1. Layout do Board (REMOVIDO - AGORA ESTÁ NO delivery.js E HTML) */
+/* 1. O Board (O Painel Principal) */
+/* Estas regras serão aplicadas quando o JS adicionar display: flex */
+.delivery-board {
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 1.5rem;
+    padding: 0 1.5rem 1.5rem 1.5rem; /* Espaçamento nas laterais e embaixo */
+    box-sizing: border-box; /* Garante que o padding não quebre a largura */
+}
 
-/* 2. Estiliza as colunas com as cores */
+/* 2. As Colunas */
 .delivery-column {
-    /* Estilos de layout (flex: 1) estão inline no HTML */
+    flex: 1; /* Faz as 3 colunas dividirem o espaço igualmente */
+    min-width: 0; /* Impede que as colunas encolham demais */
     border-radius: var(--radius-sm);
     padding: 1rem;
     min-height: 70vh;

@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (!element) return;
         // O painel principal (#delivery-board) usa 'flex', não 'block'
         if (element.id === 'delivery-board') {
+            // AQUI ESTÁ A MUDANÇA: 'flex' no lugar de 'block'
             element.style.display = show ? 'flex' : 'none';
         } else {
             // Mantém o comportamento padrão para outros elementos
