@@ -524,9 +524,27 @@ document.addEventListener('DOMContentLoaded', async function() {
         produtosParaExibir.forEach(produto => {
             const produtoCard = document.createElement('div');
             produtoCard.className = `produto-card ${produto.estoque_atual <= 0 ? 'out-of-stock' : ''}`;
+            
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Onde a mágica acontece) ===
+            // ================================================================
+            
+            // Lógica para decidir se usa <img> (Base64) ou <i> (Ícone)
+            let imagemHtml = '';
+            if (produto.icone && (produto.icone.startsWith('data:image') || produto.icone.startsWith('http'))) {
+                // É uma imagem Base64 ou URL
+                imagemHtml = `<img src="${produto.icone}" alt="${produto.nome}" class="produto-imagem-real">`;
+            } else if (produto.icone) {
+                // É um ícone Font Awesome
+                imagemHtml = `<i class="fas ${produto.icone}"></i>`;
+            } else {
+                // Padrão (Cubo)
+                imagemHtml = `<i class="fas fa-cube"></i>`;
+            }
+
             produtoCard.innerHTML = `
                 <div class="produto-imagem">
-                    <i class="fas ${produto.icone || 'fa-cube'}"></i>
+                    ${imagemHtml}
                     ${produto.estoque_atual <= 0 ? '<div class="out-of-stock-badge">ESGOTADO</div>' : ''}
                     ${produto.estoque_atual > 0 && produto.estoque_atual <= produto.estoque_minimo ? '<div class="low-stock-badge">ESTOQUE BAIXO</div>' : ''}
                 </div>
@@ -540,6 +558,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                     </button>
                 </div>
             `;
+            
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
+            
             if (produto.estoque_atual > 0) {
                 produtoCard.addEventListener('click', (e) => {
                     if (!e.target.classList.contains('btn-adicionar')) {

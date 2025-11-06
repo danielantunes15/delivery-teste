@@ -620,3 +620,20 @@ footer {
     }
 }
 /* --- FIM: CORREÇÃO E NOVOS ESTILOS PARA DESCONTO/ACRÉSCIMO --- */
+
+/* ================================================================ */
+/* === INÍCIO DA CORREÇÃO (Adicionar ao final do arquivo) === */
+/* ================================================================ */
+
+/* Adicionado para corrigir a exibição da imagem Base64 na venda */
+.produto-imagem img.produto-imagem-real {
+    width: 100%;
+    height: 180px; /* Mesma altura do container .produto-imagem */
+    object-fit: cover; /* Garante que a imagem cubra o espaço */
+}
+
+/* Ajuste para o ícone, caso a imagem não exista */
+.produto-imagem i {
+    font-size: 4rem; /* Tamanho grande para o ícone de fallback */
+    color: rgba(255, 255, 255, 0.8);
+}

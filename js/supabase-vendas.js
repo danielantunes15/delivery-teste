@@ -43,11 +43,17 @@ class VendasSupabase {
     // Buscar produtos
     async buscarProdutos() {
         try {
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (O select foi trocado por *) ===
+            // ================================================================
             const { data, error } = await this.supabase
                 .from('produtos')
-                .select('*, categoria:categorias(nome)')
+                .select(`*`) // Seleciona todas as colunas
                 .eq('ativo', true)
                 .order('nome');
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
                 
             if (error) throw error;
             console.log(`✅ ${data?.length || 0} produtos carregados`);
