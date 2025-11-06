@@ -1,6 +1,6 @@
 class ProdutoManager {
     constructor() {
-        this.produtos = [];
+        this.produtos = []; // Cache de todos os produtos
         this.categorias = [];
         this.init();
     }
@@ -8,11 +8,11 @@ class ProdutoManager {
     async init() {
         this.bindEvents();
         await this.carregarCategorias();
-        await this.carregarProdutos();
+        await this.carregarProdutos(); // Carrega produtos e renderiza
     }
 
     bindEvents() {
-        // Modal events
+        // Eventos do Modal (Lógica original mantida)
         const modal = document.getElementById('modalProduto');
         const btnNovo = document.getElementById('btnNovoProduto');
         const btnCancelar = document.getElementById('btnCancelar');
@@ -27,18 +27,63 @@ class ProdutoManager {
         form.addEventListener('submit', (e) => this.salvarProduto(e));
         fileInput.addEventListener('change', (e) => this.previewImage(e));
 
-        // Fechar modal ao clicar fora
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 this.fecharModal();
             }
         });
+
+        // --- NOVOS EVENTOS ---
+        // Lógica das Abas
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Botões
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Conteúdo
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
+                    content.classList.remove('active');
+                });
+                
+                const activeContent = document.getElementById(tabId);
+                activeContent.style.display = 'block';
+                activeContent.classList.add('active');
+            });
+        });
+
+        // Lógica dos Filtros
+        document.getElementById('filtro-categoria').addEventListener('change', () => this.aplicarFiltros());
+        document.getElementById('filtro-status').addEventListener('change', () => this.aplicarFiltros());
+        
+        // Lógica do Menu Mobile
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+        if (menuToggle && mainNav) {
+            menuToggle.addEventListener('click', function() {
+                mainNav.classList.toggle('show');
+            });
+        }
     }
 
     async carregarCategorias() {
         try {
             this.categorias = await produtoService.getCategorias();
             console.log('Categorias carregadas:', this.categorias);
+            
+            // Popular select do modal
+            this.popularSelectCategorias(document.getElementById('categoria'));
+            
+            // Popular select do filtro
+            this.popularSelectCategorias(document.getElementById('filtro-categoria'), true);
+
+            // Popular tabela de categorias (Nova funcionalidade)
+            this.renderizarCategorias();
+
         } catch (error) {
             console.error('Erro ao carregar categorias:', error);
             alert('Erro ao carregar categorias: ' + error.message);
@@ -48,9 +93,11 @@ class ProdutoManager {
     async carregarProdutos() {
         try {
             this.mostrarLoading();
-            this.produtos = await produtoService.getProdutos();
+            // Busca todos os produtos do serviço
+            this.produtos = await produtoService.getProdutos(); 
             console.log('Produtos carregados:', this.produtos);
-            this.renderizarProdutos();
+            // Renderiza com base nos filtros atuais
+            this.aplicarFiltros(); 
         } catch (error) {
             console.error('Erro ao carregar produtos:', error);
             alert('Erro ao carregar produtos: ' + error.message);
@@ -58,51 +105,113 @@ class ProdutoManager {
     }
 
     mostrarLoading() {
-        const container = document.getElementById('listaProdutos');
-        container.innerHTML = '<div class="loading">Carregando produtos...</div>';
+        // ATUALIZADO: Renderiza o loading na tabela
+        const container = document.getElementById('produtos-body');
+        if (container) {
+            container.innerHTML = '<tr><td colspan="6" class="loading">Carregando produtos...</td></tr>';
+        }
     }
 
-    renderizarProdutos() {
-        const container = document.getElementById('listaProdutos');
+    // --- FUNÇÃO RENDERIZAR PRODUTOS ATUALIZADA ---
+    renderizarProdutos(produtosParaRenderizar) {
+        // ATUALIZADO: Renderiza os produtos na <tbody> da tabela
+        const container = document.getElementById('produtos-body');
         
-        console.log('Produtos para renderizar:', this.produtos);
+        console.log('Produtos para renderizar:', produtosParaRenderizar);
 
-        if (this.produtos.length === 0) {
-            container.innerHTML = '<div class="loading">Nenhum produto cadastrado.</div>';
+        if (produtosParaRenderizar.length === 0) {
+            container.innerHTML = '<tr><td colspan="6" class="loading">Nenhum produto encontrado.</td></tr>';
             return;
         }
 
-        container.innerHTML = this.produtos.map(produto => `
-            <div class="produto-card">
-                ${produto.icone ? ` 
-                    <img src="${produto.icone}" alt="${produto.nome}" class="produto-imagem">
-                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Imagem: Base64</div>
-                ` : `
-                    <div class="produto-imagem" style="background: #ecf0f1; display: flex; align-items: center; justify-content: center; color: #7f8c8d;">
-                        Sem imagem
-                    </div>
-                `}
-                
-                <div class="produto-nome">${produto.nome}</div>
-                <div class="produto-descricao">${produto.descricao || 'Sem descrição'}</div>
-                <div class="produto-preco">R$ ${parseFloat(produto.preco_venda).toFixed(2)}</div>
-                <div class="produto-categoria">
-                    ${produto.nome_categoria || 'Sem Categoria'}
-                </div>
-                <div class="produto-status ${produto.ativo ? 'status-disponivel' : 'status-indisponivel'}">
-                    ${produto.ativo ? '✅ Disponível' : '❌ Indisponível'}
-                </div>
-                <div class="produto-acoes">
-                    <button class="btn-primary" onclick="produtoManager.editarProduto('${produto.id}')">
-                        Editar
+        container.innerHTML = produtosParaRenderizar.map(produto => `
+            <tr>
+                <td>
+                    ${produto.icone ? ` 
+                        <img src="${produto.icone}" alt="${produto.nome}" class="produto-imagem">
+                    ` : `
+                        <div class="produto-imagem-placeholder">
+                            Sem imagem
+                        </div>
+                    `}
+                </td>
+                <td>${produto.nome}</td>
+                <td>${produto.nome_categoria || 'Sem Categoria'}</td>
+                <td>R$ ${parseFloat(produto.preco_venda).toFixed(2)}</td>
+                <td>
+                    <span class="status-badge ${produto.ativo ? 'active' : 'inactive'}">
+                        ${produto.ativo ? 'Disponível' : 'Indisponível'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-edit" onclick="produtoManager.editarProduto('${produto.id}')">
+                        <i class="fas fa-edit"></i> Editar
                     </button>
                     <button class="btn-danger" onclick="produtoManager.excluirProduto('${produto.id}')">
-                        Excluir
+                        <i class="fas fa-trash"></i> Excluir
                     </button>
-                </div>
-            </div>
+                </td>
+            </tr>
         `).join('');
     }
+    
+    // --- NOVA FUNÇÃO DE FILTRO ---
+    aplicarFiltros() {
+        const categoriaFiltro = document.getElementById('filtro-categoria').value;
+        const statusFiltro = document.getElementById('filtro-status').value;
+        
+        let produtosFiltrados = this.produtos;
+
+        // Filtra por Categoria
+        if (categoriaFiltro !== 'all') {
+            produtosFiltrados = produtosFiltrados.filter(p => p.categoria_id === categoriaFiltro);
+        }
+
+        // Filtra por Status
+        if (statusFiltro !== 'all') {
+            const statusBool = statusFiltro === 'true';
+            produtosFiltrados = produtosFiltrados.filter(p => p.ativo === statusBool);
+        }
+
+        // Re-renderiza a tabela apenas com os produtos filtrados
+        this.renderizarProdutos(produtosFiltrados);
+    }
+
+    // --- NOVA FUNÇÃO PARA RENDERIZAR CATEGORIAS ---
+    renderizarCategorias() {
+        const container = document.getElementById('categorias-body');
+        if (!container) return;
+        
+        if (this.categorias.length === 0) {
+            container.innerHTML = '<tr><td colspan="4" class="loading">Nenhuma categoria cadastrada.</td></tr>';
+            return;
+        }
+        
+        container.innerHTML = this.categorias.map(categoria => {
+            // Contar quantos produtos existem nessa categoria
+            const qtdProdutos = this.produtos.filter(p => p.categoria_id === categoria.id).length;
+            
+            return `
+                <tr>
+                    <td>${categoria.nome}</td>
+                    <td>${qtdProdutos}</td>
+                    <td>
+                        <span class="status-badge active">Ativa</span>
+                    </td>
+                    <td>
+                        <button class="btn-edit" onclick="alert('Função de editar categoria em breve!')">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn-danger" onclick="alert('Função de excluir categoria em breve!')">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // --- LÓGICA DO MODAL (ORIGINAL MANTIDA) ---
 
     abrirModal(produto = null) {
         const modal = document.getElementById('modalProduto');
@@ -113,8 +222,8 @@ class ProdutoManager {
         document.getElementById('previewImage').style.display = 'none';
         document.getElementById('foto').value = '';
         
-        // Popular o select de categorias
-        this.popularSelectCategorias();
+        // Popular o select de categorias (agora usa uma função)
+        this.popularSelectCategorias(document.getElementById('categoria'));
         
         if (produto) {
             titulo.textContent = 'Editar Produto';
@@ -127,15 +236,20 @@ class ProdutoManager {
         modal.style.display = 'block';
     }
 
-    popularSelectCategorias() {
-        const selectCategoria = document.getElementById('categoria');
-        selectCategoria.innerHTML = '<option value="">Selecione uma categoria</option>';
+    popularSelectCategorias(selectElement, comOpcaoTodas = false) {
+        selectElement.innerHTML = ''; // Limpa opções
+        
+        if (comOpcaoTodas) {
+             selectElement.innerHTML = '<option value="all">Todas as categorias</option>';
+        } else {
+             selectElement.innerHTML = '<option value="">Selecione uma categoria</option>';
+        }
         
         this.categorias.forEach(categoria => {
             const option = document.createElement('option');
             option.value = categoria.id;
             option.textContent = categoria.nome;
-            selectCategoria.appendChild(option);
+            selectElement.appendChild(option);
         });
     }
 
@@ -145,7 +259,6 @@ class ProdutoManager {
         document.getElementById('descricao').value = produto.descricao || '';
         document.getElementById('preco').value = produto.preco_venda;
         
-        // Selecionar a categoria correta no select
         const selectCategoria = document.getElementById('categoria');
         selectCategoria.value = produto.categoria_id;
         
@@ -176,7 +289,6 @@ class ProdutoManager {
             ativo: document.getElementById('disponivel').value === 'true'
         };
 
-        // Validar categoria
         if (!produto.categoria_id) {
             alert('Por favor, selecione uma categoria.');
             return;
@@ -185,7 +297,7 @@ class ProdutoManager {
         try {
             let produtoSalvo;
 
-            // Upload da imagem se foi selecionada (como Base64)
+            // Lógica de upload de imagem (Original mantida)
             if (fileInput.files[0]) {
                 try {
                     console.log('Processando imagem...');
@@ -205,7 +317,8 @@ class ProdutoManager {
             }
 
             this.fecharModal();
-            await this.carregarProdutos();
+            await this.carregarProdutos(); // Recarrega e re-renderiza a tabela
+            this.renderizarCategorias(); // Atualiza a contagem de produtos nas categorias
             alert('Produto salvo com sucesso!');
 
         } catch (error) {
@@ -216,6 +329,7 @@ class ProdutoManager {
 
     async editarProduto(id) {
         try {
+            // Reutiliza o mesmo modal para edição (Lógica original)
             const produto = await produtoService.getProdutoById(id);
             this.abrirModal(produto);
         } catch (error) {
@@ -231,7 +345,8 @@ class ProdutoManager {
 
         try {
             await produtoService.deleteProduto(id);
-            await this.carregarProdutos();
+            await this.carregarProdutos(); // Recarrega e re-renderiza a tabela
+            this.renderizarCategorias(); // Atualiza a contagem de produtos nas categorias
             alert('Produto excluído com sucesso!');
         } catch (error) {
             console.error('Erro ao excluir produto:', error);
@@ -256,7 +371,7 @@ class ProdutoManager {
     }
 }
 
-// Inicializar o gerenciador de produtos quando a página carregar
+// Inicializar o gerenciador de produtos
 let produtoManager;
 document.addEventListener('DOMContentLoaded', () => {
     produtoManager = new ProdutoManager();
