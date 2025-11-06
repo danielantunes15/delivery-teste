@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', async function() {
     
     // --- CONFIGURAÇÕES E VARIÁVEIS ---
-    const NUMERO_WHATSAPP = '5573991964394'; // SEU NÚMERO DE WHATSAPP AQUI
+    const NUMERO_WHATSAPP = '5533984611926'; // SEU NÚMERO DE WHATSAPP AQUI
     
     // ================================================================
     // === INÍCIO DA ALTERAÇÃO (Remoção da restrição de CEP) ===
