@@ -101,6 +101,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     
     window.alternarView = function(viewId) {
+        // ================================================================
+        // === INÍCIO DA CORREÇÃO (Fluxo de Login) ===
+        // Adiciona "Guardas" para proteger rotas
+        // ================================================================
+        if ((viewId === 'view-inicio' || viewId === 'view-carrinho') && !clienteLogado) {
+            mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
+            viewId = 'auth-screen'; // Redireciona para o login
+        }
+        // ================================================================
+        // === FIM DA CORREÇÃO ===
+        // ================================================================
+        
         document.querySelectorAll('.app-view').forEach(view => {
             if (view) view.classList.remove('active');
         });
@@ -120,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async function() {
              // Sincroniza o menu do novo design (pelo índice, por enquanto)
              if(viewId === 'view-cardapio' && item.querySelector('span').textContent === 'Início') item.classList.add('active');
              else if(viewId === 'view-carrinho' && item.querySelector('span').textContent === 'Carrinho') item.classList.add('active');
-             else if(viewId === 'view-inicio' && item.querySelector('span').textContent === 'Pedidos') item.classList.add('active'); // Mapeando 'Pedidos' para 'Meu Perfil'
+             else if(viewId === 'view-inicio' && item.querySelector('span').textContent === 'Meu Perfil') item.classList.add('active'); // Mapeando 'Pedidos' para 'Meu Perfil'
              else if(viewId === 'view-promocoes' && item.querySelector('span').textContent === 'Promos') item.classList.add('active');
              else item.classList.remove('active');
         });
@@ -374,7 +386,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             const { data: produtosData, error } = await supabase
                 .from('produtos')
-                .select('*, categoria:categorias(nome)')
+                .select('*') // Busca simples sem join
                 .eq('ativo', true) // Apenas produtos ativos
                 .order('nome');
 
@@ -383,6 +395,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             produtos = produtosData || [];
             exibirProdutos(produtos); // Exibe todos por padrão
         } catch (error) {
+            console.error('Erro ao carregar produtos:', error); // Log detalhado
             mostrarMensagem('Erro ao carregar produtos.', 'error');
         }
     }
@@ -411,8 +424,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             data.forEach(produto => {
                 const popularItem = document.createElement('div');
                 popularItem.className = 'popular-item';
+
+                // ================================================================
+                // === INÍCIO DA CORREÇÃO (Imagem dos Mais Pedidos) ===
+                // ================================================================
+                // Usa produto.icone (Base64) ou um placeholder CSS
+                const imgTag = produto.icone
+                    ? `<img src="${produto.icone}" alt="${produto.nome}">`
+                    : `<div class="popular-item-placeholder"><i class="fas fa-cube"></i></div>`;
+                // ================================================================
+                // === FIM DA CORREÇÃO ===
+                // ================================================================
+
                 popularItem.innerHTML = `
-                    <img src="https://via.placeholder.com/140x140?text=${produto.nome.substring(0,10)}" alt="${produto.nome}">
+                    ${imgTag}
                     <h3>${produto.nome}</h3>
                     <p>${formatarMoeda(produto.preco_venda)}</p>
                 `;
@@ -501,7 +526,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         const produtosPorCategoria = {};
         produtosAtivos.forEach(produto => {
             const catId = produto.categoria_id || 'sem-categoria';
-            const catNome = produto.categoria?.nome || 'Outros';
+
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Busca manual da categoria) ===
+            // ================================================================
+            const categoriaObj = categorias.find(c => c.id === produto.categoria_id);
+            const catNome = categoriaObj?.nome || 'Outros';
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
             
             if (!produtosPorCategoria[catId]) {
                 produtosPorCategoria[catId] = {
@@ -532,6 +565,17 @@ document.addEventListener('DOMContentLoaded', async function() {
             let productListHtml = '';
             categoria.produtos.forEach(produto => {
                 const esgotado = produto.estoque_atual <= 0;
+
+                // ================================================================
+                // === INÍCIO DA CORREÇÃO (Imagem da Lista de Produtos) ===
+                // ================================================================
+                // Usa produto.icone (Base64) ou um placeholder CSS
+                const imgTag = produto.icone
+                    ? `<img src="${produto.icone}" alt="${produto.nome}">`
+                    : `<div class="product-image-placeholder"><i class="fas fa-cube"></i></div>`;
+                // ================================================================
+                // === FIM DA CORREÇÃO ===
+                // ================================================================
                 
                 productListHtml += `
                     <div class="product-item ${esgotado ? 'out-of-stock' : ''}">
@@ -541,7 +585,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             <p class="product-price">${formatarMoeda(produto.preco_venda)}</p>
                         </div>
                         <div class="product-image">
-                            <img src="https://via.placeholder.com/90x90?text=${produto.nome.substring(0,3)}" alt="${produto.nome}">
+                            ${imgTag}
                             <button class="add-cart" data-id="${produto.id}" ${esgotado ? 'disabled' : ''}>
                                 ${esgotado ? '<i class="fas fa-times"></i>' : '+'}
                             </button>
@@ -669,10 +713,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function buscarClientePorTelefone(telefone) {
         try {
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Erro 406) ===
+            // ================================================================
+            // Troca .single() por .limit(1).maybeSingle() para evitar erro com duplicados
             const { data, error } = await supabase.from('clientes_delivery')
                 .select('*')
                 .eq('telefone', telefone)
-                .single(); // Espera um único resultado
+                .limit(1) 
+                .maybeSingle(); 
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
             
             if (error && error.code !== 'PGRST116') throw error; // Ignora erro "nenhuma linha"
             
@@ -1108,14 +1160,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
+                
+                // ================================================================
+                // === INÍCIO DA CORREÇÃO (Fluxo de Login - Guarda) ===
+                // ================================================================
+                const viewTarget = item.getAttribute('data-view');
+                if ((viewTarget === 'view-inicio' || viewTarget === 'view-carrinho') && !clienteLogado) {
+                    mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
+                    window.alternarView('auth-screen'); // Redireciona para o login
+                    return; // Interrompe a navegação
+                }
+                // ================================================================
+                // === FIM DA CORREÇÃO ===
+                // ================================================================
+
                 document.querySelectorAll('.bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 
-                const spanText = item.querySelector('span').textContent;
-                if (spanText === 'Início') window.alternarView('view-cardapio');
-                if (spanText === 'Pedidos') window.alternarView('view-inicio'); // Mapeado para Perfil/Histórico
-                if (spanText === 'Promos') window.alternarView('view-promocoes');
-                if (spanText === 'Carrinho') window.alternarView('view-carrinho');
+                window.alternarView(viewTarget);
             });
         });
         
@@ -1162,15 +1224,23 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
             
-            if(clienteEncontrado) {
-                authScreen.classList.remove('active');
-                mobileNav.style.display = 'flex';
-                window.alternarView('view-cardapio');
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Fluxo de Login - Inicialização) ===
+            // ================================================================
+            // O app sempre abre no cardápio
+            authScreen.classList.remove('active');
+            mobileNav.style.display = 'flex';
+            window.alternarView('view-cardapio');
+            
+            if (!clienteEncontrado) {
+                console.log("Nenhum cliente logado, iniciando como convidado.");
+                // Não faz nada, clienteLogado continua null
             } else {
-                // Força o Login se não houver cliente salvo
-                authScreen.classList.add('active');
-                mobileNav.style.display = 'none';
+                 console.log(`Cliente ${clientePerfil.nome} carregado do localStorage.`);
             }
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
             
             // Carrega os dados do cardápio
             await carregarCategorias(); 

@@ -637,3 +637,63 @@ body {
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+/* ============================================== */
+/* === ADIÇÃO: PLACEHOLDERS DE IMAGEM (CSS) === */
+/* ============================================== */
+
+/* Para a lista "Mais Pedidos" (popular-scroll) */
+.popular-item img {
+    width: 140px;
+    height: 140px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.popular-item-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 10px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #ccc;
+}
+
+/* Para a lista principal de produtos (products-list) */
+.product-image img {
+    width: 90px;
+    height: 90px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.product-image-placeholder {
+    width: 90px;
+    height: 90px;
+    border-radius: 8px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #ccc;
+    flex-shrink: 0; /* Impede que o ícone seja esmagado */
+}
+
+/* Ajuste para a imagem (seja real ou placeholder) não ser esmagada */
+.product-image {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Garante que o container da imagem na lista principal tenha o tamanho certo */
+.product-item .product-image {
+    flex-basis: 90px; /* Define o tamanho base */
+    flex-shrink: 0; /* Impede de encolher */
+}
