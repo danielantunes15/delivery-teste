@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confeitaria Doce Criativo - Vendas</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/vendas.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/navegacao.css">
+    <link rel="stylesheet" href="css/componentes.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -79,19 +81,19 @@
                 <div class="container">
                     <div id="alert-container"></div>
         
-                    <section class="categorias">
+                    <section class="categorias card">
                         <h2>Categorias</h2>
                         <div class="categorias-botoes" id="categorias-container">
                         </div>
                     </section>
         
-                    <section class="produtos">
+                    <section class="produtos card">
                         <h2>Produtos</h2>
                         <div class="produtos-grid" id="produtos-container">
                         </div>
                     </section>
         
-                    <section class="carrinho">
+                    <section class="carrinho card">
                         <h2>Seu Pedido</h2>
                         <div class="carrinho-itens" id="carrinho-itens">
                         </div>
@@ -100,7 +102,7 @@
                         </div>
                     </section>
                     
-                    <section class="desconto-acrescimo">
+                    <section class="desconto-acrescimo card">
                         <h2>Desconto / Acréscimo</h2>
                         <div class="form-row-ajuste"> <div class="ajuste-group">
                                 <label for="desconto-input">Desconto</label>
@@ -133,7 +135,7 @@
                         <p id="total-ajustado" class="saldo-pendente" style="font-weight: bold; margin-top: 10px;">Total Final: R$ <span id="valor-total-ajustado">0,00</span></p>
                     </section>
         
-                    <section class="pagamento">
+                    <section class="pagamento card">
                         <h2>Pagamento</h2>
                         
                         <div id="pagamentos-adicionados-container" class="pagamentos-adicionados">
@@ -166,7 +168,7 @@
                         </div>
                     </section>
         
-                    <section class="cliente">
+                    <section class="cliente card">
                         <h2>Dados do Cliente</h2>
                         <div class="cliente-container">
                             <label for="cliente-select" style="display: none;">Selecione o Cliente</label>
@@ -175,7 +177,7 @@
                         </div>
                     </section>
         
-                    <section class="finalizar">
+                    <section class="finalizar card">
                         <button id="finalizar-pedido" class="btn-finalizar" disabled>Finalizar Pedido</button>
                     </section>
                 </div>

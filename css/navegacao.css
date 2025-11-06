@@ -1,0 +1,176 @@
+/* css/navegacao.css */
+
+/* 1. Estrutura Principal de Navegação (Sidebar e Header) */
+:root {
+    --sidebar-width: 250px;
+    --header-height: 60px;
+}
+
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content-wrapper {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width);
+    position: relative;
+    width: calc(100% - var(--sidebar-width));
+}
+
+.header {
+    background: white; 
+    color: var(--text-color);
+    padding: 0.5rem 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+}
+
+.header .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.header .logo {
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+}
+
+/* 2. Sidebar (Menu Lateral) */
+.sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0; 
+    background: linear-gradient(180deg, var(--primary-dark), #6a1b9a); 
+    color: white;
+    position: fixed;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1100;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    padding: 20px 0;
+    transition: transform 0.3s ease-in-out; 
+}
+
+.sidebar-header {
+    text-align: center;
+    padding: 0 10px 20px 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-header .logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
+}
+
+.sidebar-header p {
+    font-size: 0.85rem;
+    margin: 5px 0 0 0;
+    opacity: 0.8;
+}
+
+/* 3. Links de Navegação */
+.nav {
+    display: flex; 
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+
+.nav-link, .btn-logout {
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 0;
+    transition: background-color 0.3s, border-left 0.3s;
+    justify-content: flex-start; 
+    font-size: 1rem;
+    margin: 0;
+    border-left: 5px solid transparent;
+    display: flex; /* Adicionado para garantir alinhamento */
+    align-items: center; /* Adicionado para garantir alinhamento */
+    gap: 10px; /* Adicionado para espaçar ícone e texto */
+}
+
+.nav-link i, .btn-logout i {
+    font-size: 1.1rem;
+    width: 25px; 
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left-color: var(--primary-color); 
+    transform: none; 
+}
+
+.nav-link.active {
+    background-color: rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+}
+
+.btn-logout {
+    background-color: var(--primary-color);
+    margin-top: 30px; 
+    border-left: 5px solid transparent;
+}
+
+.btn-logout:hover {
+    background-color: var(--error-color);
+    border-left-color: var(--error-color);
+}
+
+/* 4. Navegação Mobile (Botão Hamburger e Overlay) */
+.menu-toggle {
+    display: none; 
+    color: var(--primary-dark) !important;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1099;
+}
+
+/* 5. Regras Responsivas da Navegação */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(calc(var(--sidebar-width) * -1)); 
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .header .menu-toggle {
+        display: block !important;
+    }
+    
+    .sidebar.show ~ .sidebar-overlay {
+        display: block;
+    }
+}
