@@ -504,7 +504,7 @@ table tr:hover {
 
 /* 3. Estilo para Botões de Vendas (Ex: Adicionar ao Carrinho) */
 .produto-info .btn-adicionar {
-    /* Aplicando estilos de .btn e .btn-primary */
+    /* Aplicando estilos do .btn e .btn-primary */
     width: 100%;
     margin-top: 0.5rem;
     padding: 0.75rem 1rem;
@@ -611,7 +611,7 @@ input[type="text"]:focus,
 input[type="number"]:focus,
 input[type="password"]:focus,
 input[type="date"]:focus,
-input[type="tel"]:focus,
+input[type="tel"]:custom-file-transparent,
 input[type="file"]:focus,
 select:focus,
 textarea:focus {
@@ -691,7 +691,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* =================================================== */
 
 .btn-finalizar {
-    /* Aplicando estilos de .btn e .btn-primary */
+    /* Aplicando estilos do .btn e .btn-primary */
     width: 100%; /* Ocupar toda a largura do card */
     padding: 1.25rem; /* Botão grande e chamativo */
     border: none;
@@ -735,7 +735,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* 1. O Board (O Painel Principal) */
 /* Estas regras serão aplicadas quando o JS adicionar display: flex */
 .delivery-board {
-    flex-wrap: nowrap;
+    display: flex; /* MUDANÇA: de grid para flex */
+    flex-wrap: nowrap; /* Garante que não quebre a linha */
     width: 100%;
     gap: 1.5rem;
     padding: 0 1.5rem 1.5rem 1.5rem; /* Espaçamento nas laterais e embaixo */
@@ -860,4 +861,73 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding-top: 0.75rem;
     border-top: 1px dashed var(--border-color);
     white-space: pre-wrap;
+}
+
+/* ============================================== */
+/* --- NOVOS ESTILOS - HEADER KANBAN (DELIVERY) --- */
+/* =... ......................................... */
+
+.delivery-search-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap; /* Permite quebrar em telas menores */
+    gap: 1rem;
+}
+
+.delivery-search-bar h2 {
+    margin: 0;
+    color: var(--text-color); /* Sobrescreve a cor rosa padrão */
+    font-size: 1.5rem;
+    flex-shrink: 0; /* Impede que o título encolha */
+}
+
+/* NOVO: Agrupador para inputs e botões */
+.delivery-actions-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.delivery-search-bar .search-inputs {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap; /* Permite que os inputs quebrem */
+}
+
+.search-group-kanban {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0 0.75rem;
+    height: 48px; /* Altura padrão */
+}
+
+.search-group-kanban i {
+    color: var(--text-light);
+    margin-right: 0.5rem;
+}
+
+/* Remove todos os estilos padrão do input */
+.search-group-kanban input {
+    border: none !important;
+    background: none !important;
+    height: 46px !important;
+    padding: 0 !important;
+    font-size: 0.9rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* NOVO: Estilo para os botões no cabeçalho */
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
 }
