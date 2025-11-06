@@ -47,7 +47,7 @@
 .sidebar {
     width: var(--sidebar-width);
     flex-shrink: 0; 
-    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark)); /* << LINHA MODIFICADA */
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark)); /* Gradiente Rosa */
     color: white;
     position: fixed;
     height: 100%;
@@ -119,16 +119,20 @@
     font-weight: 600;
 }
 
+/* === MODIFICAÇÃO "SUAVE" DO BOTÃO SAIR === */
 .btn-logout {
-    background-color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.15); /* Fundo sutil (igual ao link ativo) */
     margin-top: 30px; 
     border-left: 5px solid transparent;
+    font-weight: 600; /* Leve destaque */
 }
 
 .btn-logout:hover {
-    background-color: var(--error-color);
-    border-left-color: var(--error-color);
+    background-color: var(--error-color); /* Vermelho no hover */
+    border-left-color: #f8d7da; /* Borda vermelha clara */
+    transform: none; /* Remove efeito de "levantar" */
 }
+/* === FIM DA MODIFICAÇÃO === */
 
 /* 4. Navegação Mobile (Botão Hamburger e Overlay) */
 .menu-toggle {
