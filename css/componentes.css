@@ -1210,3 +1210,74 @@ table tr:hover {
 .btn-imprimir:hover {
     background-color: #6f42c1; /* Um pouco mais claro */
 }
+
+/* ============================================== */
+/* --- ESTILOS DO HISTÓRICO DE DELIVERY E PAGINAÇÃO --- */
+/* ============================================== */
+
+/* Ajusta o painel Kanban para ficar dentro do container */
+#tab-kanban .delivery-board {
+    padding: 1.5rem 0;
+    /* Remove o padding lateral, pois o container já tem */
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Tabela de Histórico */
+#historico-tabela {
+    width: 100%;
+}
+#historico-tabela .status-badge {
+    display: inline-flex; /* Garante que o badge apareça */
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+}
+/* Cores específicas para o histórico */
+#historico-tabela .status-badge.status-entregue {
+    background: var(--success-color);
+    color: white;
+}
+#historico-tabela .status-badge.status-cancelado {
+    background: var(--error-color);
+    color: white;
+}
+#historico-tabela .btn-ver-detalhes-hist {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+/* Controles de Paginação */
+.paginacao-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+.paginacao-info {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+.paginacao-botoes button {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: var(--transition);
+}
+.paginacao-botoes button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+.paginacao-botoes button:disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+}

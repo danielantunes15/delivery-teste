@@ -13,12 +13,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const modalPedidoId = document.getElementById('modal-pedido-id');
     const btnAvancarStatus = document.getElementById('btn-avancar-status');
     const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
-    
-    // ==================================
-    // === NOVO ELEMENTO (IMPRIMIR) ===
-    // ==================================
     const btnImprimirCanhoto = document.getElementById('btn-imprimir-canhoto');
-    // ==================================
 
     // Elementos de Configurações
     const btnAbrirConfig = document.getElementById('btn-abrir-config');
@@ -26,7 +21,17 @@ document.addEventListener('DOMContentLoaded', async function () {
     const formConfig = document.getElementById('form-config-delivery');
     const btnFecharConfig = document.getElementById('fechar-modal-config');
 
-    let todosPedidos = [];
+    // ==================================
+    // === NOVOS ELEMENTOS (HISTÓRICO E ABAS) ===
+    // ==================================
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const historicoTabelaBody = document.getElementById('historico-tabela-body');
+    const historicoPaginacao = document.getElementById('historico-paginacao');
+    // ==================================
+
+    let todosPedidos = []; // Pedidos ATIVOS (Kanban)
+    let todosPedidosHistorico = []; // Pedidos INATIVOS (Histórico)
     let pedidoSelecionado = null;
     
     // Cache de configurações da loja
@@ -35,11 +40,19 @@ document.addEventListener('DOMContentLoaded', async function () {
     let supabaseChannel = null;
     const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
     
+    // ==================================
+    // === NOVAS VARIÁVEIS (PAGINAÇÃO) ===
+    // ==================================
+    let paginaAtualHistorico = 1;
+    const ITENS_POR_PAGINA = 15; // Quantos pedidos mostrar por página no histórico
+    let totalPedidosHistorico = 0;
+    // ==================================
+    
     const STATUS_MAP = {
         'novo': { title: 'Novo', icon: 'fas fa-box-open', next: 'preparando', nextText: 'Iniciar Preparo', color: 'var(--primary-color)' },
         'preparando': { title: 'Preparando', icon: 'fas fa-fire-alt', next: 'pronto', nextText: 'Marcar como Pronto', color: 'var(--warning-color)' },
         'pronto': { title: 'Pronto para Envio', icon: 'fas fa-truck-loading', next: 'entregue', nextText: 'Marcar como Entregue', color: 'var(--info-color)' },
-        'entregue': { title: 'Entregue/Finalizado', icon: 'fas fa-check-circle', next: null, nextText: 'Finalizado', color: 'var(--success-color)' },
+        'entregue': { title: 'Entregue', icon: 'fas fa-check-circle', next: null, nextText: 'Finalizado', color: 'var(--success-color)' },
         'cancelado': { title: 'Cancelado', icon: 'fas fa-times-circle', next: null, nextText: 'Cancelado', color: 'var(--error-color)' }
     };
     
@@ -99,8 +112,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Carrega as configurações primeiro
         await carregarConfiguracoesDaLoja(); 
         
-        // Depois carrega os pedidos
-        await carregarPedidosOnline();
+        // Carrega os pedidos ativos (Kanban) e o histórico (Tabela) em paralelo
+        await Promise.all([
+            carregarPedidosOnline(),
+            carregarHistoricoPedidos(paginaAtualHistorico)
+        ]);
         
         // Inicia o ouvinte de novos pedidos (Realtime)
         iniciarOuvinteDePedidos();
@@ -109,12 +125,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         iniciarAtualizadorDeTimers();
 
         toggleDisplay(loadingElement, false);
-        toggleDisplay(contentElement, true); // Agora vai aplicar 'display: flex'
+        // Mostra o conteúdo da primeira aba (Kanban)
+        toggleDisplay(document.getElementById('tab-kanban'), true);
+        toggleDisplay(contentElement, true);
     }
     
     function configurarEventListeners() {
         if (recarregarBtn) {
-            recarregarBtn.addEventListener('click', carregarPedidosOnline);
+            recarregarBtn.addEventListener('click', () => {
+                // Recarrega AMBOS os painéis
+                carregarPedidosOnline();
+                carregarHistoricoPedidos(paginaAtualHistorico);
+            });
         }
         if (btnAvancarStatus) {
             btnAvancarStatus.addEventListener('click', avancarStatusPedido);
@@ -122,14 +144,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (btnCancelarPedido) {
             btnCancelarPedido.addEventListener('click', () => atualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
         }
-
-        // ==================================
-        // === NOVO LISTENER (IMPRIMIR) ===
-        // ==================================
         if (btnImprimirCanhoto) {
             btnImprimirCanhoto.addEventListener('click', imprimirCanhotoDelivery);
         }
-        // ==================================
 
         // Listeners do Modal de Configurações
         if (btnAbrirConfig) {
@@ -141,7 +158,44 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (formConfig) {
             formConfig.addEventListener('submit', salvarConfiguracoes);
         }
+
+        // ==================================
+        // === NOVOS LISTENERS (ABAS) ===
+        // ==================================
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+        // ==================================
     }
+
+    // ==================================
+    // === NOVA FUNÇÃO (TROCAR ABAS) ===
+    // ==================================
+    function switchTab(tabId) {
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+            // Nota: Usamos display: none / display: block para tab-content
+            // e display: flex para o delivery-board dentro dele
+            if (content.id === 'tab-kanban') {
+                toggleDisplay(content, content.id === tabId);
+                toggleDisplay(contentElement, content.id === tabId);
+            } else {
+                toggleDisplay(content, content.id === tabId);
+            }
+        });
+        tabButtons.forEach(button => {
+            button.classList.toggle('active', button.getAttribute('data-tab') === tabId);
+        });
+
+        // Se estiver trocando para o histórico e ele não tiver sido carregado, carregue-o
+        if (tabId === 'tab-historico' && todosPedidosHistorico.length === 0) {
+            carregarHistoricoPedidos(1);
+        }
+    }
+    // ==================================
     
     // ----------------------------------------------------------------------
     // --- LÓGICA DE PEDIDOS ONLINE (CRUD) ---
@@ -277,9 +331,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         return '';
     }
 
-    // ================================================================
-    // === INÍCIO DA ALTERAÇÃO (Adicionar Hora Original ao Card) ===
-    // ================================================================
     function criarCardPedido(pedido) {
         const card = document.createElement('div');
         const status = pedido.status || 'novo';
@@ -341,12 +392,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         card.addEventListener('click', () => abrirModalDetalhes(pedido.id));
         return card;
     }
-    // ================================================================
-    // === FIM DA ALTERAÇÃO ===
-    // ================================================================
     
     window.abrirModalDetalhes = function(pedidoId) {
-        pedidoSelecionado = todosPedidos.find(p => p.id === pedidoId);
+        // ==================================
+        // === ATUALIZAÇÃO (ABRIR MODAL) ===
+        // ==================================
+        // Procura o pedido tanto na lista ativa quanto no histórico
+        pedidoSelecionado = todosPedidos.find(p => p.id === pedidoId) || todosPedidosHistorico.find(p => p.id === pedidoId);
+        // ==================================
+
         if (!pedidoSelecionado) return;
         
         modalPedidoId.textContent = `#${pedidoId}`;
@@ -410,18 +464,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             modalDetalhes.style.display = 'none';
             
             // ==================================
-            // === ATUALIZAÇÃO REALTIME ===
+            // === ATUALIZAÇÃO REALTIME (MELHORIA) ===
             // ==================================
-            // Em vez de recarregar tudo, apenas move o card localmente
-            // Isso é mais rápido e funciona com o Realtime
+            // Atualiza o array local em vez de recarregar a página inteira
             const pedidoAtualizado = todosPedidos.find(p => p.id === pedidoSelecionado.id);
             if(pedidoAtualizado) {
                 pedidoAtualizado.status = novoStatus;
             }
-            // Se o status for final, remove o pedido da lista ativa
+            
+            // Se o status for final, remove o pedido da lista de ativos
             if (novoStatus === 'entregue' || novoStatus === 'cancelado') {
                 todosPedidos = todosPedidos.filter(p => p.id !== pedidoSelecionado.id);
+                // Recarrega o histórico para incluir este novo item
+                carregarHistoricoPedidos(1);
             }
+            
+            // Re-desenha o board com os dados locais atualizados
             exibirPedidosNoBoard(todosPedidos);
             // ==================================
 
@@ -629,9 +687,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             const tempoRestante = tempoEntregaPadrao - minutosPassados;
 
-            // ================================================================
-            // === INÍCIO DA ALTERAÇÃO (Lógica do Timer de Atraso) ===
-            // ================================================================
             if (tempoRestante <= 0) {
                 // ATRASADO
                 timerEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${Math.abs(tempoRestante).toFixed(0)} min ATRASADO`;
@@ -641,9 +696,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 timerEl.innerHTML = `${tempoRestante.toFixed(0)} min restantes`;
                 timerEl.className = 'card-novo-timer no-prazo';
             }
-            // ================================================================
-            // === FIM DA ALTERAÇÃO ===
-            // ================================================================
         });
     }
     
@@ -744,6 +796,126 @@ document.addEventListener('DOMContentLoaded', async function () {
         printWindow.document.close();
     }
     
+    // ==================================
+    // === NOVAS FUNÇÕES (HISTÓRICO E PAGINAÇÃO) ===
+    // ==================================
+
+    /**
+     * Carrega os pedidos finalizados (entregues/cancelados) para a aba de histórico.
+     * @param {number} pagina - O número da página a ser carregada.
+     */
+    async function carregarHistoricoPedidos(pagina) {
+        if (!historicoTabelaBody) return;
+
+        paginaAtualHistorico = pagina;
+        const offset = (pagina - 1) * ITENS_POR_PAGINA;
+
+        historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;"><div class="spinner"></div></td></tr>`;
+
+        try {
+            // 1. Busca os pedidos da página atual
+            const { data: pedidos, error: pedidosError } = await supabase
+                .from('pedidos_online')
+                .select('*')
+                .in('status', ['entregue', 'cancelado']) // Apenas pedidos finalizados
+                .order('created_at', { ascending: false }) // Mais recentes primeiro
+                .range(offset, offset + ITENS_POR_PAGINA - 1);
+
+            if (pedidosError) throw pedidosError;
+
+            // 2. Busca a contagem total de pedidos (para a paginação)
+            // O 'count: 'exact'' faz o Supabase retornar o total de linhas que batem com o filtro
+            const { count, error: countError } = await supabase
+                .from('pedidos_online')
+                .select('*', { count: 'exact', head: true }) // 'head: true' não baixa os dados, só a contagem
+                .in('status', ['entregue', 'cancelado']);
+            
+            if (countError) throw countError;
+
+            todosPedidosHistorico = pedidos || [];
+            totalPedidosHistorico = count || 0;
+
+            renderizarTabelaHistorico(todosPedidosHistorico);
+            renderizarPaginacao();
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar histórico:', error);
+            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--error-color);">Erro ao carregar histórico.</td></tr>`;
+        }
+    }
+
+    /**
+     * Desenha a tabela de histórico com os pedidos carregados.
+     * @param {Array} pedidos - A lista de pedidos da página atual.
+     */
+    function renderizarTabelaHistorico(pedidos) {
+        historicoTabelaBody.innerHTML = '';
+        if (pedidos.length === 0) {
+            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nenhum pedido encontrado no histórico.</td></tr>`;
+            return;
+        }
+
+        pedidos.forEach(pedido => {
+            const tr = document.createElement('tr');
+            const data = new Date(pedido.created_at).toLocaleDateString('pt-BR');
+            const statusClasse = `status-${pedido.status}`;
+            
+            tr.innerHTML = `
+                <td><strong>#${pedido.id}</strong></td>
+                <td>${data}</td>
+                <td>${pedido.nome_cliente}</td>
+                <td>${formatarMoeda(pedido.total)}</td>
+                <td>${formatarFormaPagamento(pedido.forma_pagamento)}</td>
+                <td>
+                    <span class="status-badge ${statusClasse}">${STATUS_MAP[pedido.status].title}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-ver-detalhes-hist" onclick="abrirModalDetalhes(${pedido.id})">
+                        <i class="fas fa-eye"></i> Ver
+                    </button>
+                </td>
+            `;
+            historicoTabelaBody.appendChild(tr);
+        });
+    }
+
+    /**
+     * Desenha os controles de paginação (Anterior / Próxima).
+     */
+    function renderizarPaginacao() {
+        if (!historicoPaginacao) return;
+
+        const totalPaginas = Math.ceil(totalPedidosHistorico / ITENS_POR_PAGINA);
+        const inicio = (paginaAtualHistorico - 1) * ITENS_POR_PAGINA + 1;
+        const fim = Math.min(paginaAtualHistorico * ITENS_POR_PAGINA, totalPedidosHistorico);
+
+        historicoPaginacao.innerHTML = `
+            <div class="paginacao-info">
+                Mostrando ${inicio}-${fim} de ${totalPedidosHistorico} pedidos
+            </div>
+            <div class="paginacao-botoes">
+                <button id="btn-hist-anterior" ${paginaAtualHistorico === 1 ? 'disabled' : ''}>
+                    <i class="fas fa-angle-left"></i> Anterior
+                </button>
+                <button id="btn-hist-proxima" ${paginaAtualHistorico >= totalPaginas ? 'disabled' : ''}>
+                    Próxima <i class="fas fa-angle-right"></i>
+                </button>
+            </div>
+        `;
+
+        document.getElementById('btn-hist-anterior').addEventListener('click', () => {
+            if (paginaAtualHistorico > 1) {
+                carregarHistoricoPedidos(paginaAtualHistorico - 1);
+            }
+        });
+        
+        document.getElementById('btn-hist-proxima').addEventListener('click', () => {
+            if (paginaAtualHistorico < totalPaginas) {
+                carregarHistoricoPedidos(paginaAtualHistorico + 1);
+            }
+        });
+    }
+
     // ==================================
 
     inicializar();
