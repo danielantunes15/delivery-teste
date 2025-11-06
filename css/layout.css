@@ -5,7 +5,7 @@
     --primary-color: #ff69b4;
     --primary-light: #ffb6c1;
     --primary-dark: #9a326c; 
-    --secondary-color: #8a2be2; /* Roxo (dos relatórios) */
+    --secondary-color: var(--primary-dark); /* MODIFICADO: Roxo -> Rosa Escuro */
     --accent-color: #ff4081;
     --text-color: #333;
     --text-light: #666;

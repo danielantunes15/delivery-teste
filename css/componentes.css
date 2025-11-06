@@ -360,6 +360,10 @@ table tr:hover {
     color: #c62828;
 }
 
+/* =================================================== */
+/* --- CORREÇÃO: Imagens na Tabela de Estoque --- */
+/* =================================================== */
+
 /* Define um tamanho fixo para a primeira célula (Foto) */
 #produtos-body td:first-child {
     width: 90px; /* Define uma largura fixa para a coluna */
