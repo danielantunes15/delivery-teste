@@ -55,11 +55,21 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Gerencial</span>
                 </a>
-                <button id="logout-btn" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sair</span>
-                </button>
              </nav>
+             
+             <div class="sidebar-footer">
+                <div class="logout-menu" id="logout-menu">
+                    <a href="#" id="global-logout-link" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair do Sistema</span>
+                    </a>
+                </div>
+                <div class="user-profile" id="user-profile-toggle">
+                    <i class="fas fa-user-circle user-avatar"></i>
+                    <span id="sidebar-username">Carregando...</span>
+                    <i class="fas fa-chevron-up toggle-icon"></i>
+                </div>
+            </div>
         </div>
         
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
