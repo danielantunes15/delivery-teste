@@ -58,6 +58,11 @@
     overflow-y: auto;
     padding: 20px 0;
     transition: transform 0.3s ease-in-out; 
+    
+    /* NOVO: Propriedades Flexbox para o Rodapé */
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0; /* Remove padding inferior para o footer encaixar */
 }
 
 .sidebar-header {
@@ -65,6 +70,7 @@
     padding: 0 10px 20px 10px;
     margin-bottom: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0; /* Impede o header de encolher */
 }
 
 .sidebar-header .logo {
@@ -86,6 +92,9 @@
     flex-direction: column;
     align-items: stretch;
     gap: 0;
+    
+    /* NOVO: Faz a navegação principal crescer e ocupar o espaço disponível */
+    flex-grow: 1;
 }
 
 .nav-link, .btn-logout {
@@ -119,7 +128,7 @@
     font-weight: 600;
 }
 
-/* === MODIFICAÇÃO "SUAVE" DO BOTÃO SAIR === */
+/* === MODIFICAÇÃO "SUAVE" DO BOTÃO SAIR (NÃO USADO MAIS, MAS MANTIDO PARA CONTEXTO) === */
 .btn-logout {
     background-color: rgba(0, 0, 0, 0.15); /* Fundo sutil (igual ao link ativo) */
     margin-top: 30px; 
@@ -133,6 +142,96 @@
     transform: none; /* Remove efeito de "levantar" */
 }
 /* === FIM DA MODIFICAÇÃO === */
+
+/* 6. NOVO: Rodapé da Sidebar (Usuário e Logout) */
+
+.sidebar-footer {
+    flex-shrink: 0; /* Impede que o footer encolha */
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.1);
+    position: relative; /* Contexto para o menu flutuante */
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.user-profile:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.user-profile .user-avatar {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.user-profile span {
+    margin-left: 10px;
+    font-weight: 600;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-grow: 1;
+}
+
+.user-profile .toggle-icon {
+    font-size: 0.9rem;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+/* Animação do ícone 'chevron' */
+.user-profile.open .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Menu de Logout (flutuante) */
+.logout-menu {
+    position: absolute;
+    bottom: 100%; /* Começa acima do footer */
+    left: 0;
+    right: 0;
+    background: #2c3e50; /* Um fundo escuro, mas diferente */
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+    
+    /* Escondido por padrão */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 1101; /* Acima da sidebar */
+}
+
+.logout-menu.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.logout-menu .logout-link {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    color: white;
+    text-decoration: none;
+    gap: 10px;
+}
+
+.logout-menu .logout-link i {
+    color: var(--error-color); /* Vermelho para o ícone de sair */
+    width: 25px;
+}
+
+.logout-menu .logout-link:hover {
+    background: var(--error-color);
+}
+.logout-menu .logout-link:hover i {
+    color: white;
+}
 
 /* 4. Navegação Mobile (Botão Hamburger e Overlay) */
 .menu-toggle {

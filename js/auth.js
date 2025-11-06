@@ -292,22 +292,88 @@ window.fazerLogoutGlobal = function() {
     }
 };
 
-// Configurar event listener global para botões de logout
-document.addEventListener('DOMContentLoaded', function() {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.fazerLogoutGlobal();
-        });
+// Instância global
+window.sistemaAuth = new SistemaAuth();
+
+// Funções de debug globais
+window.debugAuth = function() {
+    console.log('🔍 DEBUG AUTH:', {
+        usuario: window.sistemaAuth?.usuarioLogado,
+        isAdmin: window.sistemaAuth?.isAdmin(),
+        autenticado: window.sistemaAuth?.verificarAutenticacao()
+    });
+};
+
+window.forcarAdmin = function() {
+    if (window.sistemaAuth) {
+        window.sistemaAuth.forcarTipoUsuario('administrador');
+        console.log('✅ Tipo forçado para administrador');
+        location.reload();
     }
-    
+};
+
+
+// Configurar event listener global para botões de logout E NOVO MENU DE PERFIL
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Lógica de Botões de Logout (Mantida para o caso de outros .btn-logout) ---
     document.querySelectorAll('.btn-logout').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             window.fazerLogoutGlobal();
         });
     });
+
+    // --- NOVO BLOCO: Menu de Perfil na Sidebar ---
+    const userProfileToggle = document.getElementById('user-profile-toggle');
+    const logoutMenu = document.getElementById('logout-menu');
+    const globalLogoutLink = document.getElementById('global-logout-link');
+    const sidebarUsername = document.getElementById('sidebar-username');
+
+    if (window.sistemaAuth && window.sistemaAuth.usuarioLogado) {
+        const usuario = window.sistemaAuth.usuarioLogado;
+        if (sidebarUsername) {
+            // Pega o primeiro nome para melhor visualização na sidebar
+            const primeiroNome = usuario.nome.split(' ')[0];
+            sidebarUsername.textContent = primeiroNome;
+        }
+
+        if (userProfileToggle && logoutMenu) {
+            // Alterna o menu de logout ao clicar no perfil
+            userProfileToggle.addEventListener('click', () => {
+                logoutMenu.classList.toggle('show');
+                userProfileToggle.classList.toggle('open');
+            });
+
+            // Adiciona a funcionalidade de logout ao link no menu flutuante
+            if (globalLogoutLink) {
+                globalLogoutLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Garante que o menu feche antes de fazer logout (opcional)
+                    logoutMenu.classList.remove('show'); 
+                    window.sistemaAuth.fazerLogout();
+                });
+            }
+        }
+    } else {
+        // Se não estiver logado, esconde o footer do perfil.
+        const sidebarFooter = document.querySelector('.sidebar-footer');
+        if (sidebarFooter) {
+            sidebarFooter.style.display = 'none';
+        }
+    }
+    
+    // Esconde o menu de logout se clicar fora dele (Comportamento de dropdown)
+    document.addEventListener('click', function(event) {
+        if (logoutMenu && userProfileToggle && logoutMenu.classList.contains('show')) {
+            // Verifica se o clique não foi no botão de toggle e nem dentro do menu
+            if (!userProfileToggle.contains(event.target) && !logoutMenu.contains(event.target)) {
+                logoutMenu.classList.remove('show');
+                userProfileToggle.classList.remove('open');
+            }
+        }
+    });
+    // --- FIM DO NOVO BLOCO ---
+
 
     // Verificar sincronização do usuário ao carregar a página
     if (window.sistemaAuth && window.sistemaAuth.usuarioLogado) {
@@ -331,23 +397,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     }
 });
-
-// Instância global
-window.sistemaAuth = new SistemaAuth();
-
-// Funções de debug globais
-window.debugAuth = function() {
-    console.log('🔍 DEBUG AUTH:', {
-        usuario: window.sistemaAuth?.usuarioLogado,
-        isAdmin: window.sistemaAuth?.isAdmin(),
-        autenticado: window.sistemaAuth?.verificarAutenticacao()
-    });
-};
-
-window.forcarAdmin = function() {
-    if (window.sistemaAuth) {
-        window.sistemaAuth.forcarTipoUsuario('administrador');
-        console.log('✅ Tipo forçado para administrador');
-        location.reload();
-    }
-};
