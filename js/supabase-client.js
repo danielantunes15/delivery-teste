@@ -1,10 +1,17 @@
-// Configuração do Supabase
-const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
+// js/supabase-client.js
 
-// Inicializar o cliente Supabase
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// REMOVIDO: Declarações de SUPABASE_URL, SUPABASE_ANON_KEY e createClient.
+
+// CORREÇÃO:
+// Apenas criamos um "apelido" (alias) chamado 'supabaseClient'
+// para o 'window.supabase' que já foi criado pelo 'supabase-config.js'.
+// O arquivo 'script.js' (usado pelo estoque.html) espera por esta variável.
+if (!window.supabase) {
+    console.error("ERRO GRAVE: window.supabase não foi inicializado. 'supabase-config.js' deve ser carregado PRIMEIRO.");
+    alert("Erro crítico de inicialização. Recarregue a página.");
+}
+const supabaseClient = window.supabase;
+
 
 // Função para converter imagem para Base64
 function imageToBase64(file) {
@@ -178,7 +185,7 @@ const produtoService = {
 const testSupabase = {
     async testConnection() {
         try {
-            console.log('🔗 Testando conexão com Supabase...');
+            console.log('🔗 Testando conexão com Supabase (via supabase-client.js)...');
             
             // Testar se a tabela produtos existe
             const { data: produtos, error } = await supabaseClient
@@ -197,5 +204,8 @@ const testSupabase = {
 
 // Executar teste quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
-    testSupabase.testConnection();
+    // Garante que o teste só rode DEPOIS que o window.supabase existir
+    if (window.supabase) {
+        testSupabase.testConnection();
+    }
 });
