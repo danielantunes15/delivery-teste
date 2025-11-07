@@ -1,5 +1,25 @@
 /* css/contas-a-pagar.css */
-/* Estilos específicos para a página Gerencial (Contas a Pagar), baseados na imagem. */
+/* Estilos específicos para a página Gerencial (Contas a Pagar), baseados na imagem 83ee7f.png */
+
+/* 0. Fundo da Página (do layout.css) e Header Principal */
+body {
+    background: #FFF0F5; /* Garante o fundo rosa claro */
+}
+
+/* Header principal com gradiente rosa (como na imagem) */
+.header {
+    background: linear-gradient(90deg, var(--primary-color), #ff85c0);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.header .logo,
+#header-relogio,
+#status-delivery-icon {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+.header .menu-toggle {
+    color: white !important;
+}
 
 /* 1. Header de KPIs (Vencidas, Semana, Mês) */
 .alert-dashboard {
@@ -12,19 +32,19 @@
 .kpi-alerta {
     padding: 1.5rem;
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
+    box-shadow: none; /* REMOVIDA sombra pesada */
+    border: 1px solid rgba(0,0,0,0.05); /* Borda sutil */
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 .kpi-alerta i {
-    font-size: 2rem;
-    padding: 1rem;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    font-size: 1.8rem; /* Ícone menor */
+    padding: 0.75rem;
+    border-radius: 12px; /* Quadrado arredondado */
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -42,53 +62,65 @@
     font-weight: 700;
 }
 
-/* Cores (como na imagem) */
+/* Cores (como na imagem 83ee7f.png) */
 .kpi-alerta.alerta-vencido {
-    background: #FFF0F5; /* Rosa claro */
-    border-left: 5px solid var(--error-color); /* Vermelho */
+    background: #FEEBEE; /* Rosa bem claro */
+    border: 1px solid #FDC5C5;
 }
 .kpi-alerta.alerta-vencido i {
-    background: var(--error-color);
-    color: white;
+    background: #FEEBEE;
+    color: var(--error-color);
 }
-.kpi-alerta.alerta-vencido h4 { color: var(--error-color); }
+.kpi-alerta.alerta-vencido h4 { color: var(--text-light); }
 .kpi-alerta.alerta-vencido .valor { color: var(--error-color); }
 
 .kpi-alerta.alerta-semana {
-    background: #FFF8E1; /* Amarelo claro */
-    border-left: 5px solid var(--warning-color); /* Amarelo */
+    background: #FFF9E0; /* Amarelo bem claro */
+    border: 1px solid #FDE4A2;
 }
 .kpi-alerta.alerta-semana i {
-    background: var(--warning-color);
-    color: white;
+    background: #FFF9E0;
+    color: var(--warning-color);
 }
-.kpi-alerta.alerta-semana h4 { color: #856404; }
-.kpi-alerta.alerta-semana .valor { color: #856404; }
+.kpi-alerta.alerta-semana h4 { color: var(--text-light); }
+.kpi-alerta.alerta-semana .valor { color: #D68910; }
 
 .kpi-alerta.alerta-mes {
     background: #F3E5F5; /* Roxo claro */
-    border-left: 5px solid #8E44AD; /* Roxo */
+    border: 1px solid #E1BEE7;
 }
 .kpi-alerta.alerta-mes i {
-    background: #8E44AD;
-    color: white;
+    background: #F3E5F5;
+    color: #8E44AD;
 }
-.kpi-alerta.alerta-mes h4 { color: #6A1B9A; }
+.kpi-alerta.alerta-mes h4 { color: var(--text-light); }
 .kpi-alerta.alerta-mes .valor { color: #6A1B9A; }
 
 
-/* 2. Abas do Painel Gerencial (Texto com sublinhado) */
-.card .tabs {
-    border-bottom: 2px solid var(--border-color);
-    margin-bottom: 1.5rem;
+/* 2. Abas do Painel Gerencial (Estilo 83ee7f.png) */
+/* (Este é o .gerencial-header que criamos no HTML) */
+.gerencial-header {
+    margin-bottom: 1rem;
 }
 
-.card .tabs .tab-btn {
+.gerencial-header h2 {
+    font-size: 1.5rem;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+}
+
+/* As abas ficam FORA do card, no fundo rosa */
+.gerencial-header .tabs {
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 0;
+}
+
+.gerencial-header .tabs .tab-btn {
     background: none;
     border: none;
     padding: 0.75rem 0.25rem; /* Padding sutil para o sublinhado */
     margin-right: 1.5rem;
-    font-size: 1rem; /* Tamanho da fonte da imagem */
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-light);
     cursor: pointer;
@@ -99,16 +131,32 @@
     gap: 0.5rem;
 }
 
-.card .tabs .tab-btn:hover {
+.gerencial-header .tabs .tab-btn:hover {
     color: var(--primary-dark);
 }
 
-.card .tabs .tab-btn.active {
+.gerencial-header .tabs .tab-btn.active {
     color: var(--primary-color); /* Pink */
     border-bottom-color: var(--primary-color); /* Pink underline */
 }
 
-/* 3. Título (Ex: "Contas a Pagar Pendentes") */
+/* 3. Card Branco de Conteúdo */
+/* O .card que envolve o tab-content */
+#painel-gerencial-content > .card {
+    border-radius: var(--radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #FEEBEE; /* Borda rosa bem clara */
+}
+
+/* Remove o estilo antigo das abas de dentro do card */
+.card .tabs {
+    border-bottom: none;
+}
+.card .tabs .tab-btn {
+    border-bottom: none;
+}
+
+/* 4. Título (Ex: "Contas a Pagar Pendentes") */
 #contas-pendentes h3,
 #contas-a-receber h3,
 #crediario-devedores h3,
@@ -118,9 +166,10 @@
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border-color);
+    margin-top: 0; /* Reseta margin-top */
 }
 
-/* 4. Tabela (Header Rosa) */
+/* 5. Tabela (Header Rosa Claro) */
 .table-container thead th {
     background-color: #FFF0F5; /* Fundo rosa claro (como na imagem) */
     color: var(--primary-dark); /* Texto pink escuro */
@@ -143,7 +192,7 @@
     border-bottom: none;
 }
 
-/* 5. Botões de Ação da Tabela (Ícones - como na imagem) */
+/* 6. Botões de Ação da Tabela (Ícones - como na imagem) */
 .action-buttons-table .btn-acao-icon {
     background: none;
     border: none;
@@ -156,7 +205,7 @@
     height: 36px;
 }
 
-/* Verde para Editar (como na imagem, parece ser um check/edit) */
+/* Verde para Editar */
 .action-buttons-table .btn-edit-icon {
     color: var(--success-color);
 }
@@ -183,7 +232,7 @@
     color: #c62828;
 }
 
-/* 6. Badges de Status (Pendente/Vencido) */
+/* 7. Badges de Status (Pendente/Vencido) */
 .status-badge.pendente,
 .status-badge.a-receber,
 .status-badge.parcialmente-pago {
@@ -197,4 +246,30 @@
 .status-badge.pago {
     background-color: #d4edda; /* Verde */
     color: #155724;
+}
+
+/* 8. Filtros (Layout da Imagem) */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Alinha na base */
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.table-controls .search-box {
+    flex-grow: 1;
+}
+
+.table-controls .form-group {
+    margin-bottom: 0; /* Remove margem do form-group */
+}
+
+.table-controls #aplicar-filtro {
+    background-color: #6c757d; /* Cinza (como na imagem) */
+    color: white;
+}
+.table-controls #aplicar-filtro:hover {
+    background-color: #5a6268;
 }
