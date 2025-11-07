@@ -225,3 +225,128 @@
     border-top: 1px solid var(--text-color);
     padding-top: 0.5rem;
 }
+
+/* ============================================== */
+/* === INÍCIO DA CORREÇÃO (MODAL DETALHES VENDA) === */
+/* ============================================== */
+
+/* 1. Wrapper */
+/* Remove as margens negativas do modal-body */
+.modal-body #detalhes-venda-content {
+    margin: 0;
+}
+.detalhes-venda {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* 2. Info items (Data/Hora, Cliente, etc.) */
+.detalhes-venda .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+.detalhes-venda .info-item span:first-child {
+    font-weight: 600;
+    color: var(--text-light);
+}
+.detalhes-venda .info-item span:last-child {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* 3. Título "Itens da Venda" (Estilo Barra Pink) */
+.detalhes-venda h4 {
+    margin: 0.5rem -1.5rem 0.5rem -1.5rem; /* Sangria para tocar as bordas do modal-body */
+    padding: 0.5rem 1.5rem; /* Adiciona padding */
+    color: var(--primary-dark);
+    font-weight: 700;
+    background: #fdeff2; /* Fundo rosa claro */
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 4. Itens individuais (Copo Brownie) */
+.detalhes-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0.5rem; 
+    background: #f8f9fa; 
+    border-radius: var(--radius-sm);
+    margin: 0; /* Remove a margem lateral */
+}
+
+/* 4a. Lado Esquerdo (Icone, Nome, Qtd) */
+.detalhes-produto {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.detalhes-produto i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+.detalhes-produto div strong { /* Nome do produto */
+    font-size: 1rem;
+    color: var(--text-color);
+}
+.detalhes-produto div div { /* Quantidade */
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+/* 4b. Lado Direito (Valor Total, Valor Unit) */
+.detalhes-item > div:last-child {
+    text-align: right;
+}
+.detalhes-item > div:last-child strong { /* Valor total do item */
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.detalhes-item > div:last-child div { /* Valor unitário */
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+/* 5. Total da Venda (Estilo Barra Pink) */
+.detalhes-total {
+    margin: 1rem -1.5rem -1.5rem -1.5rem; /* Sangria para tocar as bordas */
+    padding: 1rem 1.5rem; /* Adiciona padding */
+    border-top: 2px solid var(--primary-dark);
+    background: #fdeff2; /* Fundo rosa claro */
+    /* Arredonda os cantos inferiores para bater com o modal-body */
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+}
+.detalhes-total .info-item {
+    border-bottom: none;
+    padding: 0; /* Remove padding do info-item interno */
+}
+.detalhes-total .info-item span {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+.detalhes-total .info-item span:first-child {
+    color: var(--primary-dark);
+}
+.detalhes-total .info-item span:last-child {
+    color: var(--primary-dark);
+}
+
+/* 6. Observações */
+.detalhes-venda .info-item.observacoes {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.5rem 0; /* Remove padding lateral */
+}
+.detalhes-venda .info-item.observacoes span:last-child {
+    white-space: pre-wrap; /* Mantém quebras de linha */
+    font-weight: 400;
+    font-style: italic;
+}

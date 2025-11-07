@@ -735,11 +735,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </div>
                 
                 ${venda.observacoes && !venda.observacoes.includes('Pagamento MISTO DETALHES:') ? `
-                    <div class="info-item">
+                    <div class="info-item observacoes">
                         <span><strong>Observações:</strong></span>
                         <span>${venda.observacoes}</span>
                     </div>
-                ` : ''}
+                    ` : ''}
             </div>
         `;
         content.innerHTML = html;
