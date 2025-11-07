@@ -34,7 +34,7 @@
 .header .header-content {
     /* *** MODIFICAÇÃO CHAVE: Forçar separação L/R do conteúdo principal *** */
     display: flex;
-    justify-content: space-between; 
+    justify-content: flex-start; /* CORREÇÃO APLICADA */
     align-items: center;
     width: 100%;
 }

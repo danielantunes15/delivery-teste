@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const btnAvancarStatus = document.getElementById('btn-avancar-status');
     const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
     const btnImprimirCanhoto = document.getElementById('btn-imprimir-canhoto');
+    const btnConfirmarPagamento = document.getElementById('btn-confirmar-pagamento'); // NOVO BOTÃO
 
     // Elementos de Configurações
     const btnAbrirConfig = document.getElementById('btn-abrir-config');
@@ -28,6 +29,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     const tabContents = document.querySelectorAll('.tab-content');
     const historicoTabelaBody = document.getElementById('historico-tabela-body');
     const historicoPaginacao = document.getElementById('historico-paginacao');
+    
+    // Filtros de Data (NOVOS)
+    const histDataInicioInput = document.getElementById('hist-data-inicio');
+    const histDataFimInput = document.getElementById('hist-data-fim');
+    const aplicarFiltroHistoricoBtn = document.getElementById('aplicar-filtro-historico');
     // ==================================
 
     let todosPedidos = []; // Pedidos ATIVOS (Kanban)
@@ -38,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let configLoja = { tempo_entrega: 60 }; // Padrão de 60 minutos
     let timerInterval = null;
     let supabaseChannel = null;
-    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
+    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
     
     // ==================================
     // === NOVAS VARIÁVEIS (PAGINAÇÃO) ===
@@ -112,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .select('*', { count: 'exact', head: true })
                 .eq('status', 'novo')
                 .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z');
-
+            
             if (error) throw error;
 
             // Atualiza a variável global (definida em header-data.js)
@@ -185,10 +191,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             btnAvancarStatus.addEventListener('click', avancarStatusPedido);
         }
         if (btnCancelarPedido) {
-            btnCancelarPedido.addEventListener('click', () => atualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
+            btnCancelarPedido.addEventListener('click', () => actualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
         }
         if (btnImprimirCanhoto) {
             btnImprimirCanhoto.addEventListener('click', imprimirCanhotoDelivery);
+        }
+        // NOVO LISTENER: Botão de Confirmar Pagamento
+        if (btnConfirmarPagamento) {
+            btnConfirmarPagamento.addEventListener('click', confirmarPagamentoManual);
         }
 
         // Listeners do Modal de Configurações
@@ -216,6 +226,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 switchTab(tabId);
             });
         });
+        
+        // NOVO LISTENER: Filtro de Histórico
+        if (aplicarFiltroHistoricoBtn) {
+            aplicarFiltroHistoricoBtn.addEventListener('click', () => carregarHistoricoPedidos(1));
+        }
         // ==================================
     }
 
@@ -239,7 +254,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         // Se estiver trocando para o histórico e ele não tiver sido carregado, carregue-o
-        if (tabId === 'tab-historico' && todosPedidosHistorico.length === 0) {
+        if (tabId === 'tab-historico') {
+            // Tenta inicializar os filtros de data
+            if (!histDataInicioInput.value) {
+                const hoje = new Date().toISOString().split('T')[0];
+                const seteDiasAtras = new Date();
+                seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+                
+                histDataFimInput.value = hoje;
+                histDataInicioInput.value = seteDiasAtras.toISOString().split('T')[0];
+            }
             carregarHistoricoPedidos(1);
         }
     }
@@ -309,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         // Atualiza os timers imediatamente após exibir
-        atualizarTimers();
+        actualizarTimers();
     }
     
     /**
@@ -457,12 +481,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         // Configura o botão de avançar
         btnAvancarStatus.style.display = statusInfo.next ? 'inline-flex' : 'none';
+        btnConfirmarPagamento.style.display = 'none'; // Esconde por padrão
         btnAvancarStatus.textContent = statusInfo.nextText || '';
         btnAvancarStatus.setAttribute('data-next-status', statusInfo.next);
         
         // Esconde botões se o pedido estiver em status final
         btnCancelarPedido.style.display = pedidoSelecionado.status !== 'cancelado' && pedidoSelecionado.status !== 'entregue' ? 'inline-flex' : 'none';
         btnAvancarStatus.style.display = pedidoSelecionado.status !== 'cancelado' && pedidoSelecionado.status !== 'entregue' ? btnAvancarStatus.style.display : 'none';
+        
+        // MOSTRA BOTÃO DE CONFIRMAR PAGAMENTO se não estiver pago/entregue/cancelado
+        const isNotFinalStatus = pedidoSelecionado.status !== 'cancelado' && pedidoSelecionado.status !== 'entregue';
+        const isPendingPayment = (pedidoSelecionado.forma_pagamento === 'PIX' || pedidoSelecionado.forma_pagamento.includes('Cartão')) && 
+                                 !pedidoSelecionado.observacoes.includes('Pagamento PIX/Comprovante CONFIRMADO');
+        if (isNotFinalStatus && isPendingPayment) {
+            btnConfirmarPagamento.style.display = 'inline-flex';
+        }
         
         // Se for o último status, forçar o botão a ser azul
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
@@ -494,10 +527,44 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function avancarStatusPedido() {
         const nextStatus = btnAvancarStatus.getAttribute('data-next-status');
         if (!nextStatus) return;
-        await atualizarStatusPedido(nextStatus, `Confirma a mudança de status para "${STATUS_MAP[nextStatus].title}"?`);
+        await actualizarStatusPedido(nextStatus, `Confirma a mudança de status para "${STATUS_MAP[nextStatus].title}"?`);
     }
 
-    async function atualizarStatusPedido(novoStatus, mensagemConfirmacao) {
+    // NOVA FUNÇÃO: CONFIRMAÇÃO MANUAL DE PAGAMENTO
+    async function confirmarPagamentoManual() {
+        if (!pedidoSelecionado) return;
+
+        if (!confirm(`Confirma que o pagamento do pedido #${pedidoSelecionado.id} foi recebido via PIX/Comprovante?`)) return;
+
+        try {
+            const observacoesAtualizadas = `\n--- REGISTRO MANUAL ---\nPagamento PIX/Comprovante CONFIRMADO em: ${new Date().toLocaleString('pt-BR')}\n-----------------------\n` + pedidoSelecionado.observacoes;
+            
+            // 1. Atualiza observações para marcar como pago
+            const { error: obsError } = await supabase.from('pedidos_online')
+                .update({ observacoes: observacoesAtualizadas })
+                .eq('id', pedidoSelecionado.id);
+            
+            if (obsError) throw obsError;
+
+            mostrarMensagem(`✅ Pagamento do pedido #${pedidoSelecionado.id} confirmado e registrado!`, 'success');
+            
+            // 2. Se estiver em status 'novo', avança para 'preparando' automaticamente
+            if (pedidoSelecionado.status === 'novo') {
+                 await actualizarStatusPedido('preparando', `Pagamento Confirmado. Avançando para Preparando...`);
+            } else {
+                 // Se já estava em 'preparando' ou 'pronto', apenas fecha o modal e redesenha.
+                 modalDetalhes.style.display = 'none';
+                 // Atualiza o array local em vez de recarregar a página inteira
+                 const pedidoAtualizado = todosPedidos.find(p => p.id === pedidoSelecionado.id);
+                 if(pedidoAtualizado) pedidoAtualizado.observacoes = observacoesAtualizadas;
+                 exibirPedidosNoBoard(todosPedidos);
+            }
+        } catch (error) {
+            mostrarMensagem('Erro ao confirmar pagamento: ' + error.message, 'error');
+        }
+    }
+
+    async function actualizarStatusPedido(novoStatus, mensagemConfirmacao) {
         if (!pedidoSelecionado || !confirm(mensagemConfirmacao)) return;
         
         try {
@@ -532,8 +599,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             // ==================================
 
         } catch (error) {
-            console.error('❌ Erro ao atualizar status:', error);
-            mostrarMensagem('Erro ao atualizar status: ' + error.message, 'error');
+            console.error('❌ Erro ao actualizar status:', error);
+            mostrarMensagem('Erro ao actualizar status: ' + error.message, 'error');
         }
     }
 
@@ -632,7 +699,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             mostrarMensagem('Configurações salvas com sucesso!', 'success');
             fecharModalConfiguracoes();
-            atualizarTimers(); // Atualiza os timers com o novo tempo
+            actualizarTimers(); // Actualiza os timers com o novo tempo
 
         } catch (error) {
             console.error('❌ Erro ao salvar configurações:', error);
@@ -694,7 +761,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     /**
-     * Inicia o intervalo que atualiza os timers dos cards.
+     * Inicia o intervalo que actualiza os timers dos cards.
      */
     function iniciarAtualizadorDeTimers() {
         // Limpa qualquer timer antigo
@@ -702,17 +769,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             clearInterval(timerInterval);
         }
         
-        // Atualiza os timers a cada 15 segundos
-        timerInterval = setInterval(atualizarTimers, 15000); 
+        // Actualiza os timers a cada 15 segundos
+        timerInterval = setInterval(actualizarTimers, 15000); 
         
         // Executa uma vez imediatamente
-        atualizarTimers();
+        actualizarTimers();
     }
 
     /**
-     * Atualiza todos os timers visíveis no board.
+     * Actualiza todos os timers visíveis no board.
      */
-    function atualizarTimers() {
+    function actualizarTimers() {
         const agora = new Date();
         const tempoEntregaPadrao = configLoja.tempo_entrega || 60; // Pega o tempo do cache
 
@@ -857,28 +924,30 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         paginaAtualHistorico = pagina;
         const offset = (pagina - 1) * ITENS_POR_PAGINA;
+        
+        const dataInicio = histDataInicioInput.value;
+        const dataFim = histDataFimInput.value;
 
         historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;"><div class="spinner"></div></td></tr>`;
 
         try {
-            // 1. Busca os pedidos da página atual
-            const { data: pedidos, error: pedidosError } = await supabase
+            let query = supabase
                 .from('pedidos_online')
-                .select('*')
-                .in('status', ['entregue', 'cancelado']) // Apenas pedidos finalizados
+                .select('*', { count: 'exact' }); // Busca com contagem
+            
+            // Aplica filtros de status
+            query = query.in('status', ['entregue', 'cancelado']);
+
+            // Aplica filtros de data (NOVOS)
+            if (dataInicio) query = query.gte('created_at', dataInicio + 'T00:00:00Z');
+            if (dataFim) query = query.lte('created_at', dataFim + 'T23:59:59Z');
+
+            // 1. Busca os pedidos da página atual
+            const { data: pedidos, error: pedidosError, count } = await query
                 .order('created_at', { ascending: false }) // Mais recentes primeiro
                 .range(offset, offset + ITENS_POR_PAGINA - 1);
 
             if (pedidosError) throw pedidosError;
-
-            // 2. Busca a contagem total de pedidos (para a paginação)
-            // O 'count: 'exact'' faz o Supabase retornar o total de linhas que batem com o filtro
-            const { count, error: countError } = await supabase
-                .from('pedidos_online')
-                .select('*', { count: 'exact', head: true }) // 'head: true' não baixa os dados, só a contagem
-                .in('status', ['entregue', 'cancelado']);
-            
-            if (countError) throw countError;
 
             todosPedidosHistorico = pedidos || [];
             totalPedidosHistorico = count || 0;

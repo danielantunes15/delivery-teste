@@ -115,8 +115,8 @@
                                     </button>
                                     <a href="pedido.html" target="_blank" class="btn btn-primary btn-sm">
                                         <i class="fas fa-external-link-alt"></i> Ver Cardápio
-                                    </a>
-                                    <button id="btn-abrir-config" class="btn btn-secondary btn-sm" style="background-color: #6f42c1; color: white;">
+                                    </a
+                                    ><button id="btn-abrir-config" class="btn btn-secondary btn-sm" style="background-color: #6f42c1; color: white;">
                                         <i class="fas fa-cog"></i> Configurações
                                     </button>
                                 </div>
@@ -167,6 +167,11 @@
                         <div class="card" style="margin-top: 1.5rem;">
                             <h3>Histórico de Pedidos (Finalizados e Cancelados)</h3>
                             
+                            <div class="filtros-data-personalizada" style="margin-bottom: 1.5rem; justify-content: flex-start; gap: 1rem;">
+                                <div class="filtro-item"><label for="hist-data-inicio">De:</label><input type="date" id="hist-data-inicio"></div>
+                                <div class="filtro-item"><label for="hist-data-fim">Até:</label><input type="date" id="hist-data-fim"></div>
+                                <button id="aplicar-filtro-historico" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Filtrar Histórico</button>
+                            </div>
                             <div class="table-container">
                                 <table id="historico-tabela">
                                     <thead>
@@ -204,6 +209,9 @@
                             <div>
                                 <button class="btn btn-secondary btn-imprimir" id="btn-imprimir-canhoto">
                                     <i class="fas fa-print"></i> Imprimir Canhoto
+                                </button>
+                                <button class="btn btn-success" id="btn-confirmar-pagamento" style="display: none;">
+                                    <i class="fas fa-check-double"></i> Pagamento OK
                                 </button>
                             </div>
                             <div>
