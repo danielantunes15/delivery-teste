@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     let taxaDebitoAtual = 0;
     let taxaCreditoAtual = 0;
 
+    // ==================================================================
+    // === INÍCIO DA CORREÇÃO (Cache de Categorias) ===
+    // ==================================================================
+    let categoriasCache = []; // Cache para armazenar nomes das categorias
+    // ==================================================================
+    // === FIM DA CORREÇÃO ===
+    // ==================================================================
+
     const toggleDisplay = (element, show) => { if (element) element.style.display = show ? 'block' : 'none'; };
     const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
     const mostrarMensagem = (mensagem, tipo = 'success') => {
@@ -91,11 +99,43 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    // ==================================================================
+    // === INÍCIO DA CORREÇÃO (Nova Função de Cache) ===
+    // ==================================================================
+    /**
+     * Carrega todas as categorias do banco para um cache local.
+     * Isso evita a necessidade de um join que está falhando no banco.
+     */
+    async function carregarCategoriasCache() {
+        try {
+            const { data, error } = await supabase.from('categorias').select('id, nome');
+            if (error) throw error;
+            categoriasCache = data || [];
+            console.log(`✅ Cache de ${categoriasCache.length} categorias carregado.`);
+        } catch (error) {
+            console.error('❌ Erro ao carregar cache de categorias:', error);
+            mostrarMensagem('Falha ao carregar categorias, o gráfico pode ficar incompleto.', 'error');
+        }
+    }
+    // ==================================================================
+    // === FIM DA CORREÇÃO ===
+    // ==================================================================
+
+
     // --- INICIALIZAÇÃO ---
     async function inicializar() {
         toggleLoading(true);
         await new Promise(resolve => setTimeout(resolve, 100));
         await buscarTaxasDoBanco();
+        
+        // ==================================================================
+        // === INÍCIO DA CORREÇÃO (Chamar Cache) ===
+        // ==================================================================
+        await carregarCategoriasCache(); // Carrega as categorias antes de tudo
+        // ==================================================================
+        // === FIM DA CORREÇÃO ===
+        // ==================================================================
+        
         configurarFiltrosEEventos();
         await carregarDadosEAtualizarDashboard();
         toggleLoading(false);
@@ -195,9 +235,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // CORREÇÃO: createLocalISO garantirá que as datas de início e fim estejam no fuso local.
-        const dataInicioQuery = createLocalISO(dataInicioInput);
-        const dataFimQuery = createLocalISO(dataFimInput, true); 
+        // Correção anterior: Usar data simples para a coluna 'data_venda'
+        const dataInicioQuery = dataInicioInput;
+        const dataFimQuery = dataFimInput;
 
         dataInicioDashboard = dataInicioInput;
         dataFimDashboard = dataFimInput;
@@ -213,11 +253,30 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         try {
+            // ==================================================================
+            // === INÍCIO DA CORREÇÃO (Query Select) ===
+            // ==================================================================
+            // Removemos o join quebrado 'categoria:categorias(nome)'
+            // e garantimos que 'categoria_id' seja buscado em 'produtos'.
             const { data, error } = await supabase.from('vendas')
-                .select(`*, usuario:sistema_usuarios(nome), itens:vendas_itens(*, produto:produtos(*, categoria:categorias(nome)))`)
+                .select(`
+                    *, 
+                    usuario:sistema_usuarios(nome), 
+                    itens:vendas_itens(
+                        *, 
+                        produto:produtos(
+                            id, 
+                            nome, 
+                            categoria_id
+                        )
+                    )
+                `)
                 .gte('data_venda', dataInicioQuery)
                 .lte('data_venda', dataFimQuery)
                 .order('created_at', { ascending: false });
+            // ==================================================================
+            // === FIM DA CORREÇÃO ===
+            // ==================================================================
 
             if (error) throw error;
             vendasDoDashboard = data || [];
@@ -613,7 +672,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         dadosBase.forEach(venda => {
             (venda.itens || []).forEach(item => {
                 const nome = item.produto?.nome || 'Produto Removido';
-                const categoria = item.produto?.categoria?.nome || 'Sem Categoria';
+                
+                // ==================================================================
+                // === INÍCIO DA CORREÇÃO (PDF Produtos) ===
+                // ==================================================================
+                // Usa o cache de categorias em vez do join quebrado
+                const catId = item.produto?.categoria_id;
+                const categoriaEncontrada = categoriasCache.find(c => c.id === catId);
+                const categoria = categoriaEncontrada ? categoriaEncontrada.nome : (catId ? 'Sem Categoria' : 'Produto Removido');
+                // ==================================================================
+                // === FIM DA CORREÇÃO ===
+                // ==================================================================
+                
                 const valorVendido = item.preco_unitario * item.quantidade;
 
                 produtos[nome] = produtos[nome] || { 
@@ -698,7 +768,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     function criarGraficoCategorias(dados) {
         const categorias = {};
         dados.forEach(v => (v.itens || []).forEach(item => {
-            const cat = item.produto?.categoria?.nome || 'Sem Categoria';
+            
+            // ==================================================================
+            // === INÍCIO DA CORREÇÃO (Gráfico Categorias) ===
+            // ==================================================================
+            // Usa o cache de categorias em vez do join quebrado
+            const catId = item.produto?.categoria_id;
+            const categoriaEncontrada = categoriasCache.find(c => c.id === catId);
+            const cat = categoriaEncontrada ? categoriaEncontrada.nome : (catId ? 'Sem Categoria' : 'Produto Removido');
+            // ==================================================================
+            // === FIM DA CORREÇÃO ===
+            // ==================================================================
+
             categorias[cat] = (categorias[cat] || 0) + (item.preco_unitario * item.quantidade);
         }));
         charts.categorias = criarGrafico('chart-categorias', 'pie', {
