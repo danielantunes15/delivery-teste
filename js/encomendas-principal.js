@@ -21,8 +21,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     const sinalEncomendaInput = document.getElementById('sinal-encomenda');
     const clientesTabelaBody = document.getElementById('clientes-tabela-body');
     const formCadastroCliente = document.getElementById('form-cadastro-cliente');
-    const encomendasNavBtns = document.querySelectorAll('.encomendas-nav-btn');
+    
+    // ================================================================
+    // === INÍCIO DA CORREÇÃO (Seletor dos botões principais) ===
+    // ================================================================
+    // Procura por .tab-button que seja filho DIRETO de .tabs-nav
+    const encomendasNavBtns = document.querySelectorAll('.tabs-nav > .tab-button');
+    // Procura por .tab-button DENTRO de .tabs-header (para as sub-abas de Clientes)
     const tabButtons = document.querySelectorAll('.tabs-header .tab-button');
+    // ================================================================
+    // === FIM DA CORREÇÃO ===
+    // ================================================================
+    
     const pageContents = document.querySelectorAll('.page-content');
     const tabContents = document.querySelectorAll('.tab-content');
     const clienteIdEdicao = document.getElementById('cliente-id-edicao');
@@ -299,6 +309,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
+        // Listener dos botões PRINCIPAIS ("Criar", "Lista", "Clientes")
         encomendasNavBtns.forEach(btn => {
             btn.addEventListener('click', async () => {
                 const page = btn.getAttribute('data-page');
@@ -311,6 +322,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         });
         
+        // Listener das SUB-ABAS (dentro de "Clientes")
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const tabId = btn.getAttribute('data-tab');

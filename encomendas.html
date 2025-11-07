@@ -101,6 +101,7 @@
                             <i class="fas fa-users"></i> Clientes
                         </button>
                     </div>
+
                     <div class="encomendas-content">
                         <div id="page-criar-encomenda" class="page-content active">
                             <section class="card">
@@ -366,30 +367,15 @@
                 }
             });
 
-            // CORREÇÃO: Lógica das abas do Cliente (sub-abas)
-            const subTabButtons = document.querySelectorAll('.tabs-header .tab-button');
-            const subTabContents = document.querySelectorAll('.tab-content');
-            
-            subTabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const tabId = button.getAttribute('data-tab');
-                    
-                    // Desativa todos os botões e painéis DENTRO do submenu
-                    subTabButtons.forEach(btn => btn.classList.remove('active'));
-                    subTabContents.forEach(content => {
-                        content.classList.remove('active');
-                        content.style.display = 'none';
-                    });
-                    
-                    // Ativa o botão e o painel corretos
-                    button.classList.add('active');
-                    const activeContent = document.getElementById(tabId);
-                    if (activeContent) {
-                        activeContent.classList.add('active');
-                        activeContent.style.display = 'block';
-                    }
-                });
-            });
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Script duplicado removido) ===
+            // ================================================================
+            // O script que estava aqui foi removido.
+            // A lógica correta já está em js/encomendas-principal.js
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
+
 
             // Lógica dos Modais (para fechar)
             document.querySelectorAll('.modal .close').forEach(closeBtn => {
