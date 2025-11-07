@@ -34,7 +34,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    background: var(--bg-light);
+    background: #FFF0F5; /* <-- CORREÇÃO: Fundo rosa claro (como nas imagens) */
     min-height: 100vh;
     overflow-x: hidden;
     margin: 0;

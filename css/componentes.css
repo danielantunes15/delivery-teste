@@ -1368,3 +1368,353 @@ table tr:hover {
     flex: 1 1 100%;
   }
 }
+
+/* ============================================== */
+/* === INÍCIO: CSS NOVO PARA RELATORIOS.HTML === */
+/* ============================================== */
+
+/* Abas (Estilo da Imagem) */
+.tabs-nav {
+    display: flex;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+.tab-button {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+.tab-button:hover {
+    background: var(--bg-light);
+    color: var(--text-color);
+}
+.tab-button.active {
+    background: var(--secondary-color);
+    color: white;
+    box-shadow: 0 4px 10px rgba(154, 50, 108, 0.3);
+}
+
+/* Painéis de Abas */
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+.tab-pane.active {
+    display: block;
+}
+
+/* Header Roxo (Ex: "Análise de Vendas Detalhada") */
+.new-dashboard-header {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 20px rgba(154, 50, 108, 0.2);
+}
+.new-dashboard-header h2 {
+    margin: 0 0 0.25rem 0;
+}
+.new-dashboard-header p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Filtros */
+.filtros-container-novo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.filtros-rapidos-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.filtro-rapido {
+    background: white;
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+.filtro-rapido:hover {
+    background: var(--bg-light);
+}
+.filtro-rapido.active {
+    background: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+.filtros-data-personalizada {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.filtro-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.filtro-item label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.filtro-item input[type="date"] {
+    height: 40px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    width: auto;
+}
+
+/* KPIs (Key Performance Indicators) */
+.kpi-financial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.kpi-card-detailed {
+    background: white;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    border-left: 5px solid transparent; /* Cor definida por tipo */
+    transition: var(--transition);
+}
+.kpi-card-detailed:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+.kpi-icon-wrapper {
+    font-size: 1.5rem;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+.kpi-data .kpi-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.kpi-data .kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+}
+
+/* Cores dos KPIs */
+.kpi-faturamento { border-left-color: #8a2be2; }
+.kpi-faturamento .kpi-icon-wrapper { background: #8a2be2; }
+.kpi-liquido { border-left-color: #28a745; }
+.kpi-liquido .kpi-icon-wrapper { background: #28a745; }
+.kpi-taxas { border-left-color: #dc3545; }
+.kpi-taxas .kpi-icon-wrapper { background: #dc3545; }
+.kpi-transacoes { border-left-color: #17a2b8; }
+.kpi-transacoes .kpi-icon-wrapper { background: #17a2b8; }
+.kpi-medio { border-left-color: #ffc107; }
+.kpi-medio .kpi-icon-wrapper { background: #ffc107; }
+.kpi-dia { border-left-color: #6f42c1; }
+.kpi-dia .kpi-icon-wrapper { background: #6f42c1; }
+
+/* Layout dos Gráficos */
+.dashboard-main-layout-v2 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.col-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.col-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.grafico-card-v2 {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    flex-grow: 1;
+}
+.grafico-card-v2 h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.75rem;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.grafico-container-v2 {
+    position: relative;
+    width: 100%;
+}
+.table-moderna {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table-moderna th {
+    background: none;
+    color: var(--primary-dark);
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--primary-light);
+    font-size: 0.9rem;
+}
+.table-moderna td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+}
+.badge-pagamento {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+}
+
+/* Layout da Aba "Gerar Relatórios" */
+.report-date-filter-inputs {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.filter-note {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 1rem;
+}
+.report-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.report-option-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: var(--transition);
+}
+.report-option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+.report-option-card .report-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+.report-option-card h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+.report-option-card p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    min-height: 50px;
+}
+.report-option-card .btn {
+    background: var(--primary-color);
+    width: 100%;
+}
+.report-option-card .btn:hover {
+    background: var(--primary-dark);
+}
+
+/* Layout da Aba "Configurações" */
+.settings-container h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+.settings-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.settings-instructions {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+.settings-instructions p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Responsividade do Dashboard */
+@media (max-width: 900px) {
+    .dashboard-main-layout-v2 {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 767px) {
+    .tabs-nav {
+        flex-direction: column;
+    }
+    .kpi-financial-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .filtros-container-novo {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filtros-data-personalizada {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filtro-item input[type="date"] {
+        width: 100%;
+    }
+    .new-dashboard-header {
+        padding: 1.5rem;
+        text-align: center;
+    }
+}
