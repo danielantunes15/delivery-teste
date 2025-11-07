@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let configLoja = { tempo_entrega: 60 }; // Padrão de 60 minutos
     let timerInterval = null;
     let supabaseChannel = null;
-    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
+    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
     
     // ==================================
     // === NOVAS VARIÁVEIS (PAGINAÇÃO) ===
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .select('*', { count: 'exact', head: true })
                 .eq('status', 'novo')
                 .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z');
-            
+
             if (error) throw error;
 
             // Atualiza a variável global (definida em header-data.js)
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             btnAvancarStatus.addEventListener('click', avancarStatusPedido);
         }
         if (btnCancelarPedido) {
-            btnCancelarPedido.addEventListener('click', () => actualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
+            btnCancelarPedido.addEventListener('click', () => atualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
         }
         if (btnImprimirCanhoto) {
             btnImprimirCanhoto.addEventListener('click', imprimirCanhotoDelivery);
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             button.classList.toggle('active', button.getAttribute('data-tab') === tabId);
         });
 
-        // Se estiver trocando para o histórico e ele não tiver sido carregado, carregue-o
+        // Se estiver trocando para o histórico
         if (tabId === 'tab-historico') {
             // Tenta inicializar os filtros de data
             if (!histDataInicioInput.value) {
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         // Atualiza os timers imediatamente após exibir
-        actualizarTimers();
+        atualizarTimers();
     }
     
     /**
@@ -416,6 +416,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         const trocoInfo = parseTroco(pedido.observacoes);
         const pagamentoInfo = formatarFormaPagamento(pedido.forma_pagamento);
         const totalInfo = formatarMoeda(pedido.total);
+        
+        // **NOVO: Verificação de Pagamento Confirmado**
+        const isPago = pedido.observacoes.includes('Pagamento CONFIRMADO');
+        const pagamentoOkHtml = isPago 
+            ? `<span class="badge-pagamento-ok" style="background: var(--success-color); color: white; font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 5px; display: inline-block;">
+                 <i class="fas fa-check-double"></i> Pago
+               </span>`
+            : '';
 
         // O card inteiro é clicável para abrir o modal
         card.innerHTML = `
@@ -445,8 +453,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         <strong>${totalInfo}</strong>
                     </div>
                     <div class="info-pagamento">
-                        <span>${pagamentoInfo}</span>
-                        <strong class="troco-info">${trocoInfo}</strong>
+                        <span>${pagamentoInfo} ${pagamentoOkHtml}</span> <strong class="troco-info">${trocoInfo}</strong>
                     </div>
                 </div>
                 <div class="card-novo-delivery">
@@ -479,23 +486,20 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         const statusInfo = STATUS_MAP[pedidoSelecionado.status];
         
-        // Configura o botão de avançar
-        btnAvancarStatus.style.display = statusInfo.next ? 'inline-flex' : 'none';
-        btnConfirmarPagamento.style.display = 'none'; // Esconde por padrão
+        // **NOVA LÓGICA DE EXIBIÇÃO DE BOTÕES**
+        const isFinal = pedidoSelecionado.status === 'cancelado' || pedidoSelecionado.status === 'entregue';
+        const isConfirmed = pedidoSelecionado.observacoes.includes('Pagamento CONFIRMADO');
+
+        // Botão Avançar: Só aparece se o status não for final
+        btnAvancarStatus.style.display = (isFinal || !statusInfo.next) ? 'none' : 'inline-flex';
         btnAvancarStatus.textContent = statusInfo.nextText || '';
         btnAvancarStatus.setAttribute('data-next-status', statusInfo.next);
+
+        // Botão Cancelar: Só aparece se o status não for final
+        btnCancelarPedido.style.display = isFinal ? 'none' : 'inline-flex';
         
-        // Esconde botões se o pedido estiver em status final
-        btnCancelarPedido.style.display = pedidoSelecionado.status !== 'cancelado' && pedidoSelecionado.status !== 'entregue' ? 'inline-flex' : 'none';
-        btnAvancarStatus.style.display = pedidoSelecionado.status !== 'cancelado' && pedidoSelecionado.status !== 'entregue' ? btnAvancarStatus.style.display : 'none';
-        
-        // MOSTRA BOTÃO DE CONFIRMAR PAGAMENTO se não estiver pago/entregue/cancelado
-        const isNotFinalStatus = pedidoSelecionado.status !== 'cancelado' && pedidoSelecionado.status !== 'entregue';
-        const isPendingPayment = (pedidoSelecionado.forma_pagamento === 'PIX' || pedidoSelecionado.forma_pagamento.includes('Cartão')) && 
-                                 !pedidoSelecionado.observacoes.includes('Pagamento PIX/Comprovante CONFIRMADO');
-        if (isNotFinalStatus && isPendingPayment) {
-            btnConfirmarPagamento.style.display = 'inline-flex';
-        }
+        // Botão Pagamento OK: Só aparece se o status não for final E o pagamento ainda NÃO foi confirmado
+        btnConfirmarPagamento.style.display = (isFinal || isConfirmed) ? 'none' : 'inline-flex';
         
         // Se for o último status, forçar o botão a ser azul
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
@@ -504,8 +508,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         const todosItens = parseItens(pedidoSelecionado.observacoes, true); // true = formatar como HTML
         const obsAdicionais = parseObsAdicionais(pedidoSelecionado.observacoes);
 
+        // **NOVO: Badge de Confirmação no Modal**
+        const confirmacaoHtml = isConfirmed 
+            ? `<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 1rem; text-align: center;">
+                 <i class="fas fa-check-double"></i> Pagamento Confirmado Manualmente
+               </div>`
+            : '';
+
         detalhesContent.innerHTML = `
-            <p><strong>Status Atual:</strong> <span style="font-weight: bold; color: ${statusInfo.color}">${statusInfo.title}</span></p>
+            ${confirmacaoHtml} <p><strong>Status Atual:</strong> <span style="font-weight: bold; color: ${statusInfo.color}">${statusInfo.title}</span></p>
             <p><strong>Cliente:</strong> ${pedidoSelecionado.nome_cliente}</p>
             <p><strong>Telefone:</strong> <a href="https://wa.me/55${pedidoSelecionado.telefone_cliente.replace(/\D/g,'')}" target="_blank">${pedidoSelecionado.telefone_cliente}</a></p>
             <p><strong>Endereço:</strong> ${pedidoSelecionado.endereco_entrega}</p>
@@ -527,17 +538,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function avancarStatusPedido() {
         const nextStatus = btnAvancarStatus.getAttribute('data-next-status');
         if (!nextStatus) return;
-        await actualizarStatusPedido(nextStatus, `Confirma a mudança de status para "${STATUS_MAP[nextStatus].title}"?`);
+        await atualizarStatusPedido(nextStatus, `Confirma a mudança de status para "${STATUS_MAP[nextStatus].title}"?`);
     }
 
-    // NOVA FUNÇÃO: CONFIRMAÇÃO MANUAL DE PAGAMENTO
+    // FUNÇÃO DE CONFIRMAÇÃO MANUAL DE PAGAMENTO (Atualizada)
     async function confirmarPagamentoManual() {
         if (!pedidoSelecionado) return;
 
-        if (!confirm(`Confirma que o pagamento do pedido #${pedidoSelecionado.id} foi recebido via PIX/Comprovante?`)) return;
+        if (!confirm(`Confirma que o pagamento do pedido #${pedidoSelecionado.id} foi recebido?\n(Isso vale para Dinheiro, PIX ou Cartão)`)) return;
 
         try {
-            const observacoesAtualizadas = `\n--- REGISTRO MANUAL ---\nPagamento PIX/Comprovante CONFIRMADO em: ${new Date().toLocaleString('pt-BR')}\n-----------------------\n` + pedidoSelecionado.observacoes;
+            // **MUDANÇA: String genérica "Pagamento CONFIRMADO"**
+            const observacoesAtualizadas = `\n--- REGISTRO MANUAL ---\nPagamento CONFIRMADO em: ${new Date().toLocaleString('pt-BR')}\n-----------------------\n` + pedidoSelecionado.observacoes;
             
             // 1. Atualiza observações para marcar como pago
             const { error: obsError } = await supabase.from('pedidos_online')
@@ -546,25 +558,31 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             if (obsError) throw obsError;
 
+            // 2. Atualiza o objeto local (para re-renderizar o modal e o card)
+            pedidoSelecionado.observacoes = observacoesAtualizadas;
+            const pedidoNoKanban = todosPedidos.find(p => p.id === pedidoSelecionado.id);
+            if(pedidoNoKanban) {
+                pedidoNoKanban.observacoes = observacoesAtualizadas;
+            }
+
             mostrarMensagem(`✅ Pagamento do pedido #${pedidoSelecionado.id} confirmado e registrado!`, 'success');
             
-            // 2. Se estiver em status 'novo', avança para 'preparando' automaticamente
+            // 3. Re-renderiza o modal e o kanban
+            abrirModalDetalhes(pedidoSelecionado.id); // Reabre o modal com o badge
+            exibirPedidosNoBoard(todosPedidos);      // Redesenha o kanban com o badge
+            
+            // 4. Se estiver em status 'novo', avança para 'preparando' automaticamente
             if (pedidoSelecionado.status === 'novo') {
-                 await actualizarStatusPedido('preparando', `Pagamento Confirmado. Avançando para Preparando...`);
-            } else {
-                 // Se já estava em 'preparando' ou 'pronto', apenas fecha o modal e redesenha.
-                 modalDetalhes.style.display = 'none';
-                 // Atualiza o array local em vez de recarregar a página inteira
-                 const pedidoAtualizado = todosPedidos.find(p => p.id === pedidoSelecionado.id);
-                 if(pedidoAtualizado) pedidoAtualizado.observacoes = observacoesAtualizadas;
-                 exibirPedidosNoBoard(todosPedidos);
+                 // A função atualizarStatusPedido vai fechar o modal
+                 await atualizarStatusPedido('preparando', `Pagamento Confirmado. Avançando para Preparando...`);
             }
+
         } catch (error) {
             mostrarMensagem('Erro ao confirmar pagamento: ' + error.message, 'error');
         }
     }
 
-    async function actualizarStatusPedido(novoStatus, mensagemConfirmacao) {
+    async function atualizarStatusPedido(novoStatus, mensagemConfirmacao) {
         if (!pedidoSelecionado || !confirm(mensagemConfirmacao)) return;
         
         try {
@@ -599,8 +617,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             // ==================================
 
         } catch (error) {
-            console.error('❌ Erro ao actualizar status:', error);
-            mostrarMensagem('Erro ao actualizar status: ' + error.message, 'error');
+            console.error('❌ Erro ao atualizar status:', error);
+            mostrarMensagem('Erro ao atualizar status: ' + error.message, 'error');
         }
     }
 
@@ -699,7 +717,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             mostrarMensagem('Configurações salvas com sucesso!', 'success');
             fecharModalConfiguracoes();
-            actualizarTimers(); // Actualiza os timers com o novo tempo
+            atualizarTimers(); // Atualiza os timers com o novo tempo
 
         } catch (error) {
             console.error('❌ Erro ao salvar configurações:', error);
@@ -761,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     /**
-     * Inicia o intervalo que actualiza os timers dos cards.
+     * Inicia o intervalo que atualiza os timers dos cards.
      */
     function iniciarAtualizadorDeTimers() {
         // Limpa qualquer timer antigo
@@ -769,17 +787,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             clearInterval(timerInterval);
         }
         
-        // Actualiza os timers a cada 15 segundos
-        timerInterval = setInterval(actualizarTimers, 15000); 
+        // Atualiza os timers a cada 15 segundos
+        timerInterval = setInterval(atualizarTimers, 15000); 
         
         // Executa uma vez imediatamente
-        actualizarTimers();
+        atualizarTimers();
     }
 
     /**
-     * Actualiza todos os timers visíveis no board.
+     * Atualiza todos os timers visíveis no board.
      */
-    function actualizarTimers() {
+    function atualizarTimers() {
         const agora = new Date();
         const tempoEntregaPadrao = configLoja.tempo_entrega || 60; // Pega o tempo do cache
 
@@ -968,7 +986,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderizarTabelaHistorico(pedidos) {
         historicoTabelaBody.innerHTML = '';
         if (pedidos.length === 0) {
-            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nenhum pedido encontrado no histórico.</td></tr>`;
+            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nenhum pedido encontrado no histórico${(histDataInicioInput.value || histDataFimInput.value) ? ' para este filtro' : ''}.</td></tr>`;
             return;
         }
 
