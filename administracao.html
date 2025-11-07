@@ -123,6 +123,9 @@
                                 <button class="tab-btn" data-tab="novo-usuario">
                                     <i class="fas fa-user-plus"></i> Novo Usuário
                                 </button>
+                                <button class="tab-btn" data-tab="excluir-vendas">
+                                    <i class="fas fa-trash-alt"></i> Excluir Vendas
+                                </button>
                             </div>
 
                             <div id="lista-usuarios" class="tab-content active">
@@ -230,6 +233,49 @@
                                     </div>
                                 </form>
                             </div>
+
+                            <div id="excluir-vendas" class="tab-content">
+                                <h3 style="color: var(--error-color);"><i class="fas fa-exclamation-triangle"></i> Exclusão de Vendas</h3>
+                                <p>Use esta ferramenta com cuidado. Excluir uma venda é irreversível e removerá todos os dados associados a ela (itens, caixa).</p>
+                                
+                                <div class="filtros-data-personalizada" style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1rem;">
+                                    <div class="filtro-item">
+                                        <label for="vendas-data-inicio">Data Início</label>
+                                        <input type="date" id="vendas-data-inicio">
+                                    </div>
+                                    <div class="filtro-item">
+                                        <label for="vendas-data-fim">Data Fim</label>
+                                        <input type="date" id="vendas-data-fim">
+                                    </div>
+                                    <button id="buscar-vendas-btn" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-search"></i> Buscar Vendas
+                                    </button>
+                                </div>
+                                
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID Venda</th>
+                                                <th>Data</th>
+                                                <th>Cliente</th>
+                                                <th>Vendedor</th>
+                                                <th>Total (R$)</th>
+                                                <th>Pagamento</th>
+                                                <th style="width: 100px;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="vendas-body">
+                                            <tr>
+                                                <td colspan="7" style="text-align: center;">
+                                                    Selecione um período e clique em "Buscar Vendas".
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
                         </div>
                     </div>
 

@@ -43,9 +43,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-usuarios');
     const refreshBtn = document.getElementById('refresh-usuarios');
 
+    // NOVOS ELEMENTOS (Excluir Vendas)
+    const vendasBody = document.getElementById('vendas-body');
+    const buscarVendasBtn = document.getElementById('buscar-vendas-btn');
+    const vendasDataInicio = document.getElementById('vendas-data-inicio');
+    const vendasDataFim = document.getElementById('vendas-data-fim');
+
     // Estado global
     let todosUsuarios = [];
     let usuarioEditando = null;
+    let vendasCarregadas = []; // Cache para vendas
+
+    // Helper (NOVO)
+    const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
 
     // Inicializar
     inicializarAdministracao();
@@ -56,6 +66,12 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarLoadingUsuarios();
             await carregarListaUsuarios();
             configurarEventListeners();
+            
+            // Definir datas padrão para o filtro de vendas
+            const hoje = new Date().toISOString().split('T')[0];
+            vendasDataInicio.value = hoje;
+            vendasDataFim.value = hoje;
+            
             console.log('✅ Módulo de administração inicializado com sucesso!');
         } catch (error) {
             console.error('❌ Erro na inicialização:', error);
@@ -83,14 +99,19 @@ document.addEventListener('DOMContentLoaded', function() {
             formEditarUsuario.addEventListener('input', limparErrosFormulario);
         }
 
-        // Busca
+        // Busca (Usuários)
         if (searchInput) {
             searchInput.addEventListener('input', filtrarUsuarios);
         }
 
-        // Atualizar
+        // Atualizar (Usuários)
         if (refreshBtn) {
             refreshBtn.addEventListener('click', carregarListaUsuarios);
+        }
+        
+        // NOVOS LISTENERS (Vendas)
+        if (buscarVendasBtn) {
+            buscarVendasBtn.addEventListener('click', carregarVendasParaExclusao);
         }
 
         // Modal events
@@ -126,6 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tabId === 'novo-usuario') {
             formNovoUsuario?.reset();
             limparErrosFormulario();
+        }
+        
+        // Definir datas padrão ao mudar para a aba de exclusão
+        if (tabId === 'excluir-vendas') {
+            const hoje = new Date().toISOString().split('T')[0];
+            if (!vendasDataInicio.value) vendasDataInicio.value = hoje;
+            if (!vendasDataFim.value) vendasDataFim.value = hoje;
         }
     }
 
@@ -549,6 +577,137 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarMensagem('Erro ao atualizar usuário', 'error');
         }
     }
+    
+    // ================================================================
+    // === NOVAS FUNÇÕES (EXCLUIR VENDAS) ===
+    // ================================================================
+
+    async function carregarVendasParaExclusao() {
+        const dataInicio = vendasDataInicio.value;
+        const dataFim = vendasDataFim.value;
+
+        if (!dataInicio || !dataFim) {
+            mostrarMensagem('Por favor, selecione a data de início e fim.', 'error');
+            return;
+        }
+
+        vendasBody.innerHTML = `<tr><td colspan="7" style="text-align: center;"><div class="loading-spinner"></div> Carregando vendas...</td></tr>`;
+
+        try {
+            const { data, error } = await supabase
+                .from('vendas')
+                .select(`
+                    id,
+                    data_venda,
+                    cliente,
+                    total,
+                    forma_pagamento,
+                    usuario:sistema_usuarios(nome)
+                `)
+                .gte('data_venda', dataInicio)
+                .lte('data_venda', dataFim)
+                .order('data_venda', { ascending: false });
+
+            if (error) throw error;
+
+            vendasCarregadas = data || [];
+            exibirVendasParaExclusao(vendasCarregadas);
+
+        } catch (error)
+        {
+            console.error('Erro ao carregar vendas:', error);
+            mostrarMensagem('Erro ao carregar vendas: ' + error.message, 'error');
+            vendasBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--error-color);">Falha ao carregar vendas.</td></tr>`;
+        }
+    }
+
+    function exibirVendasParaExclusao(vendas) {
+        vendasBody.innerHTML = '';
+
+        if (vendas.length === 0) {
+            vendasBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #666;">Nenhuma venda encontrada para este período.</td></tr>`;
+            return;
+        }
+
+        vendas.forEach(venda => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${venda.id}</td>
+                <td>${formatarData(venda.data_venda)}</td>
+                <td>${venda.cliente || 'N/A'}</td>
+                <td>${venda.usuario?.nome || 'N/A'}</td>
+                <td>${formatarMoeda(venda.total)}</td>
+                <td>${venda.forma_pagamento}</td>
+                <td>
+                    <button class="btn-danger" onclick="excluirVenda('${venda.id}')" title="Excluir Venda">
+                        <i class="fas fa-trash"></i> Excluir
+                    </button>
+                </td>
+            `;
+            vendasBody.appendChild(tr);
+        });
+    }
+
+    /**
+     * Exclui uma venda e seus itens associados.
+     * Esta função DEVE ser global (window.) para ser chamada pelo onclick.
+     */
+    window.excluirVenda = async function(vendaId) {
+        if (!vendaId) return;
+        
+        // Dupla confirmação
+        if (!confirm(`ATENÇÃO!\n\nTem certeza que deseja excluir a Venda ID: ${vendaId}?\n\nEsta ação é IRREVERSÍVEL e removerá todos os itens desta venda do banco de dados.`)) {
+            return;
+        }
+        
+        if (!confirm(`CONFIRMAÇÃO FINAL:\n\nExcluir a Venda ID: ${vendaId}?`)) {
+            mostrarMensagem('Exclusão cancelada.', 'info');
+            return;
+        }
+
+        mostrarMensagem('Excluindo venda... Por favor, aguarde.', 'info');
+
+        try {
+            // 1. Excluir os itens da venda (vendas_itens)
+            // Esta tabela depende da 'vendas', então deve ser apagada primeiro.
+            console.log(`Excluindo itens da venda ${vendaId}...`);
+            const { error: itensError } = await supabase
+                .from('vendas_itens')
+                .delete()
+                .eq('venda_id', vendaId);
+
+            if (itensError) {
+                console.error('Erro ao excluir itens:', itensError);
+                throw new Error(`Falha ao excluir itens da venda: ${itensError.message}`);
+            }
+            console.log(`Itens da venda ${vendaId} excluídos.`);
+
+            // 2. Excluir a venda principal (vendas)
+            console.log(`Excluindo venda principal ${vendaId}...`);
+            const { error: vendaError } = await supabase
+                .from('vendas')
+                .delete()
+                .eq('id', vendaId);
+
+            if (vendaError) {
+                console.error('Erro ao excluir venda:', vendaError);
+                throw new Error(`Falha ao excluir a venda principal: ${vendaError.message}`);
+            }
+
+            mostrarMensagem(`Venda ID: ${vendaId} foi excluída com sucesso!`, 'success');
+            
+            // Recarregar a lista de vendas
+            await carregarVendasParaExclusao();
+
+        } catch (error) {
+            console.error('Erro no processo de exclusão:', error);
+            mostrarMensagem(error.message, 'error');
+        }
+    }
+    
+    // ================================================================
+    // === FIM DAS NOVAS FUNÇÕES ===
+    // ================================================================
 
     function fecharModal() {
         if (modalEditar) {
@@ -564,13 +723,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
         try {
-            return new Date(dataString).toLocaleDateString('pt-BR', {
+            // Adiciona T00:00:00 para garantir que a data seja interpretada como local
+            const dataObj = new Date(dataString + 'T00:00:00');
+            return dataObj.toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric'
             });
         } catch (error) {
-            return 'Data inválida';
+            // Fallback para datas que já vêm com timestamp
+            try {
+                return new Date(dataString).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return 'Data inválida';
+            }
         }
     }
 
