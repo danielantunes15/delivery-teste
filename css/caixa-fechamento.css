@@ -1,0 +1,148 @@
+/* css/caixa-fechamento.css */
+/* Estilos específicos para a página de Fechamento de Caixa, baseados na imagem. */
+
+/* 1. Botões do Header (Baseado na Imagem) */
+.fechamento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.fechamento-header h2 {
+    margin: 0;
+    color: var(--primary-dark);
+}
+.fechamento-header .data-selecao {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Cor dos botões (como na imagem) */
+#carregar-dados {
+    background: var(--primary-color); /* Pink */
+    color: white;
+}
+#carregar-dados:hover {
+    background: var(--primary-dark);
+}
+
+#gerar-relatorio {
+    background: var(--success-color); /* Green */
+    color: white;
+}
+#gerar-relatorio:hover {
+    background: #388e3c; /* Darker Green */
+}
+
+/* 2. Estilo das Abas (Baseado na Imagem) */
+/* Sobrescreve o estilo de .tabs-header de componentes.css */
+.tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: none; /* Remove a borda padrão */
+}
+
+.tabs-header .tab-button {
+    background: #fdeff2; /* Rosa bem claro (inativo) */
+    color: var(--primary-dark);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tabs-header .tab-button:hover {
+    background: #fbcde8; /* Rosa um pouco mais escuro no hover */
+}
+
+.tabs-header .tab-button.active {
+    background: var(--primary-color); /* Rosa principal (ativo) */
+    color: white;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+
+/* 3. Estilo dos Cards de Conteúdo (Abertura, Movimentações) */
+/* O .tab-content já tem display:none/block, mas vamos garantir o card interno */
+.tab-content .card {
+    border-top-left-radius: 0; /* Encaixa na aba */
+    margin-top: -1.5rem; /* Remove o espaço da .tabs-header */
+    box-shadow: var(--shadow);
+}
+
+/* Botão Abrir Caixa (Rosa) */
+#abrir-caixa-btn {
+    background: var(--primary-color);
+    color: white;
+    width: 100%;
+}
+#abrir-caixa-btn:hover {
+    background: var(--primary-dark);
+}
+ 
+#registrar-movimentacao-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* 4. Estilo do Resumo Financeiro (Baseado na Imagem) */
+/* Estes estilos não existem em componentes.css, então os adicionamos aqui */
+
+.resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.resumo-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.resumo-icon {
+    font-size: 1.8rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.resumo-info h4 {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.resumo-info .valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    display: block;
+}
+
+.resumo-info .quantidade {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* Cores dos ícones (como na imagem) */
+.resumo-card.dinheiro .resumo-icon { background: var(--primary-color); }
+.resumo-card.cartao-debito .resumo-icon { background: #6c757d; }
+.resumo-card.cartao-credito .resumo-icon { background: #6c757d; }
+.resumo-card.pix .resumo-icon { background: #17a2b8; }
+.resumo-card.total .resumo-icon { background: var(--primary-dark); }
