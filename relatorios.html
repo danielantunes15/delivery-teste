@@ -82,6 +82,13 @@
                     <div class="header-content">
                         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                         <h1 class="logo">Dashboard de Relatórios</h1>
+                        
+                        <div class="header-right-info">
+                            <span id="header-relogio" class="info-item-relogio">--:--</span>
+                            <span id="status-delivery-icon" class="info-item-icon" title="Status dos Pedidos Online">
+                                <i class="fas fa-bell"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -313,6 +320,7 @@
     <script src="js/auth.js"></script>
     <script src="js/relatorios.js" defer></script>
     
+    <script src="js/header-data.js" defer></script> 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');

@@ -41,7 +41,25 @@
 .header .logo {
     color: var(--primary-dark);
     font-size: 1.3rem;
+    /* Linha mantida, mas a classe será substituída pelo JS */
 }
+
+/* NOVO BLOCO: Estilo do Título formatado pelo JS/CSS */
+.header .page-title-formatted {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaço entre o ícone e o texto */
+}
+
+.header .page-title-formatted i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+/* FIM NOVO BLOCO */
+
 
 /* 2. Sidebar (Menu Lateral) */
 .sidebar {
@@ -254,6 +272,55 @@
     z-index: 1099;
 }
 
+/* NOVO BLOCO: Informações do Canto Direito (Relógio + Status) */
+.header-right-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Espaço entre os itens */
+}
+
+.info-item-relogio {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-light);
+}
+
+.info-item-icon {
+    font-size: 1.4rem;
+    cursor: pointer;
+    position: relative;
+    /* Adiciona margem se estiver sozinho ou entre outros elementos */
+}
+
+.info-item-icon .fa-bell {
+    /* Estilo inicial do sino de notificação */
+    color: var(--text-light); 
+    transition: all 0.3s ease;
+}
+
+/* Estilo para o badge (ponto vermelho de notificação) */
+.delivery-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--error-color); /* Vermelho */
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+/* FIM NOVO BLOCO */
+
+
 /* 5. Regras Responsivas da Navegação */
 @media (max-width: 1024px) {
     .sidebar {
@@ -275,5 +342,25 @@
     
     .sidebar.show ~ .sidebar-overlay {
         display: block;
+    }
+    
+    /* Regras de Responsividade para o novo header */
+    .header .page-title-formatted {
+        /* Reduz o tamanho do título para caber melhor no mobile */
+        font-size: 1.1rem;
+        gap: 5px;
+    }
+    
+    .header .page-title-formatted i {
+         font-size: 1.3rem;
+    }
+    
+    .header-right-info {
+        /* Esconde o relógio no mobile (mantém apenas o ícone de status) */
+        gap: 0.5rem;
+    }
+    
+    .info-item-relogio {
+        display: none;
     }
 }

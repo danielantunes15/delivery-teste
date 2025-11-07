@@ -82,6 +82,13 @@
                     <div class="header-content">
                         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
                         <h1 class="logo">Gestão de Encomendas</h1>
+                        
+                        <div class="header-right-info">
+                            <span id="header-relogio" class="info-item-relogio">--:--</span>
+                            <span id="status-delivery-icon" class="info-item-icon" title="Status dos Pedidos Online">
+                                <i class="fas fa-bell"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -339,6 +346,7 @@
     <script src="js/supabase-vendas.js"></script>
     <script src="js/encomendas-principal.js"></script>
 
+    <script src="js/header-data.js" defer></script> 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');
@@ -366,16 +374,6 @@
                     link.classList.remove('active');
                 }
             });
-
-            // ================================================================
-            // === INÍCIO DA CORREÇÃO (Script duplicado removido) ===
-            // ================================================================
-            // O script que estava aqui foi removido.
-            // A lógica correta já está em js/encomendas-principal.js
-            // ================================================================
-            // === FIM DA CORREÇÃO ===
-            // ================================================================
-
 
             // Lógica dos Modais (para fechar)
             document.querySelectorAll('.modal .close').forEach(closeBtn => {
