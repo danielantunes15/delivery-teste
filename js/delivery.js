@@ -96,16 +96,25 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
     const usuario = window.sistemaAuth.usuarioLogado;
+    // Esta variável agora só é usada para mostrar/esconder o botão de Configurações, por exemplo.
     const isAdminOrManager = ['administrador', 'admin', 'gerente', 'supervisor'].includes(usuario.tipo?.toLowerCase());
     
     async function inicializar() {
         toggleDisplay(loadingElement, true);
 
+        // ================================================================
+        // === INÍCIO DA ALTERAÇÃO ===
+        // ================================================================
+        /* // Bloco de verificação de admin removido para permitir acesso a todos os usuários logados.
         if (!isAdminOrManager) {
             toggleDisplay(loadingElement, false);
             toggleDisplay(acessoNegadoElement, true);
             return;
         }
+        */
+        // ================================================================
+        // === FIM DA ALTERAÇÃO ===
+        // ================================================================
 
         configurarEventListeners();
         
@@ -150,7 +159,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Listeners do Modal de Configurações
         if (btnAbrirConfig) {
-            btnAbrirConfig.addEventListener('click', abrirModalConfiguracoes);
+            // Esconde o botão de Configurações se não for admin
+            if (!isAdminOrManager) {
+                btnAbrirConfig.style.display = 'none';
+            } else {
+                btnAbrirConfig.addEventListener('click', abrirModalConfiguracoes);
+            }
         }
         if (btnFecharConfig) {
             btnFecharConfig.addEventListener('click', fecharModalConfiguracoes);
