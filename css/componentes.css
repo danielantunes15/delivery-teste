@@ -61,11 +61,14 @@
     transform: translateY(-2px);
 }
 .btn-edit {
-    background-color: #17a2b8; /* Info color */
+    /* MODIFICADO: Usar cor da marca para consistência */
+    background-color: var(--secondary-color); 
     color: white;
 }
 .btn-edit:hover {
-    background-color: #138496;
+    /* MODIFICADO: Usar cor mais escura da marca */
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
 }
 .btn-link {
     background: none;
@@ -552,8 +555,8 @@ table tr:hover {
 }
 
 /* Cores que já estavam definidas, mas reforçadas */
-.btn-edit { background-color: var(--info-color); color: white; }
-.btn-edit:hover { background-color: #138496; transform: translateY(-1px); }
+.btn-edit { background-color: var(--secondary-color); color: white; }
+.btn-edit:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
 
 .btn-danger { background: linear-gradient(135deg, var(--error-color), #d32f2f); color: white; }
 .btn-danger:hover { background: #d32f2f; transform: translateY(-1px); }
@@ -568,7 +571,7 @@ table tr:hover {
 .btn-toggle:hover { background-color: #5a6268; transform: translateY(-1px); }
 
 .btn-detalhes { background-color: var(--secondary-color); color: white; }
-.btn-detalhes:hover { background-color: #6f42c1; transform: translateY(-1px); }
+.btn-detalhes:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
 
 /* Botões da tabela de Encomendas */
 .btn-acao { background-color: #6c757d; color: white; }
@@ -586,7 +589,7 @@ table tr:hover {
     width: 32px;
     height: 32px;
 }
-.btn-edit-icon { background-color: var(--info-color); }
+.btn-edit-icon { background-color: var(--secondary-color); color: white; }
 .btn-pago-icon { background-color: var(--success-color); }
 .btn-danger-icon { background-color: var(--error-color); }
 
@@ -736,7 +739,7 @@ table tr:hover {
     border: none;
 }
 /* ================================================================ */
-/* === FIM DA ALTERAÇÃO === */
+/* === FIM DA ALTERAÇÃO ===
 /* ================================================================ */
 
 
@@ -787,7 +790,6 @@ table tr:hover {
 /* 4. Cards de Pedido (Layout de image_eaae23.png) */
 .pedido-card {
     background-color: white;
-    border-radius: var(--radius-sm);
     padding: 0; /* REMOVIDO padding principal */
     box-shadow: var(--shadow);
     cursor: pointer;
@@ -997,7 +999,7 @@ table tr:hover {
 .delivery-search-bar .search-inputs {
     display: flex;
     gap: 1rem;
-    flex-wrap: wrap; /* Permite que os inputs quebrem */
+    flex-wrap: wrap;
 }
 
 .search-group-kanban {
@@ -1716,5 +1718,44 @@ table tr:hover {
     .new-dashboard-header {
         padding: 1.5rem;
         text-align: center;
+    }
+    
+    /* NOVO: Estilos de responsividade do Delivery */
+    .delivery-search-bar .delivery-actions-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .delivery-search-bar .search-inputs {
+        width: 100%;
+        display: none; /* Esconde os inputs por padrão no mobile */
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .delivery-search-bar .search-inputs.show-mobile {
+        display: flex; /* Mostra inputs ao clicar no ícone */
+    }
+
+    .delivery-search-bar .header-actions {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 0;
+    }
+    
+    /* NOVO: Botão de alternância de busca */
+    .delivery-search-bar .btn-toggle-search {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.5rem;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
     }
 }
