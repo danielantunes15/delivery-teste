@@ -32,8 +32,9 @@
 }
 
 .header .header-content {
+    /* *** MODIFICAÇÃO CHAVE: Forçar separação L/R do conteúdo principal *** */
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; 
     align-items: center;
     width: 100%;
 }
@@ -41,10 +42,10 @@
 .header .logo {
     color: var(--primary-dark);
     font-size: 1.3rem;
-    /* Linha mantida, mas a classe será substituída pelo JS */
 }
 
 /* NOVO BLOCO: Estilo do Título formatado pelo JS/CSS */
+/* Esta é a h1 que contém o nome da página (Administração - Gerenciamento) */
 .header .page-title-formatted {
     font-size: 1.3rem;
     font-weight: 700;
@@ -52,6 +53,9 @@
     display: flex;
     align-items: center;
     gap: 10px; /* Espaço entre o ícone e o texto */
+    /* *** CORREÇÃO FINAL: Empurra o elemento da direita para a extremidade *** */
+    margin-right: auto; 
+    flex-shrink: 0;
 }
 
 .header .page-title-formatted i {
@@ -259,6 +263,8 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
+    /* Faz o botão de toggle ficar no canto esquerdo */
+    margin-right: 1rem; 
 }
 
 .sidebar-overlay {
@@ -274,9 +280,13 @@
 
 /* NOVO BLOCO: Informações do Canto Direito (Relógio + Status) */
 .header-right-info {
+    /* Faz com que o grupo de info fique agrupado à direita */
     display: flex;
     align-items: center;
     gap: 1rem; /* Espaço entre os itens */
+    /* *** CORREÇÃO: Mover para a extrema direita *** */
+    margin-left: auto; 
+    flex-shrink: 0;
 }
 
 .info-item-relogio {
@@ -349,6 +359,8 @@
         /* Reduz o tamanho do título para caber melhor no mobile */
         font-size: 1.1rem;
         gap: 5px;
+        /* *** CORREÇÃO: Dá um espaço no mobile para que o título não bata no ícone toggle *** */
+        margin-right: 10px; 
     }
     
     .header .page-title-formatted i {
