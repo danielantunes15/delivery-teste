@@ -146,3 +146,82 @@
 .resumo-card.cartao-credito .resumo-icon { background: #6c757d; }
 .resumo-card.pix .resumo-icon { background: #17a2b8; }
 .resumo-card.total .resumo-icon { background: var(--primary-dark); }
+
+/* === NOVOS ESTILOS (IMAGEM 846322.png) === */
+
+/* 8. Relatório de Fechamento (Grid) */
+.relatorio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* Três colunas */
+    gap: 1.5rem 1rem; /* Espaçamento vertical e horizontal */
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.relatorio-grid .info-item {
+    display: block; 
+    padding: 0.5rem;
+    border-bottom: none;
+}
+
+.relatorio-grid .info-item span {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.relatorio-grid .info-item strong {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Item "Saldo Calculado" (ocupa a linha toda) */
+.relatorio-grid .info-item.saldo-total {
+    grid-column: 1 / -1; /* Ocupa todas as colunas */
+    background: #FFF0F5; /* Fundo rosa claro */
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid #FEEBEE;
+}
+
+.relatorio-grid .info-item.saldo-total span {
+    font-size: 1rem;
+    color: var(--primary-dark);
+}
+
+.relatorio-grid .info-item.saldo-total strong {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+/* 9. Assinaturas (Layout de 2 colunas) */
+.assinaturas {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    padding-top: 1.5rem;
+}
+
+.assinaturas .assinatura {
+    flex: 1;
+    text-align: left; /* Alinha à esquerda */
+}
+
+.assinaturas .assinatura:last-child {
+    text-align: right; /* Alinha o último à direita */
+}
+
+.assinaturas .assinatura p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.assinaturas .assinatura p:first-child {
+    border-top: 1px solid var(--text-color);
+    padding-top: 0.5rem;
+}
