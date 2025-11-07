@@ -344,14 +344,25 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fazer hash da senha
             const senhaHash = await hashSenha(senha);
 
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (Adicionar UUID) ===
+            // ================================================================
+            // Gerar um UUID para o novo usuário
+            const novoId = crypto.randomUUID();
+
             // Inserir usuário
             const dadosUsuario = {
+                id: novoId, // <--- CORREÇÃO APLICADA AQUI
                 nome: nome,
                 username: username,
                 senha_hash: senhaHash,
                 tipo: tipo,
                 ativo: ativo
             };
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
+
 
             const { error: insertError } = await supabase
                 .from('sistema_usuarios')
