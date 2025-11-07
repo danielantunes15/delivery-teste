@@ -1,0 +1,200 @@
+/* css/contas-a-pagar.css */
+/* Estilos específicos para a página Gerencial (Contas a Pagar), baseados na imagem. */
+
+/* 1. Header de KPIs (Vencidas, Semana, Mês) */
+.alert-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-alerta {
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.kpi-alerta i {
+    font-size: 2rem;
+    padding: 1rem;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kpi-alerta h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.kpi-alerta .valor {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+/* Cores (como na imagem) */
+.kpi-alerta.alerta-vencido {
+    background: #FFF0F5; /* Rosa claro */
+    border-left: 5px solid var(--error-color); /* Vermelho */
+}
+.kpi-alerta.alerta-vencido i {
+    background: var(--error-color);
+    color: white;
+}
+.kpi-alerta.alerta-vencido h4 { color: var(--error-color); }
+.kpi-alerta.alerta-vencido .valor { color: var(--error-color); }
+
+.kpi-alerta.alerta-semana {
+    background: #FFF8E1; /* Amarelo claro */
+    border-left: 5px solid var(--warning-color); /* Amarelo */
+}
+.kpi-alerta.alerta-semana i {
+    background: var(--warning-color);
+    color: white;
+}
+.kpi-alerta.alerta-semana h4 { color: #856404; }
+.kpi-alerta.alerta-semana .valor { color: #856404; }
+
+.kpi-alerta.alerta-mes {
+    background: #F3E5F5; /* Roxo claro */
+    border-left: 5px solid #8E44AD; /* Roxo */
+}
+.kpi-alerta.alerta-mes i {
+    background: #8E44AD;
+    color: white;
+}
+.kpi-alerta.alerta-mes h4 { color: #6A1B9A; }
+.kpi-alerta.alerta-mes .valor { color: #6A1B9A; }
+
+
+/* 2. Abas do Painel Gerencial (Texto com sublinhado) */
+.card .tabs {
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.card .tabs .tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 0.25rem; /* Padding sutil para o sublinhado */
+    margin-right: 1.5rem;
+    font-size: 1rem; /* Tamanho da fonte da imagem */
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card .tabs .tab-btn:hover {
+    color: var(--primary-dark);
+}
+
+.card .tabs .tab-btn.active {
+    color: var(--primary-color); /* Pink */
+    border-bottom-color: var(--primary-color); /* Pink underline */
+}
+
+/* 3. Título (Ex: "Contas a Pagar Pendentes") */
+#contas-pendentes h3,
+#contas-a-receber h3,
+#crediario-devedores h3,
+#historico h3 {
+    color: var(--primary-dark);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 4. Tabela (Header Rosa) */
+.table-container thead th {
+    background-color: #FFF0F5; /* Fundo rosa claro (como na imagem) */
+    color: var(--primary-dark); /* Texto pink escuro */
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    padding: 1rem;
+}
+
+.table-container tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #fdeff2; /* Borda rosa claro */
+}
+
+.table-container tr:last-child td {
+    border-bottom: none;
+}
+
+/* 5. Botões de Ação da Tabela (Ícones - como na imagem) */
+.action-buttons-table .btn-acao-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    transition: var(--transition);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+}
+
+/* Verde para Editar (como na imagem, parece ser um check/edit) */
+.action-buttons-table .btn-edit-icon {
+    color: var(--success-color);
+}
+.action-buttons-table .btn-edit-icon:hover {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+/* Verde para Pagar */
+.action-buttons-table .btn-pago-icon {
+    color: var(--success-color);
+}
+.action-buttons-table .btn-pago-icon:hover {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+/* Vermelho para Excluir */
+.action-buttons-table .btn-danger-icon {
+    color: var(--error-color);
+}
+.action-buttons-table .btn-danger-icon:hover {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+/* 6. Badges de Status (Pendente/Vencido) */
+.status-badge.pendente,
+.status-badge.a-receber,
+.status-badge.parcialmente-pago {
+    background-color: #fff3cd; /* Amarelo */
+    color: #856404;
+}
+.status-badge.vencido {
+    background-color: #f8d7da; /* Vermelho */
+    color: #721c24;
+}
+.status-badge.pago {
+    background-color: #d4edda; /* Verde */
+    color: #155724;
+}
