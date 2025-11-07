@@ -595,8 +595,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         clienteSelect.innerHTML = '';
         const optionDefault = document.createElement('option');
         optionDefault.value = '';
-        optionDefault.textContent = 'Cliente sem cadastro';
         optionDefault.dataset.nome = 'Cliente sem cadastro';
+        optionDefault.textContent = 'Cliente sem cadastro';
         clienteSelect.appendChild(optionDefault);
         
         clientes.forEach(cliente => {
@@ -756,38 +756,37 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             await window.vendasSupabase.criarItensVenda(itensVenda);
 
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (TYPO z/c) ===
+            // ================================================================
             for (const item of carrinho) {
                 const novoEstoque = item.produto.estoque_atual - item.quantidade;
-                await window.vendasSupabase.atualizarEstoque(item.produto.id, novoEstoque);
+                // CORREÇÃO: Chamando a função com 'c' (actualizarEstoque)
+                await window.vendasSupabase.actualizarEstoque(item.produto.id, novoEstoque);
             }
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
 
-            let mensagem = `✅ Pedido finalizado com sucesso!\n\n`;
-            mensagem += `📋 Número do Pedido: ${venda.id}\n`;
-            mensagem += `👤 Cliente: ${clienteNome}\n`;
-            mensagem += `💰 Total Final: ${formatarMoeda(total)}\n`;
-            if (descontoPercentual > 0 || acrescimoPercentual > 0 || descontoValorFixo > 0 || acrescimoValorFixo > 0) {
-                 mensagem += `\n(Ajustes aplicados. Detalhes nas Observações.)`;
-            }
-            mensagem += `\nDetalhes de Pagamento:\n${observacoesVenda}`;
-            
-            alert(mensagem);
+
+            // Lógica de reset (da correção anterior)
             mostrarMensagem('✅ Pedido finalizado com sucesso!', 'success');
             
-            // Resetar
             carrinho = [];
             pagamentos = []; 
             descontoPercentual = acrescimoPercentual = descontoValorFixo = acrescimoValorFixo = 0;
             descontoTipo = acrescimoTipo = 'percentual';
+
             if (descontoInput) descontoInput.value = 0;
             if (acrescimoInput) acrescimoInput.value = 0;
             if (descontoTipoSelect) descontoTipoSelect.value = 'percentual';
             if (acrescimoTipoSelect) acrescimoTipoSelect.value = 'percentual';
+            if (clienteSelect) clienteSelect.value = '';
 
-
-            atualizarCarrinho();
-            clienteSelect.value = '';
-            
+            atualizarCarrinho(); 
             await carregarProdutos();
+            
+            finalizarPedidoBtn.innerHTML = 'Finalizar Pedido';
             
         } catch (error) {
             console.error('❌ Erro ao finalizar pedido:', error);
@@ -801,10 +800,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 mensagemErro += error.message;
             }
             mostrarMensagem(mensagemErro, 'error');
-            try { await carregarProdutos(); } catch (reloadError) { console.error('❌ Erro ao recarregar produtos:', reloadError); }
-        } finally {
+            
+            // SE DER ERRO, re-habilita o botão
             finalizarPedidoBtn.disabled = false;
             finalizarPedidoBtn.innerHTML = 'Finalizar Pedido';
+
+            try { await carregarProdutos(); } catch (reloadError) { console.error('❌ Erro ao recarregar produtos:', reloadError); }
         }
     };
     
