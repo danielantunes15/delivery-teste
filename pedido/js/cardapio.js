@@ -287,17 +287,32 @@
         }
     }
 
+    /* --- INÍCIO DA ALTERAÇÃO: Lógica de Busca --- */
     function setupSearch() {
-        const searchTerm = prompt('O que você está procurando?');
-        if (searchTerm && searchTerm.trim() !== '') {
-            const produtosFiltrados = window.app.produtos.filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase()));
+        // Lê o valor diretamente do input (que está em ui.elementos.searchIcon)
+        const searchTerm = window.AppUI.elementos.searchIcon.value.trim().toLowerCase();
+
+        if (searchTerm) {
+            // Se houver um termo de busca, filtra os produtos
+            const produtosFiltrados = window.app.produtos.filter(p => p.nome.toLowerCase().includes(searchTerm));
             exibirProdutos(produtosFiltrados);
+            
+            // Desativa a categoria "Todos" e mostra todas as seções
             document.querySelectorAll('.category-item').forEach(cat => cat.classList.remove('active'));
             document.querySelectorAll('.category-products').forEach(section => {
                 section.style.display = 'block';
             });
+        } else {
+            // Se o campo de busca está vazio, reseta para a visão original
+            exibirProdutos(window.app.produtos);
+            
+            // Ativa a categoria "Todos"
+            document.querySelectorAll('.category-item').forEach(cat => {
+                cat.classList.toggle('active', cat.getAttribute('data-id') === 'todos');
+            });
         }
     }
+    /* --- FIM DA ALTERAÇÃO --- */
 
     // --- Lógica do Modal de Opções ---
 
@@ -311,7 +326,6 @@
         elementos.opcoesTitulo.textContent = produto.nome;
         elementos.opcoesDescricao.textContent = produto.descricao || '';
         
-        /* --- INÍCIO DA ALTERAÇÃO: Mostrar Imagem --- */
         if (produto.icone) {
             elementos.opcoesImagemProduto.src = produto.icone;
             elementos.opcoesImagemProduto.style.display = 'block';
@@ -321,7 +335,6 @@
             elementos.opcoesImagemProduto.style.display = 'none';
             elementos.opcoesImagemPlaceholder.style.display = 'flex';
         }
-        /* --- FIM DA ALTERAÇÃO --- */
         
         elementos.opcoesContainer.innerHTML = '';
         elementos.complementosContainer.innerHTML = '';
@@ -437,8 +450,8 @@
         const categorySections = document.querySelectorAll('.category-products');
         const categoryItems = document.querySelectorAll('.category-item');
         
-        // Offset para ativação: Altura do Header (70px) + Altura da Categoria (aprox. 80px)
-        const topOffset = 151; // +1 pixel de margem
+        // Offset para ativação: Altura do Header (80px) + Altura da Categoria (aprox. 80px)
+        const topOffset = 161; // +1 pixel de margem
 
         scrollContainer.addEventListener('scroll', () => {
             let currentCategoryId = null;

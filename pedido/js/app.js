@@ -123,8 +123,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (ui.modalCepInput) ui.modalCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
         
         /* --- INÍCIO DA ALTERAÇÃO: Listeners do Header v2 --- */
-        // O "searchIcon" agora é o input de busca, que chama o prompt
-        if (ui.searchIcon) ui.searchIcon.addEventListener('click', app.Cardapio.setupSearch);
+        
+        // O "searchIcon" (que agora é o input) dispara a busca a CADA TECLA
+        if (ui.searchIcon) ui.searchIcon.addEventListener('input', app.Cardapio.setupSearch);
         
         // O "loginBtn" é o ícone de usuário, que leva para a tela de "Pedidos" (view-inicio)
         if (ui.loginBtn) ui.loginBtn.addEventListener('click', () => app.UI.alternarView('view-inicio'));
