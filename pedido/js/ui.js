@@ -123,11 +123,17 @@
         opcoesPrecoModal: document.getElementById('opcoes-preco-modal'),
         btnAdicionarOpcoes: document.getElementById('btn-adicionar-opcoes'),
         
+        /* --- INÍCIO DA ALTERAÇÃO --- */
         // --- ELEMENTOS DO NOVO HEADER v2 ---
-        searchIcon: document.getElementById('header-search-input'), // Campo de busca (para o prompt)
-        loginBtn: document.getElementById('header-v2-login-btn'), // Botão de conta/login
-        addressBtn: document.getElementById('header-v2-address-btn'), // Botão de endereço
-        addressText: document.getElementById('header-v2-address-text'), // Texto do endereço
+        headerV2: document.getElementById('header-v2'),
+        headerV2Logo: document.getElementById('header-v2-logo'),
+        headerV2Actions: document.getElementById('header-v2-actions'),
+        headerV2SearchToggle: document.getElementById('header-v2-search-toggle'),
+        headerV2SearchContainer: document.getElementById('header-v2-search-container'),
+        headerSearchInput: document.getElementById('header-search-input'), // Renomeado de 'searchIcon'
+        loginBtn: document.getElementById('header-v2-login-btn'),
+        addressBtn: document.getElementById('header-v2-address-btn'),
+        addressText: document.getElementById('header-v2-address-text'),
         
         // --- ELEMENTOS DO NOVO HEADER CART v2 ---
         headerCartBtn: document.getElementById('header-v2-cart-btn'),
@@ -137,6 +143,7 @@
         // --- ELEMENTOS DO MODAL DE OPÇÕES ---
         opcoesImagemProduto: document.getElementById('opcoes-imagem-produto'),
         opcoesImagemPlaceholder: document.getElementById('opcoes-imagem-placeholder')
+        /* --- FIM DA ALTERAÇÃO --- */
     };
 
     /**
@@ -145,23 +152,8 @@
      * @param {string} [tipo='info'] - O tipo de alerta ('info', 'success', 'warning', 'error').
      */
     function mostrarMensagem(mensagem, tipo = 'info') {
-        /* --- INÍCIO DA ALTERAÇÃO: Mensagens desativadas --- */
-        
         // As mensagens agora só aparecerão no console do navegador (F12)
-        // Isso é útil para você depurar, mas o cliente não verá as "nuvens".
         console.log(`[Mensagem Oculta - ${tipo}]: ${mensagem}`);
-
-        /* // Código original que foi desativado:
-        const alertContainer = elementos.alertContainer;
-        if (!alertContainer) return;
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${tipo}`;
-        alertDiv.innerHTML = `<span>${mensagem}</span><button class="alert-close" onclick="this.parentElement.remove()">&times;</button>`;
-        alertContainer.appendChild(alertDiv);
-        setTimeout(() => { if (alertDiv.parentNode) alertDiv.remove(); }, 5000);
-        */
-        
-        /* --- FIM DA ALTERAÇÃO --- */
     }
 
     /**
@@ -240,14 +232,5 @@
         formatarMoeda,
         formatarTelefone
     };
-
-    // --- NOVO: Listener para o botão do carrinho no header ---
-    // Adicionado fora do objeto, mas no IIFE
-    if (elementos.headerCartBtn) {
-        elementos.headerCartBtn.addEventListener('click', () => {
-            // A função alternarView já tem a lógica de login
-            window.AppUI.alternarView('view-carrinho');
-        });
-    }
 
 })();

@@ -6,6 +6,7 @@
     <title>Doce Criativo App</title>
     
     <link rel="stylesheet" href="pedido/css/style.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -132,21 +133,25 @@
 
         <div id="view-cardapio" class="app-view">
             
-            <header class="header-v2">
+            <header class="header-v2" id="header-v2">
                 <div class="header-v2-content">
-                    <h1 class="header-v2-logo">Confeitaria Doce Criativo</h1>
+                    <h1 class="header-v2-logo" id="header-v2-logo">Confeitaria Doce Criativo</h1>
                     
-                    <div class="header-v2-search-container">
+                    <div class="header-v2-search-container" id="header-v2-search-container">
                         <i class="fas fa-search"></i>
                         <input type="text" id="header-search-input" placeholder="Busque por item ou loja">
                     </div>
                     
-                    <div class="header-v2-actions">
+                    <div class="header-v2-actions" id="header-v2-actions">
                         <div class="header-v2-address" id="header-v2-address-btn" title="Mudar Endereço">
                             <i class="fas fa-map-marker-alt"></i>
                             <span id="header-v2-address-text">Seu Endereço</span>
                             <i class="fas fa-chevron-down"></i>
                         </div>
+                        
+                        <button class="header-v2-icon-btn header-v2-search-toggle" id="header-v2-search-toggle" title="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
                         
                         <button class="header-v2-icon-btn" id="header-v2-login-btn" title="Minha Conta">
                             <i class="fas fa-user"></i>
@@ -162,7 +167,6 @@
                     </div>
                 </div>
             </header>
-
             <div class="app-content-scroll">
                 <section class="store-status">
                     <div class="status-content">
@@ -341,6 +345,7 @@
     <script src="pedido/js/checkout.js" defer></script>    
     <script src="pedido/js/rastreamento.js" defer></script> 
     <script src="pedido/js/app.js" defer></script>
+    
     <div id="modal-editar-endereco" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 400px; margin-top: 10vh;">
             <div class="modal-header">

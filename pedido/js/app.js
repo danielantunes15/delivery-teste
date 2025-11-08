@@ -124,17 +124,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         /* --- INÍCIO DA ALTERAÇÃO: Listeners do Header v2 --- */
         
-        // O "searchIcon" (que agora é o input) dispara a busca a CADA TECLA
-        if (ui.searchIcon) ui.searchIcon.addEventListener('input', app.Cardapio.setupSearch);
+        // Busca: Dispara a CADA TECLA digitada no input
+        if (ui.headerSearchInput) ui.headerSearchInput.addEventListener('input', app.Cardapio.setupSearch);
         
-        // O "loginBtn" é o ícone de usuário, que leva para a tela de "Pedidos" (view-inicio)
+        // Botão de Login/Conta (ícone de usuário)
         if (ui.loginBtn) ui.loginBtn.addEventListener('click', () => app.UI.alternarView('view-inicio'));
         
-        // O "headerCartBtn" é o botão de carrinho central, que leva para "view-carrinho"
+        // Botão de Carrinho (ícone de sacola)
         if (ui.headerCartBtn) ui.headerCartBtn.addEventListener('click', () => app.UI.alternarView('view-carrinho'));
         
-        // O "addressBtn" abre o modal de edição de endereço
+        // Botão de Endereço
         if (ui.addressBtn) ui.addressBtn.addEventListener('click', () => app.UI.abrirModalEditarEndereco());
+        
+        // NOVO: Lógica do botão de busca (Lupa) no mobile
+        if (ui.headerV2SearchToggle) {
+            ui.headerV2SearchToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                ui.headerV2.classList.add('search-active');
+                ui.headerSearchInput.focus();
+            });
+        }
+        
+        // NOVO: Lógica para fechar a busca no mobile ao perder o foco
+        if (ui.headerSearchInput) {
+            ui.headerSearchInput.addEventListener('blur', () => {
+                // Adiciona um pequeno delay para caso o usuário clique em um item
+                setTimeout(() => {
+                    ui.headerV2.classList.remove('search-active');
+                }, 100);
+            });
+        }
         /* --- FIM DA ALTERAÇÃO --- */
     }
 
