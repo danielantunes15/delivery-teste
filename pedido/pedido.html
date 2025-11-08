@@ -133,20 +133,36 @@
 
         <div id="view-cardapio" class="app-view">
             
-            <header class="header">
-                <div class="header-content">
-                    <h1 class="logo">Confeitaria Doce Criativo</h1>
-                    <div class="header-icons">
-                        <div class="search-icon">
-                            <i class="fas fa-search"></i>
+            <header class="header-v2">
+                <div class="header-v2-content">
+                    <h1 class="header-v2-logo">Confeitaria Doce Criativo</h1>
+                    
+                    <div class="header-v2-search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="header-search-input" placeholder="Busque por item ou loja">
+                    </div>
+                    
+                    <div class="header-v2-actions">
+                        <div class="header-v2-address" id="header-v2-address-btn" title="Mudar Endereço">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="header-v2-address-text">Seu Endereço</span>
+                            <i class="fas fa-chevron-down"></i>
                         </div>
-                        <div class="share-icon">
-                            <i class="fas fa-share-alt"></i>
-                        </div>
+                        
+                        <button class="header-v2-icon-btn" id="header-v2-login-btn" title="Minha Conta">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        
+                        <button class="header-v2-cart-btn" id="header-v2-cart-btn" title="Ver Carrinho">
+                            <i class="fas fa-shopping-bag"></i>
+                            <div class="header-v2-cart-summary">
+                                <span id="header-v2-cart-total">R$ 0,00</span>
+                                <span id="header-v2-cart-items">0 itens</span>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </header>
-
             <div class="app-content-scroll">
                 <section class="store-status">
                     <div class="status-content">
@@ -374,6 +390,14 @@
                 <h3 id="opcoes-titulo">Personalize seu item</h3>
                 <span class="close">&times;</span> </div>
             <div class="modal-body" style="overflow-y: auto; flex-grow: 1;">
+                
+                <div class="modal-product-image-container">
+                    <img id="opcoes-imagem-produto" src="" alt="Imagem do Produto" />
+                    <div class="modal-product-image-placeholder" id="opcoes-imagem-placeholder">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                </div>
+                
                 <p id="opcoes-descricao" style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;"></p>
                 
                 <div id="opcoes-container"></div>

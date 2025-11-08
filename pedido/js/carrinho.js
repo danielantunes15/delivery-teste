@@ -167,6 +167,15 @@
             elementos.cartCountNav.textContent = totalItens;
             elementos.cartCountNav.style.display = totalItens > 0 ? 'flex' : 'none';
         }
+
+        /* --- INÍCIO DA ALTERAÇÃO: Atualizar Header Cart v2 --- */
+        if (elementos.headerCartItems) { // ID: header-v2-cart-items
+            elementos.headerCartItems.textContent = totalItens === 1 ? '1 item' : `${totalItens} itens`;
+        }
+        if (elementos.headerCartTotal) { // ID: header-v2-cart-total
+            elementos.headerCartTotal.textContent = formatarMoeda(totalFinal);
+        }
+        /* --- FIM DA ALTERAÇÃO --- */
     }
     
     /**

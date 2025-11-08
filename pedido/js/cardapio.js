@@ -126,13 +126,10 @@
                 if (categoryId === 'todos') {
                     categorySections.forEach(section => section.style.display = 'block');
                     
-                    /* --- INÍCIO DA ALTERAÇÃO (Scroll Navigation) --- */
-                    // Rola a janela (window) para o topo da seção de produtos
                     window.scrollTo({
                         top: productsSectionEl.offsetTop - 150, // (Header + Categorias)
                         behavior: 'smooth'
                     });
-                    /* --- FIM DA ALTERAÇÃO --- */
                     return;
                 }
                 
@@ -142,8 +139,6 @@
                 if (targetSection) {
                     targetSection.style.display = 'block';
                     
-                    /* --- INÍCIO DA ALTERAÇÃO (Scroll Navigation) --- */
-                    // Calcula a posição correta da seção relativa ao topo do documento
                     const headerHeight = 70; // .header
                     const categoryBarHeight = document.querySelector('.categories-section').offsetHeight || 80;
                     const offset = headerHeight + categoryBarHeight;
@@ -155,7 +150,6 @@
                         top: offsetPosition,
                         behavior: 'smooth'
                     });
-                    /* --- FIM DA ALTERAÇÃO --- */
                 }
             });
         });
@@ -316,6 +310,19 @@
         const elementos = window.AppUI.elementos;
         elementos.opcoesTitulo.textContent = produto.nome;
         elementos.opcoesDescricao.textContent = produto.descricao || '';
+        
+        /* --- INÍCIO DA ALTERAÇÃO: Mostrar Imagem --- */
+        if (produto.icone) {
+            elementos.opcoesImagemProduto.src = produto.icone;
+            elementos.opcoesImagemProduto.style.display = 'block';
+            elementos.opcoesImagemPlaceholder.style.display = 'none';
+        } else {
+            elementos.opcoesImagemProduto.src = '';
+            elementos.opcoesImagemProduto.style.display = 'none';
+            elementos.opcoesImagemPlaceholder.style.display = 'flex';
+        }
+        /* --- FIM DA ALTERAÇÃO --- */
+        
         elementos.opcoesContainer.innerHTML = '';
         elementos.complementosContainer.innerHTML = '';
         elementos.opcoesObservacao.value = '';
@@ -418,7 +425,6 @@
         }
     }
     
-    /* --- INÍCIO DA ALTERAÇÃO (Scroll Spy) --- */
     /**
      * NOVO: Configura o 'scroll spy' para atualizar a categoria ativa
      * enquanto o usuário rola a lista de produtos.
@@ -469,7 +475,6 @@
             });
         });
     }
-    /* --- FIM DA ALTERAÇÃO --- */
 
 
     // Expõe as funções para o objeto global AppCardapio

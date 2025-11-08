@@ -80,9 +80,7 @@
         categoriesScroll: document.getElementById('categorias-container'),
         popularScroll: document.getElementById('popular-scroll'),
         productsSection: document.getElementById('products-section'),
-        searchIcon: document.querySelector('.header .search-icon'),
-        shareIcon: document.querySelector('.header .share-icon'),
-
+        
         // Carrinho (view-carrinho)
         carrinhoBadge: document.getElementById('carrinho-badge'),
         cartCountNav: document.querySelector('.bottom-nav .cart-count'),
@@ -124,6 +122,23 @@
         opcoesBtnAdicionar: document.getElementById('opcoes-btn-adicionar'),
         opcoesPrecoModal: document.getElementById('opcoes-preco-modal'),
         btnAdicionarOpcoes: document.getElementById('btn-adicionar-opcoes'),
+        
+        /* --- INÍCIO DA ALTERAÇÃO --- */
+        // --- ELEMENTOS DO NOVO HEADER v2 ---
+        searchIcon: document.getElementById('header-search-input'), // Campo de busca (para o prompt)
+        loginBtn: document.getElementById('header-v2-login-btn'), // Botão de conta/login
+        addressBtn: document.getElementById('header-v2-address-btn'), // Botão de endereço
+        addressText: document.getElementById('header-v2-address-text'), // Texto do endereço
+        
+        // --- ELEMENTOS DO NOVO HEADER CART v2 ---
+        headerCartBtn: document.getElementById('header-v2-cart-btn'),
+        headerCartItems: document.getElementById('header-v2-cart-items'),
+        headerCartTotal: document.getElementById('header-v2-cart-total'),
+        
+        // --- ELEMENTOS DO MODAL DE OPÇÕES ---
+        opcoesImagemProduto: document.getElementById('opcoes-imagem-produto'),
+        opcoesImagemPlaceholder: document.getElementById('opcoes-imagem-placeholder')
+        /* --- FIM DA ALTERAÇÃO --- */
     };
 
     /**
@@ -212,14 +227,8 @@
         alternarView,
         abrirModalEditarEndereco,
         fecharModal,
-        // ================================================================
-        // === INÍCIO DA CORREÇÃO (Exportando as funções) ===
-        // ================================================================
         formatarMoeda,
         formatarTelefone
-        // ================================================================
-        // === FIM DA CORREÇÃO ===
-        // ================================================================
     };
 
 })();

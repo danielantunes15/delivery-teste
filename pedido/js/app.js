@@ -122,9 +122,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (ui.cadastroCepInput) ui.cadastroCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
         if (ui.modalCepInput) ui.modalCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
         
-        // Listeners do Header
+        /* --- INÍCIO DA ALTERAÇÃO: Listeners do Header v2 --- */
+        // O "searchIcon" agora é o input de busca, que chama o prompt
         if (ui.searchIcon) ui.searchIcon.addEventListener('click', app.Cardapio.setupSearch);
-        if (ui.shareIcon) ui.shareIcon.addEventListener('click', app.Cardapio.setupShare);
+        
+        // O "loginBtn" é o ícone de usuário, que leva para a tela de "Pedidos" (view-inicio)
+        if (ui.loginBtn) ui.loginBtn.addEventListener('click', () => app.UI.alternarView('view-inicio'));
+        
+        // O "headerCartBtn" é o botão de carrinho central, que leva para "view-carrinho"
+        if (ui.headerCartBtn) ui.headerCartBtn.addEventListener('click', () => app.UI.alternarView('view-carrinho'));
+        
+        // O "addressBtn" abre o modal de edição de endereço
+        if (ui.addressBtn) ui.addressBtn.addEventListener('click', () => app.UI.abrirModalEditarEndereco());
+        /* --- FIM DA ALTERAÇÃO --- */
     }
 
     /**
