@@ -1,7 +1,33 @@
-// js/ui.js - Módulo de Interface e DOM
+// js/ui.js - Módulo de Interface e DOM (Corrigido)
 
 (function() {
     
+    // ================================================================
+    // === INÍCIO DA CORREÇÃO (Adicionando funções utilitárias) ===
+    // ================================================================
+
+    /**
+     * Formata um número para o padrão de moeda BRL.
+     * @param {number} valor - O valor a ser formatado.
+     * @returns {string} - O valor formatado (ex: "R$ 10,50").
+     */
+    const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
+
+    /**
+     * Formata um número de telefone para o padrão E.164 (WhatsApp).
+     * @param {string} telefone - O telefone (ex: "(33) 99999-9999").
+     * @returns {string} - O telefone formatado (ex: "5533999999999").
+     */
+    const formatarTelefone = (telefone) => {
+        const digitos = telefone.replace(/\D/g, '');
+        // Garante que o 55 (código do Brasil) esteja presente
+        return digitos.length >= 12 ? digitos : '55' + digitos;
+    };
+    // ================================================================
+    // === FIM DA CORREÇÃO ===
+    // ================================================================
+
+
     // Objeto para armazenar todos os elementos do DOM
     const elementos = {
         // Views
@@ -185,7 +211,15 @@
         mostrarMensagem,
         alternarView,
         abrirModalEditarEndereco,
-        fecharModal
+        fecharModal,
+        // ================================================================
+        // === INÍCIO DA CORREÇÃO (Exportando as funções) ===
+        // ================================================================
+        formatarMoeda,
+        formatarTelefone
+        // ================================================================
+        // === FIM DA CORREÇÃO ===
+        // ================================================================
     };
 
 })();

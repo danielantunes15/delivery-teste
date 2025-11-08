@@ -1,10 +1,10 @@
-// js/rastreamento.js - Módulo de Rastreamento de Pedidos e Histórico
+// js/rastreamento.js - Módulo de Rastreamento de Pedidos e Histórico (Corrigido)
 
 (function() {
 
     const ui = window.AppUI;
     const api = window.AppAPI;
-    const app = window.app;
+    // const app = window.app; // <-- REMOVIDO
     
     /**
      * Inicia o ouvinte de Realtime do Supabase para um pedido específico.
@@ -13,27 +13,28 @@
     async function iniciarRastreamento(pedidoId) {
         if (!pedidoId) return;
         
-        app.pedidoAtivoId = pedidoId;
+        // CORREÇÃO: Acessa window.app diretamente
+        window.app.pedidoAtivoId = pedidoId;
         console.log(`Iniciando rastreamento para o pedido: ${pedidoId}`);
         
         ui.elementos.statusUltimoPedido.innerHTML = '';
         
         pararRastreamento(); // Remove qualquer ouvinte antigo
 
-        // 1. Busca o status atual do pedido
         const pedido = await api.buscarPedidoParaRastreamento(pedidoId);
         if (!pedido) {
             console.log("Pedido não encontrado, limpando tracker.");
             localStorage.removeItem('pedidoAtivoId');
-            app.pedidoAtivoId = null;
+            window.app.pedidoAtivoId = null;
             carregarStatusUltimoPedido();
             return;
         }
         
         atualizarTrackerUI(pedido);
 
-        // 2. Ouve por atualizações futuras
-        app.supabaseChannel = window.supabase.channel(`pedido-${pedidoId}`)
+        // Ouve por atualizações futuras
+        // CORREÇÃO: Acessa window.app diretamente
+        window.app.supabaseChannel = window.supabase.channel(`pedido-${pedidoId}`)
             .on(
                 'postgres_changes',
                 {
@@ -61,10 +62,11 @@
      * Para o ouvinte de Realtime atual.
      */
     function pararRastreamento() {
-        if (app.supabaseChannel) {
-            window.supabase.removeChannel(app.supabaseChannel);
-            app.supabaseChannel = null;
-            app.pedidoAtivoId = null;
+        // CORREÇÃO: Acessa window.app diretamente
+        if (window.app.supabaseChannel) {
+            window.supabase.removeChannel(window.app.supabaseChannel);
+            window.app.supabaseChannel = null;
+            window.app.pedidoAtivoId = null;
             console.log("Canal de rastreamento interrompido.");
         }
     }
@@ -77,7 +79,8 @@
         const elementos = ui.elementos;
         if (!pedido) {
             localStorage.removeItem('pedidoAtivoId');
-            app.pedidoAtivoId = null;
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.pedidoAtivoId = null;
             elementos.rastreamentoContainer.style.display = 'none';
             pararRastreamento();
             carregarStatusUltimoPedido();
@@ -120,7 +123,8 @@
 
             setTimeout(() => {
                 localStorage.removeItem('pedidoAtivoId');
-                app.pedidoAtivoId = null;
+                // CORREÇÃO: Acessa window.app diretamente
+                window.app.pedidoAtivoId = null;
                 elementos.rastreamentoContainer.style.display = 'none';
                 carregarStatusUltimoPedido();
             }, 5000);
@@ -134,7 +138,8 @@
      */
     async function carregarStatusUltimoPedido() {
         const elementos = ui.elementos;
-        if (app.pedidoAtivoId) {
+        // CORREÇÃO: Acessa window.app diretamente
+        if (window.app.pedidoAtivoId) {
             elementos.statusUltimoPedido.innerHTML = '';
             return;
         }
@@ -142,14 +147,16 @@
         elementos.rastreamentoContainer.style.display = 'none';
         elementos.statusUltimoPedido.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando histórico...';
         
-        if (!app.clienteLogado) {
+        // CORREÇÃO: Acessa window.app diretamente
+        if (!window.app.clienteLogado) {
             elementos.statusUltimoPedido.innerHTML = '<p>Faça login para ver o status e o histórico de pedidos.</p>';
             return;
         }
 
         try {
-            const pedidos = await api.buscarHistoricoPedidos(app.clientePerfil.telefone);
-            app.historicoPedidos = pedidos;
+            // CORREÇÃO: Acessa window.app diretamente
+            const pedidos = await api.buscarHistoricoPedidos(window.app.clientePerfil.telefone);
+            window.app.historicoPedidos = pedidos;
             
             let htmlHistorico = '';
             if (pedidos.length > 0) {
@@ -158,7 +165,6 @@
                      const dataPedido = new Date(p.created_at).toLocaleDateString('pt-BR');
                      const status = (p.status || 'novo').toUpperCase();
                      
-                     // Lógica de parse (simplificada)
                      const listaItens = p.observacoes.split('\n').find(l => l.startsWith('*')) || 'Detalhes do pedido';
                      
                      htmlHistorico += `
@@ -180,7 +186,6 @@
             
             elementos.statusUltimoPedido.innerHTML = htmlHistorico;
             
-            // Adiciona cliques para abrir o modal de detalhes do histórico
             elementos.statusUltimoPedido.querySelectorAll('.card-pedido-historico').forEach(card => {
                 card.addEventListener('click', (e) => {
                     const pedidoId = e.currentTarget.dataset.id;
@@ -199,7 +204,8 @@
      * @param {string} pedidoId - O ID do pedido do histórico.
      */
     function abrirModalDetalhesPedido(pedidoId) {
-        const pedido = app.historicoPedidos.find(p => p.id.toString() === pedidoId);
+        // CORREÇÃO: Acessa window.app diretamente
+        const pedido = window.app.historicoPedidos.find(p => p.id.toString() === pedidoId);
         if (!pedido) {
             ui.mostrarMensagem('Detalhes do pedido não encontrados.', 'error');
             return;
@@ -256,7 +262,6 @@
         `;
         elementos.modalDetalhesPedido.style.display = 'flex';
     }
-
 
     // Expõe as funções para o objeto global AppRastreamento
     window.AppRastreamento = {

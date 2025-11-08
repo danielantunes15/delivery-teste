@@ -1,9 +1,9 @@
-// js/carrinho.js - Módulo de Gerenciamento do Carrinho
+// js/carrinho.js - Módulo de Gerenciamento do Carrinho (Corrigido)
 
 (function() {
 
     const ui = window.AppUI;
-    const app = window.app; // Acesso ao estado global
+    // const app = window.app; // <-- REMOVIDO
 
     /**
      * Adiciona um item ao carrinho.
@@ -18,7 +18,8 @@
 
         // Se o item não tem detalhes, tenta agrupar
         if (!detalhes) {
-            const itemExistente = app.carrinho.find(item => 
+            // CORREÇÃO: Acessa window.app diretamente
+            const itemExistente = window.app.carrinho.find(item => 
                 item.produto.id === produto.id && 
                 !item.opcoes && !item.complementos && !item.observacao
             );
@@ -31,7 +32,8 @@
                     return;
                 }
             } else {
-                app.carrinho.push({ 
+                // CORREÇÃO: Acessa window.app diretamente
+                window.app.carrinho.push({ 
                     produto: produto, 
                     quantidade: 1, 
                     precoFinalItem: produto.preco_venda 
@@ -39,7 +41,8 @@
             }
         } else {
             // Se tem detalhes, adiciona como um novo item
-            app.carrinho.push({
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.carrinho.push({
                 produto: produto,
                 quantidade: detalhes.quantidade,
                 precoFinalItem: detalhes.precoFinalItem,
@@ -58,8 +61,9 @@
      * @param {number} index - O índice do item no carrinho.
      */
     function aumentarQuantidade(index) {
-        const item = app.carrinho[index];
-        const produtoEstoque = app.produtos.find(p => p.id === item.produto.id).estoque_atual;
+        // CORREÇÃO: Acessa window.app diretamente
+        const item = window.app.carrinho[index];
+        const produtoEstoque = window.app.produtos.find(p => p.id === item.produto.id).estoque_atual;
         
         if (item.quantidade < produtoEstoque) {
             item.quantidade += 1;
@@ -74,11 +78,12 @@
      * @param {number} index - O índice do item no carrinho.
      */
     function removerDoCarrinho(index) {
-        const produtoNome = app.carrinho[index].produto.nome;
-        if (app.carrinho[index].quantidade > 1) {
-            app.carrinho[index].quantidade -= 1;
+        // CORREÇÃO: Acessa window.app diretamente
+        const produtoNome = window.app.carrinho[index].produto.nome;
+        if (window.app.carrinho[index].quantidade > 1) {
+            window.app.carrinho[index].quantidade -= 1;
         } else {
-            app.carrinho.splice(index, 1);
+            window.app.carrinho.splice(index, 1);
         }
         atualizarCarrinho();
         ui.mostrarMensagem(`${produtoNome} removido da sacola.`, 'info');
@@ -90,14 +95,16 @@
     function atualizarCarrinho() {
         let subTotal = 0;
         let totalItens = 0;
-        const taxaEntrega = app.configLoja.taxa_entrega || 0;
+        // CORREÇÃO: Acessa window.app diretamente
+        const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
         const elementos = ui.elementos;
+        const carrinho = window.app.carrinho; // Pega o carrinho global
             
-        if (app.carrinho.length === 0) {
+        if (carrinho.length === 0) {
             elementos.carrinhoItens.innerHTML = `<p style="text-align: center; color: #666;">Sua sacola está vazia.</p>`;
         } else {
             elementos.carrinhoItens.innerHTML = '';
-            app.carrinho.forEach((item, index) => {
+            carrinho.forEach((item, index) => {
                 const itemSubtotal = item.precoFinalItem * item.quantidade;
                 subTotal += itemSubtotal;
                 totalItens += item.quantidade; 
@@ -121,7 +128,6 @@
 
                 const itemElement = document.createElement('div');
                 itemElement.className = 'carrinho-item';
-                // Mostra a quantidade no nome do item
                 itemElement.innerHTML = `
                     <div class="carrinho-item-info">
                         <div class="carrinho-item-nome">${item.quantidade}x ${item.produto.nome}</div>
@@ -139,7 +145,6 @@
                 elementos.carrinhoItens.appendChild(itemElement);
             });
             
-            // Adiciona listeners aos botões de +/-
             elementos.carrinhoItens.querySelectorAll('.btn-remover').forEach(btn => btn.addEventListener('click', function() {
                 removerDoCarrinho(parseInt(this.getAttribute('data-index')));
             }));
@@ -150,23 +155,21 @@
 
         const totalFinal = subTotal + taxaEntrega;
         
-        // Atualiza o resumo do carrinho
         elementos.subtotalCarrinho.textContent = ui.formatarMoeda(subTotal);
         elementos.taxaEntregaCarrinho.textContent = ui.formatarMoeda(taxaEntrega);
         elementos.totalCarrinho.textContent = totalFinal.toFixed(2).replace('.', ',');
         
-        // Verifica se está logado e se a loja está aberta
         const isLojaAberta = elementos.storeStatusText.textContent === 'Aberto';
-        const isReady = app.carrinho.length > 0 && app.clienteLogado && isLojaAberta; 
+        // CORREÇÃO: Acessa window.app diretamente
+        const isReady = carrinho.length > 0 && window.app.clienteLogado && isLojaAberta; 
         
         if (elementos.finalizarDiretoBtn) {
             elementos.finalizarDiretoBtn.disabled = !isReady;
         }
-        if (!isLojaAberta && app.carrinho.length > 0) {
+        if (!isLojaAberta && carrinho.length > 0) {
             ui.mostrarMensagem('A loja está fechada. Não é possível finalizar o pedido.', 'warning');
         }
         
-        // Atualiza badges
         if (elementos.carrinhoBadge) {
             elementos.carrinhoBadge.textContent = totalItens;
             elementos.carrinhoBadge.style.display = totalItens > 0 ? 'block' : 'none';
@@ -181,7 +184,8 @@
      * Atualiza a UI do perfil e do carrinho com dados do cliente.
      */
     function atualizarCarrinhoDisplay() {
-        app.Auth.atualizarPerfilUI(); 
+        // CORREÇÃO: Acessa window.app diretamente
+        window.app.Auth.atualizarPerfilUI(); 
         atualizarCarrinho();
     }
     
@@ -189,11 +193,12 @@
      * Limpa o carrinho e reseta os formulários.
      */
     function limparFormularioECarrinho() { 
-        app.carrinho = [];
+        // CORREÇÃO: Acessa window.app diretamente
+        window.app.carrinho = [];
         atualizarCarrinho();
         
         const elementos = ui.elementos;
-        if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = app.clientePerfil.endereco || '';
+        if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = window.app.clientePerfil.endereco || '';
         if (elementos.cadastroForm) elementos.cadastroForm.reset();
         
         document.querySelectorAll('.opcoes-pagamento input[name="pagamento"]').forEach(input => input.checked = false);

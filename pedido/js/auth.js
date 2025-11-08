@@ -1,10 +1,11 @@
-// js/auth.js - Módulo de Autenticação do Cliente
+// js/auth.js - Módulo de Autenticação do Cliente (Corrigido)
 
 (function() {
     
+    // Acessa os módulos UI e API diretamente do window
     const ui = window.AppUI;
     const api = window.AppAPI;
-    const app = window.app; // Acesso ao estado global
+    // const app = window.app; // <-- REMOVIDO: Este é o problema
 
     /**
      * Verifica se há um cliente salvo no localStorage ao carregar a página.
@@ -14,8 +15,9 @@
         if (telefoneSalvo) {
             const cliente = await api.buscarClientePorTelefone(telefoneSalvo);
             if (cliente) {
-                app.clientePerfil = cliente;
-                app.clienteLogado = { id: cliente.telefone, email: cliente.telefone };
+                // CORREÇÃO: Acessa window.app diretamente
+                window.app.clientePerfil = cliente;
+                window.app.clienteLogado = { id: cliente.telefone, email: cliente.telefone };
             } else {
                  // Limpa dados inválidos
                  localStorage.removeItem('clienteTelefone');
@@ -42,7 +44,8 @@
         const cliente = await api.buscarClientePorTelefone(telefone);
 
         if (cliente) {
-            app.clientePerfil = cliente;
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.clientePerfil = cliente;
             ui.mostrarMensagem(`Bem-vindo de volta, ${cliente.nome.split(' ')[0]}!`, 'success');
             logarClienteManual(true); // true = mostrar mensagem
         } else {
@@ -88,7 +91,8 @@
             };
             const novoCliente = await api.finalizarCadastroNoSupabase(dadosCliente);
 
-            app.clientePerfil = novoCliente;
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.clientePerfil = novoCliente;
             ui.mostrarMensagem(`Cadastro de ${nome.split(' ')[0]} concluído!`, 'success');
             logarClienteManual(true);
 
@@ -106,8 +110,9 @@
      * @param {boolean} [mostrarMensagemBemVindo=true] - Exibe a mensagem de boas-vindas.
      */
     function logarClienteManual(mostrarMensagemBemVindo = true) {
-        localStorage.setItem('clienteTelefone', app.clientePerfil.telefone);
-        app.clienteLogado = { id: app.clientePerfil.telefone, email: app.clientePerfil.telefone }; 
+        // CORREÇÃO: Acessa window.app diretamente
+        localStorage.setItem('clienteTelefone', window.app.clientePerfil.telefone);
+        window.app.clienteLogado = { id: window.app.clientePerfil.telefone, email: window.app.clientePerfil.telefone }; 
         
         ui.elementos.authScreen.classList.remove('active');
         ui.elementos.mobileNav.style.display = 'flex';
@@ -124,9 +129,11 @@
         // Verifica se há um pedido ativo para rastrear
         const pedidoIdSalvo = localStorage.getItem('pedidoAtivoId');
         if (pedidoIdSalvo) {
-            app.Rastreamento.iniciarRastreamento(pedidoIdSalvo);
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.Rastreamento.iniciarRastreamento(pedidoIdSalvo);
         } else {
-            app.Rastreamento.carregarStatusUltimoPedido();
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.Rastreamento.carregarStatusUltimoPedido();
         }
     }
 
@@ -137,10 +144,11 @@
         localStorage.removeItem('clienteTelefone');
         localStorage.removeItem('pedidoAtivoId');
         
-        app.Rastreamento.pararRastreamento();
+        // CORREÇÃO: Acessa window.app diretamente
+        window.app.Rastreamento.pararRastreamento();
         
-        app.clienteLogado = null;
-        app.clientePerfil = { nome: null, telefone: null, endereco: null };
+        window.app.clienteLogado = null;
+        window.app.clientePerfil = { nome: null, telefone: null, endereco: null };
         ui.elementos.mobileNav.style.display = 'none';
         
         ui.elementos.authTelefoneInput.value = '';
@@ -155,10 +163,11 @@
      * Atualiza os elementos da UI com dados do perfil do cliente.
      */
     function atualizarPerfilUI() {
-        const perfil = app.clientePerfil;
+        // CORREÇÃO: Acessa window.app diretamente
+        const perfil = window.app.clientePerfil;
         const elementos = ui.elementos;
         
-        if (app.clienteLogado) {
+        if (window.app.clienteLogado) {
             elementos.homeClienteNome.textContent = perfil.nome.split(' ')[0];
             elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
             elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
@@ -174,7 +183,8 @@
      */
     async function salvarEdicaoEndereco(e) {
         e.preventDefault();
-        const telefone = app.clientePerfil.telefone;
+        // CORREÇÃO: Acessa window.app diretamente
+        const telefone = window.app.clientePerfil.telefone;
         const cep = ui.elementos.modalCepInput.value.trim();
         const rua = ui.elementos.modalRuaInput.value.trim();
         const numero = ui.elementos.modalNumeroInput.value.trim();
@@ -191,11 +201,13 @@
         try {
             await api.salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto);
             
-            app.clientePerfil.endereco = enderecoCompleto;
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.clientePerfil.endereco = enderecoCompleto;
             ui.mostrarMensagem('✅ Endereço atualizado com sucesso!', 'success');
             ui.fecharModal(ui.elementos.modalEditarEndereco);
             atualizarPerfilUI(); 
-            app.Rastreamento.carregarStatusUltimoPedido(); 
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.Rastreamento.carregarStatusUltimoPedido(); 
 
         } catch (error) {
             console.error('Erro ao salvar endereço:', error);

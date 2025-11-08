@@ -1,10 +1,10 @@
-// js/checkout.js - Módulo de Finalização de Pedido
+// js/checkout.js - Módulo de Finalização de Pedido (Corrigido)
 
 (function() {
     
     const ui = window.AppUI;
     const api = window.AppAPI;
-    const app = window.app;
+    // const app = window.app; // <-- REMOVIDO
     
     /**
      * Coleta os dados do cliente logado.
@@ -16,9 +16,10 @@
         const trocoPara = parseFloat(elementos.trocoParaInput.value) || 0; 
         const observacoes = elementos.pedidoObservacoes.value.trim(); 
 
-        if (app.clienteLogado) {
-             const nome = app.clientePerfil.nome;
-             const telefone = app.clientePerfil.telefone;
+        // CORREÇÃO: Acessa window.app diretamente
+        if (window.app.clienteLogado) {
+             const nome = window.app.clientePerfil.nome;
+             const telefone = window.app.clientePerfil.telefone;
              
              if (!telefone) {
                 ui.alternarView('auth-screen');
@@ -30,7 +31,7 @@
                  nome: nome,
                  telefone: telefone,
                  endereco: endereco,
-                 authId: app.clienteLogado.id,
+                 authId: window.app.clienteLogado.id,
                  trocoPara: trocoPara,
                  observacoes: observacoes
              };
@@ -48,8 +49,9 @@
     function validarDados() {
         const dadosCliente = obterDadosCliente();
         const formaPagamentoEl = document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked');
-        const taxaEntrega = app.configLoja.taxa_entrega || 0;
-        const carrinho = app.carrinho;
+        // CORREÇÃO: Acessa window.app diretamente
+        const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        const carrinho = window.app.carrinho;
 
         if (carrinho.length === 0) {
             ui.mostrarMensagem('Sua sacola está vazia!', 'error');
@@ -125,7 +127,6 @@
         ui.elementos.finalizarDiretoBtn.disabled = true;
 
         try {
-            // 1. Criar o pedido_online
             const dadosPedidoSupabase = {
                 nome_cliente: dados.nome,
                 telefone_cliente: dados.telefone,
@@ -137,14 +138,13 @@
             };
             const novoPedido = await api.finalizarPedidoNoSupabase(dadosPedidoSupabase);
 
-            // 2. Atualizar estoque
-            for (const item of app.carrinho) {
-                const produtoNoEstoque = app.produtos.find(p => p.id === item.produto.id);
+            // CORREÇÃO: Acessa window.app diretamente
+            for (const item of window.app.carrinho) {
+                const produtoNoEstoque = window.app.produtos.find(p => p.id === item.produto.id);
                 const novoEstoque = produtoNoEstoque.estoque_atual - item.quantidade;
                 await api.atualizarEstoqueNoSupabase(item.produto.id, novoEstoque);
             }
 
-            // 3. ENVIAR MENSAGEM VIA WHATSAPP
             let mensagem = `*PEDIDO ONLINE - DOCE CRIATIVO*\n\n`;
             mensagem += `*Cliente:* ${dados.nome}\n`;
             mensagem += `*Telefone:* ${dados.telefone}\n`;
@@ -152,29 +152,29 @@
             mensagem += `*Pagamento:* ${dados.formaPagamento}\n`;
             mensagem += `*TOTAL:* ${ui.formatarMoeda(dados.total)}\n\n`;
             mensagem += `--- DETALHES ---\n`;
-            mensagem += dados.observacoes; // Já contém tudo formatado
+            mensagem += dados.observacoes;
 
-            const url = `https://wa.me/${app.NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+            // CORREÇÃO: Acessa window.app diretamente
+            const url = `https://wa.me/${window.app.NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
             window.open(url, '_blank');
 
             ui.mostrarMensagem('✅ Pedido registrado! Acompanhe o status na tela "Pedidos".', 'success');
             
-            // 4. Iniciar Rastreamento
             localStorage.setItem('pedidoAtivoId', novoPedido.id);
-            app.Rastreamento.iniciarRastreamento(novoPedido.id);
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.Rastreamento.iniciarRastreamento(novoPedido.id);
             
-            // 5. Limpar tudo
-            app.Carrinho.limparFormularioECarrinho();
-            await app.Cardapio.carregarDadosCardapio(); // Recarrega produtos (estoque)
+            window.app.Carrinho.limparFormularioECarrinho();
+            await window.app.Cardapio.carregarDadosCardapio();
             
-            ui.alternarView('view-inicio'); // Muda para a tela de Pedidos/Perfil
+            ui.alternarView('view-inicio');
 
         } catch (error) {
             console.error("Erro ao finalizar pedido direto:", error);
             ui.mostrarMensagem(`Erro ao enviar pedido: ${error.message}`, 'error');
         } finally {
-            // Re-habilita o botão com base no status da loja
-            app.Cardapio.updateStoreStatus();
+            // CORREÇÃO: Acessa window.app diretamente
+            window.app.Cardapio.updateStoreStatus();
         }
     }
 
