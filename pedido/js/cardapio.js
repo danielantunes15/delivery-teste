@@ -120,14 +120,19 @@
         categoryItems.forEach(item => {
             item.addEventListener('click', () => {
                 const categoryId = item.getAttribute('data-id');
-                categoryItems.forEach(cat => cat.classList.remove('active'));
-                item.classList.add('active');
                 
                 const categorySections = document.querySelectorAll('.category-products');
 
                 if (categoryId === 'todos') {
                     categorySections.forEach(section => section.style.display = 'block');
-                    productsSectionEl.scrollIntoView({ behavior: 'smooth' });
+                    
+                    /* --- INÍCIO DA ALTERAÇÃO (Scroll Navigation) --- */
+                    // Rola a janela (window) para o topo da seção de produtos
+                    window.scrollTo({
+                        top: productsSectionEl.offsetTop - 150, // (Header + Categorias)
+                        behavior: 'smooth'
+                    });
+                    /* --- FIM DA ALTERAÇÃO --- */
                     return;
                 }
                 
@@ -136,7 +141,21 @@
                 
                 if (targetSection) {
                     targetSection.style.display = 'block';
-                    setTimeout(() => targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                    
+                    /* --- INÍCIO DA ALTERAÇÃO (Scroll Navigation) --- */
+                    // Calcula a posição correta da seção relativa ao topo do documento
+                    const headerHeight = 70; // .header
+                    const categoryBarHeight = document.querySelector('.categories-section').offsetHeight || 80;
+                    const offset = headerHeight + categoryBarHeight;
+                    
+                    const elementPosition = targetSection.getBoundingClientRect().top + window.scrollY;
+                    const offsetPosition = elementPosition - offset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                    /* --- FIM DA ALTERAÇÃO --- */
                 }
             });
         });
@@ -253,6 +272,9 @@
                 }
             });
         });
+
+        // Configura o scroll spy após os produtos serem renderizados
+        setupCategoryScrollSpy();
     }
 
     // --- Funções de Busca e Compartilhamento ---
@@ -395,6 +417,60 @@
             calcularPrecoModal();
         }
     }
+    
+    /* --- INÍCIO DA ALTERAÇÃO (Scroll Spy) --- */
+    /**
+     * NOVO: Configura o 'scroll spy' para atualizar a categoria ativa
+     * enquanto o usuário rola a lista de produtos.
+     */
+    function setupCategoryScrollSpy() {
+        // Seleciona o container que de fato rola (AGORA É A JANELA)
+        const scrollContainer = window;
+        if (!scrollContainer) return;
+
+        const categorySections = document.querySelectorAll('.category-products');
+        const categoryItems = document.querySelectorAll('.category-item');
+        
+        // Offset para ativação: Altura do Header (70px) + Altura da Categoria (aprox. 80px)
+        const topOffset = 151; // +1 pixel de margem
+
+        scrollContainer.addEventListener('scroll', () => {
+            let currentCategoryId = null;
+
+            // Itera pelas seções para ver qual está no topo
+            for (let i = 0; i < categorySections.length; i++) {
+                const section = categorySections[i];
+                const rect = section.getBoundingClientRect();
+                
+                // Verifica se a seção está visível e próxima ao topo definido pelo offset
+                if (section.style.display !== 'none' && rect.top <= topOffset) {
+                    currentCategoryId = section.id.replace('category-section-', '');
+                }
+            }
+            
+            // Se nenhuma seção estiver no topo (ex: início ou fim da página), 
+            // tenta ativar a primeira visível ou 'todos'
+            if (!currentCategoryId) {
+                const firstVisibleSection = Array.from(categorySections).find(s => s.style.display !== 'none');
+                if (firstVisibleSection) {
+                     // Se o topo da primeira seção estiver abaixo da linha de ativação
+                     // (ou seja, estamos no topo da página), ativa 'todos'.
+                     if (firstVisibleSection.getBoundingClientRect().top > topOffset) {
+                        currentCategoryId = 'todos';
+                     }
+                } else {
+                    currentCategoryId = 'todos';
+                }
+            }
+
+            // Atualiza os botões de categoria
+            categoryItems.forEach(item => {
+                item.classList.toggle('active', item.getAttribute('data-id') === currentCategoryId);
+            });
+        });
+    }
+    /* --- FIM DA ALTERAÇÃO --- */
+
 
     // Expõe as funções para o objeto global AppCardapio
     window.AppCardapio = {
@@ -404,6 +480,7 @@
         exibirProdutos,
         exibirMaisPedidos,
         setupCategoryNavigationJS,
+        setupCategoryScrollSpy, // <-- LINHA ADICIONADA
         setupShare,
         setupSearch,
         abrirModalOpcoes,
