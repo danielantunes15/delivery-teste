@@ -123,7 +123,6 @@
         opcoesPrecoModal: document.getElementById('opcoes-preco-modal'),
         btnAdicionarOpcoes: document.getElementById('btn-adicionar-opcoes'),
         
-        /* --- INÍCIO DA ALTERAÇÃO --- */
         // --- ELEMENTOS DO NOVO HEADER v2 ---
         searchIcon: document.getElementById('header-search-input'), // Campo de busca (para o prompt)
         loginBtn: document.getElementById('header-v2-login-btn'), // Botão de conta/login
@@ -138,7 +137,6 @@
         // --- ELEMENTOS DO MODAL DE OPÇÕES ---
         opcoesImagemProduto: document.getElementById('opcoes-imagem-produto'),
         opcoesImagemPlaceholder: document.getElementById('opcoes-imagem-placeholder')
-        /* --- FIM DA ALTERAÇÃO --- */
     };
 
     /**
@@ -147,6 +145,13 @@
      * @param {string} [tipo='info'] - O tipo de alerta ('info', 'success', 'warning', 'error').
      */
     function mostrarMensagem(mensagem, tipo = 'info') {
+        /* --- INÍCIO DA ALTERAÇÃO: Mensagens desativadas --- */
+        
+        // As mensagens agora só aparecerão no console do navegador (F12)
+        // Isso é útil para você depurar, mas o cliente não verá as "nuvens".
+        console.log(`[Mensagem Oculta - ${tipo}]: ${mensagem}`);
+
+        /* // Código original que foi desativado:
         const alertContainer = elementos.alertContainer;
         if (!alertContainer) return;
         const alertDiv = document.createElement('div');
@@ -154,6 +159,9 @@
         alertDiv.innerHTML = `<span>${mensagem}</span><button class="alert-close" onclick="this.parentElement.remove()">&times;</button>`;
         alertContainer.appendChild(alertDiv);
         setTimeout(() => { if (alertDiv.parentNode) alertDiv.remove(); }, 5000);
+        */
+        
+        /* --- FIM DA ALTERAÇÃO --- */
     }
 
     /**
@@ -163,6 +171,8 @@
     function alternarView(viewId) {
         // Guarda de Rota
         if ((viewId === 'view-inicio' || viewId === 'view-carrinho') && !window.app.clienteLogado) {
+            // A função mostrarMensagem() agora está desativada,
+            // mas a lógica de bloqueio de rota continua.
             mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
             viewId = 'auth-screen';
         }
@@ -230,5 +240,14 @@
         formatarMoeda,
         formatarTelefone
     };
+
+    // --- NOVO: Listener para o botão do carrinho no header ---
+    // Adicionado fora do objeto, mas no IIFE
+    if (elementos.headerCartBtn) {
+        elementos.headerCartBtn.addEventListener('click', () => {
+            // A função alternarView já tem a lógica de login
+            window.AppUI.alternarView('view-carrinho');
+        });
+    }
 
 })();
