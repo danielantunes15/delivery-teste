@@ -2,26 +2,23 @@
 
 (function() {
 
-    const ui = window.AppUI;
-    const api = window.AppAPI;
-    // const app = window.app; // <-- REMOVIDO
+    // const ui = window.AppUI; // <-- REMOVIDO
+    // const api = window.AppAPI; // <-- REMOVIDO
     
     /**
      * Inicia o ouvinte de Realtime do Supabase para um pedido específico.
-     * @param {string} pedidoId - O ID do pedido a ser rastreado.
      */
     async function iniciarRastreamento(pedidoId) {
         if (!pedidoId) return;
         
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.pedidoAtivoId = pedidoId;
         console.log(`Iniciando rastreamento para o pedido: ${pedidoId}`);
         
-        ui.elementos.statusUltimoPedido.innerHTML = '';
+        window.AppUI.elementos.statusUltimoPedido.innerHTML = '';
         
-        pararRastreamento(); // Remove qualquer ouvinte antigo
+        pararRastreamento(); 
 
-        const pedido = await api.buscarPedidoParaRastreamento(pedidoId);
+        const pedido = await window.AppAPI.buscarPedidoParaRastreamento(pedidoId);
         if (!pedido) {
             console.log("Pedido não encontrado, limpando tracker.");
             localStorage.removeItem('pedidoAtivoId');
@@ -32,8 +29,6 @@
         
         atualizarTrackerUI(pedido);
 
-        // Ouve por atualizações futuras
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.supabaseChannel = window.supabase.channel(`pedido-${pedidoId}`)
             .on(
                 'postgres_changes',
@@ -62,7 +57,6 @@
      * Para o ouvinte de Realtime atual.
      */
     function pararRastreamento() {
-        // CORREÇÃO: Acessa window.app diretamente
         if (window.app.supabaseChannel) {
             window.supabase.removeChannel(window.app.supabaseChannel);
             window.app.supabaseChannel = null;
@@ -73,13 +67,11 @@
 
     /**
      * Atualiza a interface da barra de rastreamento.
-     * @param {object} pedido - O objeto do pedido com 'id' e 'status'.
      */
     function atualizarTrackerUI(pedido) {
-        const elementos = ui.elementos;
+        const elementos = window.AppUI.elementos;
         if (!pedido) {
             localStorage.removeItem('pedidoAtivoId');
-            // CORREÇÃO: Acessa window.app diretamente
             window.app.pedidoAtivoId = null;
             elementos.rastreamentoContainer.style.display = 'none';
             pararRastreamento();
@@ -123,7 +115,6 @@
 
             setTimeout(() => {
                 localStorage.removeItem('pedidoAtivoId');
-                // CORREÇÃO: Acessa window.app diretamente
                 window.app.pedidoAtivoId = null;
                 elementos.rastreamentoContainer.style.display = 'none';
                 carregarStatusUltimoPedido();
@@ -137,8 +128,7 @@
      * Carrega o histórico de pedidos antigos (se nenhum pedido estiver ativo).
      */
     async function carregarStatusUltimoPedido() {
-        const elementos = ui.elementos;
-        // CORREÇÃO: Acessa window.app diretamente
+        const elementos = window.AppUI.elementos;
         if (window.app.pedidoAtivoId) {
             elementos.statusUltimoPedido.innerHTML = '';
             return;
@@ -147,15 +137,13 @@
         elementos.rastreamentoContainer.style.display = 'none';
         elementos.statusUltimoPedido.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando histórico...';
         
-        // CORREÇÃO: Acessa window.app diretamente
         if (!window.app.clienteLogado) {
             elementos.statusUltimoPedido.innerHTML = '<p>Faça login para ver o status e o histórico de pedidos.</p>';
             return;
         }
 
         try {
-            // CORREÇÃO: Acessa window.app diretamente
-            const pedidos = await api.buscarHistoricoPedidos(window.app.clientePerfil.telefone);
+            const pedidos = await window.AppAPI.buscarHistoricoPedidos(window.app.clientePerfil.telefone);
             window.app.historicoPedidos = pedidos;
             
             let htmlHistorico = '';
@@ -175,7 +163,7 @@
                                  <span class="status-badge-history status-${status}">
                                      ${status}
                                  </span>
-                                 | Total: ${ui.formatarMoeda(p.total)}
+                                 | Total: ${window.AppUI.formatarMoeda(p.total)}
                              </p>
                          </div>
                      `;
@@ -201,20 +189,17 @@
     
     /**
      * Abre o modal com os detalhes de um pedido do histórico.
-     * @param {string} pedidoId - O ID do pedido do histórico.
      */
     function abrirModalDetalhesPedido(pedidoId) {
-        // CORREÇÃO: Acessa window.app diretamente
         const pedido = window.app.historicoPedidos.find(p => p.id.toString() === pedidoId);
         if (!pedido) {
-            ui.mostrarMensagem('Detalhes do pedido não encontrados.', 'error');
+            window.AppUI.mostrarMensagem('Detalhes do pedido não encontrados.', 'error');
             return;
         }
 
         const dataPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
         const status = (pedido.status || 'novo').toUpperCase();
         
-        // Parse da observação
         const obsLines = pedido.observacoes.split('\n');
         let itensListHtml = '';
         let obsAdicionais = '';
@@ -236,11 +221,11 @@
         }
         const cleanedObsAdicionais = obsAdicionais.replace('OBSERVAÇÕES ADICIONAIS:', '').trim();
         
-        const elementos = ui.elementos;
+        const elementos = window.AppUI.elementos;
         elementos.detalhesPedidoId.textContent = `#${pedido.id}`;
         elementos.detalhesPedidoContent.innerHTML = `
             <div style="text-align: center; margin-bottom: 15px;">
-                <h4 style="margin: 0; font-size: 1.5rem;">${ui.formatarMoeda(pedido.total)}</h4>
+                <h4 style="margin: 0; font-size: 1.5rem;">${window.AppUI.formatarMoeda(pedido.total)}</h4>
                 <span class="status-badge-history status-${status}" style="margin-top: 5px;">
                     <i class="fas fa-info-circle"></i> STATUS: ${status}
                 </span>
@@ -262,6 +247,7 @@
         `;
         elementos.modalDetalhesPedido.style.display = 'flex';
     }
+
 
     // Expõe as funções para o objeto global AppRastreamento
     window.AppRastreamento = {

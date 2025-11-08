@@ -2,9 +2,8 @@
 
 (function() {
 
-    const ui = window.AppUI;
-    const api = window.AppAPI;
-    // const app = window.app; // <-- REMOVIDO
+    // const ui = window.AppUI; // <-- REMOVIDO
+    // const api = window.AppAPI; // <-- REMOVIDO
 
     /**
      * Carrega categorias, produtos e destaques.
@@ -12,21 +11,20 @@
     async function carregarDadosCardapio() {
         try {
             const [categoriasData, produtosData, maisPedidosData] = await Promise.all([
-                api.carregarCategorias(),
-                api.carregarProdutos(),
-                api.carregarMaisPedidos()
+                window.AppAPI.carregarCategorias(),
+                window.AppAPI.carregarProdutos(),
+                window.AppAPI.carregarMaisPedidos()
             ]);
             
-            // CORREÇÃO: Acessa window.app diretamente
             window.app.categorias = categoriasData;
             window.app.produtos = produtosData;
             
             exibirCategorias();
-            exibirProdutos(window.app.produtos); // Exibe todos por padrão
+            exibirProdutos(window.app.produtos);
             exibirMaisPedidos(maisPedidosData);
 
         } catch (error) {
-            ui.mostrarMensagem('Erro ao carregar o cardápio: ' + error.message, 'error');
+            window.AppUI.mostrarMensagem('Erro ao carregar o cardápio: ' + error.message, 'error');
         }
     }
 
@@ -34,14 +32,13 @@
      * Atualiza o status da loja (Aberto/Fechado) com base nos horários do config.
      */
     function updateStoreStatus() {
-        const elementos = ui.elementos;
+        const elementos = window.AppUI.elementos;
         if (!elementos.storeStatusIndicator || !elementos.storeStatusText) return;
 
         const diasSemana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
         const agora = new Date();
         const diaHoje = diasSemana[agora.getDay()];
         
-        // CORREÇÃO: Acessa window.app diretamente
         const configLoja = window.app.configLoja;
         const abertura = configLoja[`${diaHoje}_abertura`];
         const fechamento = configLoja[`${diaHoje}_fechamento`];
@@ -85,7 +82,6 @@
         }
         
         elementos.storeHoursText.textContent = horarioTexto;
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.Carrinho.atualizarCarrinho();
     }
 
@@ -93,7 +89,7 @@
      * Renderiza a lista de categorias.
      */
     function exibirCategorias() { 
-        const container = ui.elementos.categoriesScroll;
+        const container = window.AppUI.elementos.categoriesScroll;
         if (!container) return;
         container.innerHTML = ''; 
         
@@ -103,7 +99,6 @@
         todos.setAttribute('data-id', 'todos');
         container.appendChild(todos);
 
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.categorias.forEach(categoria => {
             const btn = document.createElement('div');
             btn.className = `category-item`;
@@ -120,7 +115,7 @@
      */
     function setupCategoryNavigationJS() {
         const categoryItems = document.querySelectorAll('.category-item');
-        const productsSectionEl = ui.elementos.productsSection;
+        const productsSectionEl = window.AppUI.elementos.productsSection;
         
         categoryItems.forEach(item => {
             item.addEventListener('click', () => {
@@ -149,10 +144,9 @@
 
     /**
      * Renderiza a lista de "Mais Pedidos" (Destaques).
-     * @param {Array} destaques - Lista de produtos em destaque.
      */
     function exibirMaisPedidos(destaques) {
-        const container = ui.elementos.popularScroll;
+        const container = window.AppUI.elementos.popularScroll;
         if (!container) return;
         container.innerHTML = '';
         
@@ -171,7 +165,7 @@
             item.innerHTML = `
                 ${imgTag}
                 <h3>${produto.nome}</h3>
-                <p>${ui.formatarMoeda(produto.preco_venda)}</p>
+                <p>${window.AppUI.formatarMoeda(produto.preco_venda)}</p>
             `;
             item.addEventListener('click', () => abrirModalOpcoes(produto));
             container.appendChild(item);
@@ -180,20 +174,17 @@
 
     /**
      * Renderiza a lista principal de produtos, agrupados por categoria.
-     * @param {Array} listaParaExibir - A lista de produtos (pode ser filtrada).
      */
     function exibirProdutos(listaParaExibir) {
-        const container = ui.elementos.productsSection;
+        const container = window.AppUI.elementos.productsSection;
         if (!container) return;
         container.innerHTML = ''; 
         
-        // CORREÇÃO: Acessa window.app diretamente
         const produtosAtivos = listaParaExibir || window.app.produtos.filter(p => p.ativo);
         
         const produtosPorCategoria = {};
         produtosAtivos.forEach(produto => {
             const catId = produto.categoria_id || 'sem-categoria';
-            // CORREÇÃO: Acessa window.app diretamente
             const categoriaObj = window.app.categorias.find(c => c.id === produto.categoria_id);
             const catNome = categoriaObj?.nome || 'Outros';
             
@@ -227,7 +218,7 @@
                         <div class="product-info">
                             <h4 class="product-name">${produto.nome}</h4>
                             <p class="product-description">${produto.descricao || 'Sem descrição'}</p>
-                            <p class="product-price">${ui.formatarMoeda(produto.preco_venda)}</p>
+                            <p class="product-price">${window.AppUI.formatarMoeda(produto.preco_venda)}</p>
                         </div>
                         <div class="product-image">
                             ${imgTag}
@@ -251,13 +242,11 @@
         container.querySelectorAll('.product-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 const produtoId = e.currentTarget.getAttribute('data-id');
-                // CORREÇÃO: Acessa window.app diretamente
                 const produto = window.app.produtos.find(p => p.id === produtoId);
                 if (!produto) return;
 
                 if (e.target.classList.contains('add-cart')) {
                     e.stopPropagation();
-                    // CORREÇÃO: Acessa window.app diretamente
                     window.app.Carrinho.adicionarAoCarrinho(produto);
                 } else if (produto.estoque_atual > 0) {
                     abrirModalOpcoes(produto);
@@ -277,7 +266,7 @@
             }).catch(error => console.log('Erro ao compartilhar:', error));
         } else {
             navigator.clipboard.writeText(window.location.href).then(() => {
-                ui.mostrarMensagem('Link copiado para a área de transferência!', 'success');
+                window.AppUI.mostrarMensagem('Link copiado para a área de transferência!', 'success');
             });
         }
     }
@@ -285,7 +274,6 @@
     function setupSearch() {
         const searchTerm = prompt('O que você está procurando?');
         if (searchTerm && searchTerm.trim() !== '') {
-            // CORREÇÃO: Acessa window.app diretamente
             const produtosFiltrados = window.app.produtos.filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase()));
             exibirProdutos(produtosFiltrados);
             document.querySelectorAll('.category-item').forEach(cat => cat.classList.remove('active'));
@@ -300,11 +288,10 @@
     async function abrirModalOpcoes(produto) {
         if (produto.estoque_atual <= 0) return;
 
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.produtoSelecionadoModal = produto;
         window.app.precoBaseModal = produto.preco_venda;
         
-        const elementos = ui.elementos;
+        const elementos = window.AppUI.elementos;
         elementos.opcoesTitulo.textContent = produto.nome;
         elementos.opcoesDescricao.textContent = produto.descricao || '';
         elementos.opcoesContainer.innerHTML = '';
@@ -312,22 +299,22 @@
         elementos.opcoesObservacao.value = '';
         elementos.opcoesQuantidadeValor.textContent = '1';
 
-        ui.mostrarMensagem('Carregando opções...', 'info');
+        window.AppUI.mostrarMensagem('Carregando opções...', 'info');
 
         try {
             const [gruposOpcoes, complementos] = await Promise.all([
-                api.buscarOpcoesProduto(produto.id),
-                api.buscarComplementosProduto(produto.id)
+                window.AppAPI.buscarOpcoesProduto(produto.id),
+                window.AppAPI.buscarComplementosProduto(produto.id)
             ]);
 
             if (gruposOpcoes && gruposOpcoes.length > 0) {
-                // ... (lógica de renderização de opções)
+                // (lógica de renderização de opções)
             } else {
                 elementos.opcoesContainer.innerHTML = '<p style="font-size:0.9rem; color:#888;">Este item não possui opções de escolha.</p>';
             }
 
             if (complementos && complementos.length > 0) {
-                // ... (lógica de renderização de complementos)
+                // (lógica de renderização de complementos)
             }
 
             elementos.modalOpcoesProduto.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
@@ -347,40 +334,39 @@
     }
 
     function calcularPrecoModal() {
-        // CORREÇÃO: Acessa window.app diretamente
         let precoCalculado = window.app.precoBaseModal;
-        const quantidade = parseInt(ui.elementos.opcoesQuantidadeValor.textContent);
+        const quantidade = parseInt(window.AppUI.elementos.opcoesQuantidadeValor.textContent);
 
-        ui.elementos.modalOpcoesProduto.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+        window.AppUI.elementos.modalOpcoesProduto.querySelectorAll('input[type="radio"]:checked').forEach(input => {
             precoCalculado += parseFloat(input.dataset.preco || 0);
         });
-        ui.elementos.modalOpcoesProduto.querySelectorAll('input[type="checkbox"]:checked').forEach(input => {
+        window.AppUI.elementos.modalOpcoesProduto.querySelectorAll('input[type="checkbox"]:checked').forEach(input => {
             precoCalculado += parseFloat(input.dataset.preco || 0);
         });
         
         const precoFinal = precoCalculado * quantidade;
-        ui.elementos.opcoesPrecoModal.textContent = ui.formatarMoeda(precoFinal);
+        window.AppUI.elementos.opcoesPrecoModal.textContent = window.AppUI.formatarMoeda(precoFinal);
     }
     
     function adicionarItemComOpcoes() {
-        const quantidade = parseInt(ui.elementos.opcoesQuantidadeValor.textContent);
-        // CORREÇÃO: Acessa window.app diretamente
+        const elementos = window.AppUI.elementos;
+        const quantidade = parseInt(elementos.opcoesQuantidadeValor.textContent);
         let precoCalculado = window.app.precoBaseModal;
         
         const opcoesSelecionadas = [];
         const complementosSelecionados = [];
 
-        ui.elementos.modalOpcoesProduto.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+        elementos.modalOpcoesProduto.querySelectorAll('input[type="radio"]:checked').forEach(input => {
             precoCalculado += parseFloat(input.dataset.preco || 0);
             opcoesSelecionadas.push({ id: input.value, nome: input.dataset.nome, grupo: input.dataset.grupo, preco: parseFloat(input.dataset.preco || 0) });
         });
         
-        ui.elementos.modalOpcoesProduto.querySelectorAll('input[type="checkbox"]:checked').forEach(input => {
+        elementos.modalOpcoesProduto.querySelectorAll('input[type="checkbox"]:checked').forEach(input => {
             precoCalculado += parseFloat(input.dataset.preco || 0);
             complementosSelecionados.push({ id: input.value, nome: input.dataset.nome, preco: parseFloat(input.dataset.preco || 0) });
         });
 
-        const observacaoItem = ui.elementos.opcoesObservacao.value.trim();
+        const observacaoItem = elementos.opcoesObservacao.value.trim();
         
         const detalhes = {
             quantidade: quantidade,
@@ -390,23 +376,22 @@
             observacao: observacaoItem
         };
         
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.Carrinho.adicionarAoCarrinho(window.app.produtoSelecionadoModal, detalhes);
-        ui.fecharModal(ui.elementos.modalOpcoesProduto);
+        window.AppUI.fecharModal(elementos.modalOpcoesProduto);
     }
     
     function aumentarQtdModal() {
-        let qtd = parseInt(ui.elementos.opcoesQuantidadeValor.textContent);
+        let qtd = parseInt(window.AppUI.elementos.opcoesQuantidadeValor.textContent);
         qtd++;
-        ui.elementos.opcoesQuantidadeValor.textContent = qtd;
+        window.AppUI.elementos.opcoesQuantidadeValor.textContent = qtd;
         calcularPrecoModal();
     }
     
     function diminuirQtdModal() {
-        let qtd = parseInt(ui.elementos.opcoesQuantidadeValor.textContent);
+        let qtd = parseInt(window.AppUI.elementos.opcoesQuantidadeValor.textContent);
         if (qtd > 1) {
             qtd--;
-            ui.elementos.opcoesQuantidadeValor.textContent = qtd;
+            window.AppUI.elementos.opcoesQuantidadeValor.textContent = qtd;
             calcularPrecoModal();
         }
     }

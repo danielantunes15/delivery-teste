@@ -2,23 +2,19 @@
 
 (function() {
 
-    const ui = window.AppUI;
-    // const app = window.app; // <-- REMOVIDO
+    // const ui = window.AppUI; // <-- REMOVIDO
 
     /**
      * Adiciona um item ao carrinho.
-     * @param {object} produto - O objeto do produto.
-     * @param {object} [detalhes=null] - Detalhes de opções, complementos e observação.
      */
     function adicionarAoCarrinho(produto, detalhes = null) {
         if (produto.estoque_atual <= 0) {
-            ui.mostrarMensagem(`Desculpe, ${produto.nome} está esgotado.`, 'error');
+            // CORREÇÃO: Acessa window.AppUI diretamente
+            window.AppUI.mostrarMensagem(`Desculpe, ${produto.nome} está esgotado.`, 'error');
             return;
         }
 
-        // Se o item não tem detalhes, tenta agrupar
         if (!detalhes) {
-            // CORREÇÃO: Acessa window.app diretamente
             const itemExistente = window.app.carrinho.find(item => 
                 item.produto.id === produto.id && 
                 !item.opcoes && !item.complementos && !item.observacao
@@ -28,11 +24,10 @@
                 if (itemExistente.quantidade < produto.estoque_atual) {
                     itemExistente.quantidade += 1;
                 } else {
-                    ui.mostrarMensagem(`Estoque máximo atingido para ${produto.nome} (${produto.estoque_atual} un.)`, 'warning');
+                    window.AppUI.mostrarMensagem(`Estoque máximo atingido para ${produto.nome} (${produto.estoque_atual} un.)`, 'warning');
                     return;
                 }
             } else {
-                // CORREÇÃO: Acessa window.app diretamente
                 window.app.carrinho.push({ 
                     produto: produto, 
                     quantidade: 1, 
@@ -40,8 +35,6 @@
                 });
             }
         } else {
-            // Se tem detalhes, adiciona como um novo item
-            // CORREÇÃO: Acessa window.app diretamente
             window.app.carrinho.push({
                 produto: produto,
                 quantidade: detalhes.quantidade,
@@ -53,15 +46,13 @@
         }
         
         atualizarCarrinho();
-        ui.mostrarMensagem(`${produto.nome} adicionado à sacola!`, 'success');
+        window.AppUI.mostrarMensagem(`${produto.nome} adicionado à sacola!`, 'success');
     }
 
     /**
      * Aumenta a quantidade de um item no carrinho.
-     * @param {number} index - O índice do item no carrinho.
      */
     function aumentarQuantidade(index) {
-        // CORREÇÃO: Acessa window.app diretamente
         const item = window.app.carrinho[index];
         const produtoEstoque = window.app.produtos.find(p => p.id === item.produto.id).estoque_atual;
         
@@ -69,16 +60,14 @@
             item.quantidade += 1;
             atualizarCarrinho();
         } else {
-            ui.mostrarMensagem(`Estoque máximo atingido para ${item.produto.nome} (${produtoEstoque} un.)`, 'warning');
+            window.AppUI.mostrarMensagem(`Estoque máximo atingido para ${item.produto.nome} (${produtoEstoque} un.)`, 'warning');
         }
     }
     
     /**
      * Remove ou diminui a quantidade de um item no carrinho.
-     * @param {number} index - O índice do item no carrinho.
      */
     function removerDoCarrinho(index) {
-        // CORREÇÃO: Acessa window.app diretamente
         const produtoNome = window.app.carrinho[index].produto.nome;
         if (window.app.carrinho[index].quantidade > 1) {
             window.app.carrinho[index].quantidade -= 1;
@@ -86,7 +75,7 @@
             window.app.carrinho.splice(index, 1);
         }
         atualizarCarrinho();
-        ui.mostrarMensagem(`${produtoNome} removido da sacola.`, 'info');
+        window.AppUI.mostrarMensagem(`${produtoNome} removido da sacola.`, 'info');
     }
     
     /**
@@ -95,10 +84,11 @@
     function atualizarCarrinho() {
         let subTotal = 0;
         let totalItens = 0;
-        // CORREÇÃO: Acessa window.app diretamente
+        // CORREÇÃO: Acessa window.app e window.AppUI diretamente
         const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
-        const elementos = ui.elementos;
-        const carrinho = window.app.carrinho; // Pega o carrinho global
+        const elementos = window.AppUI.elementos;
+        const carrinho = window.app.carrinho;
+        const formatarMoeda = window.AppUI.formatarMoeda;
             
         if (carrinho.length === 0) {
             elementos.carrinhoItens.innerHTML = `<p style="text-align: center; color: #666;">Sua sacola está vazia.</p>`;
@@ -131,7 +121,7 @@
                 itemElement.innerHTML = `
                     <div class="carrinho-item-info">
                         <div class="carrinho-item-nome">${item.quantidade}x ${item.produto.nome}</div>
-                        <div class="carrinho-item-preco">${ui.formatarMoeda(item.precoFinalItem)} (un)</div>
+                        <div class="carrinho-item-preco">${formatarMoeda(item.precoFinalItem)} (un)</div>
                         ${opcoesHtml}
                     </div>
                     <div class="carrinho-item-controles">
@@ -139,7 +129,7 @@
                         <button class="btn-adicionar-carrinho" data-index="${index}"><i class="fas fa-plus"></i></button>
                     </div>
                     <div class="carrinho-item-subtotal">
-                        ${ui.formatarMoeda(itemSubtotal)}
+                        ${formatarMoeda(itemSubtotal)}
                     </div>
                 `;
                 elementos.carrinhoItens.appendChild(itemElement);
@@ -155,19 +145,18 @@
 
         const totalFinal = subTotal + taxaEntrega;
         
-        elementos.subtotalCarrinho.textContent = ui.formatarMoeda(subTotal);
-        elementos.taxaEntregaCarrinho.textContent = ui.formatarMoeda(taxaEntrega);
+        elementos.subtotalCarrinho.textContent = formatarMoeda(subTotal);
+        elementos.taxaEntregaCarrinho.textContent = formatarMoeda(taxaEntrega);
         elementos.totalCarrinho.textContent = totalFinal.toFixed(2).replace('.', ',');
         
         const isLojaAberta = elementos.storeStatusText.textContent === 'Aberto';
-        // CORREÇÃO: Acessa window.app diretamente
         const isReady = carrinho.length > 0 && window.app.clienteLogado && isLojaAberta; 
         
         if (elementos.finalizarDiretoBtn) {
             elementos.finalizarDiretoBtn.disabled = !isReady;
         }
         if (!isLojaAberta && carrinho.length > 0) {
-            ui.mostrarMensagem('A loja está fechada. Não é possível finalizar o pedido.', 'warning');
+            window.AppUI.mostrarMensagem('A loja está fechada. Não é possível finalizar o pedido.', 'warning');
         }
         
         if (elementos.carrinhoBadge) {
@@ -184,7 +173,6 @@
      * Atualiza a UI do perfil e do carrinho com dados do cliente.
      */
     function atualizarCarrinhoDisplay() {
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.Auth.atualizarPerfilUI(); 
         atualizarCarrinho();
     }
@@ -193,11 +181,10 @@
      * Limpa o carrinho e reseta os formulários.
      */
     function limparFormularioECarrinho() { 
-        // CORREÇÃO: Acessa window.app diretamente
         window.app.carrinho = [];
         atualizarCarrinho();
         
-        const elementos = ui.elementos;
+        const elementos = window.AppUI.elementos;
         if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = window.app.clientePerfil.endereco || '';
         if (elementos.cadastroForm) elementos.cadastroForm.reset();
         

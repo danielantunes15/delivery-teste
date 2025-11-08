@@ -2,28 +2,26 @@
 
 (function() {
     
-    const ui = window.AppUI;
-    const api = window.AppAPI;
-    // const app = window.app; // <-- REMOVIDO
+    // const ui = window.AppUI; // <-- REMOVIDO
+    // const api = window.AppAPI; // <-- REMOVIDO
     
     /**
      * Coleta os dados do cliente logado.
-     * @returns {object|null} Dados do cliente ou null se não estiver logado.
      */
     function obterDadosCliente() {
-        const elementos = ui.elementos;
+        // CORREÇÃO: Acessa window.AppUI diretamente
+        const elementos = window.AppUI.elementos;
         const endereco = elementos.carrinhoEnderecoInput.value.trim();
         const trocoPara = parseFloat(elementos.trocoParaInput.value) || 0; 
         const observacoes = elementos.pedidoObservacoes.value.trim(); 
 
-        // CORREÇÃO: Acessa window.app diretamente
         if (window.app.clienteLogado) {
              const nome = window.app.clientePerfil.nome;
              const telefone = window.app.clientePerfil.telefone;
              
              if (!telefone) {
-                ui.alternarView('auth-screen');
-                ui.mostrarMensagem('Sua sessão expirou. Faça login novamente.', 'error');
+                window.AppUI.alternarView('auth-screen');
+                window.AppUI.mostrarMensagem('Sua sessão expirou. Faça login novamente.', 'error');
                 return null;
              }
              
@@ -36,32 +34,31 @@
                  observacoes: observacoes
              };
         } else {
-             ui.alternarView('auth-screen');
-             ui.mostrarMensagem('🚨 Você precisa estar logado para enviar o pedido.', 'error');
+             window.AppUI.alternarView('auth-screen');
+             window.AppUI.mostrarMensagem('🚨 Você precisa estar logado para enviar o pedido.', 'error');
              return null;
         }
     }
 
     /**
      * Valida todos os dados antes de finalizar (carrinho, cliente, pagamento).
-     * @returns {object|null} Objeto de dados do pedido pronto para API, ou null se inválido.
      */
     function validarDados() {
         const dadosCliente = obterDadosCliente();
         const formaPagamentoEl = document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked');
-        // CORREÇÃO: Acessa window.app diretamente
         const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
         const carrinho = window.app.carrinho;
+        const formatarMoeda = window.AppUI.formatarMoeda; // Pega a função utilitária
 
         if (carrinho.length === 0) {
-            ui.mostrarMensagem('Sua sacola está vazia!', 'error');
+            window.AppUI.mostrarMensagem('Sua sacola está vazia!', 'error');
             return null;
         }
         
         if (!dadosCliente) return null;
         
         if (!dadosCliente.nome || !dadosCliente.telefone || !dadosCliente.endereco) {
-            ui.mostrarMensagem('Dados do cliente ou endereço incompletos.', 'error');
+            window.AppUI.mostrarMensagem('Dados do cliente ou endereço incompletos.', 'error');
             return null;
         }
         
@@ -69,19 +66,19 @@
         const totalPedido = subTotalProdutos + taxaEntrega;
         
         if (formaPagamentoEl.value === 'Dinheiro' && dadosCliente.trocoPara > 0 && dadosCliente.trocoPara < totalPedido) {
-             ui.mostrarMensagem('O valor do troco deve ser igual ou maior que o total do pedido.', 'error');
-             ui.elementos.trocoParaInput.focus();
+             window.AppUI.mostrarMensagem('O valor do troco deve ser igual ou maior que o total do pedido.', 'error');
+             window.AppUI.elementos.trocoParaInput.focus();
              return null;
         }
         
         if (!formaPagamentoEl) {
-            ui.mostrarMensagem('Por favor, escolha uma forma de pagamento.', 'error');
+            window.AppUI.mostrarMensagem('Por favor, escolha uma forma de pagamento.', 'error');
             return null;
         }
         
         let listaItens = "Itens:\n";
         carrinho.forEach(item => {
-            listaItens += `* ${item.quantidade}x ${item.produto.nome} (${ui.formatarMoeda(item.precoFinalItem)})\n`;
+            listaItens += `* ${item.quantidade}x ${item.produto.nome} (${formatarMoeda(item.precoFinalItem)})\n`;
             if(item.opcoes && item.opcoes.length > 0) {
                 item.opcoes.forEach(op => { listaItens += `  - ${op.grupo}: ${op.nome}\n`; });
             }
@@ -95,12 +92,12 @@
         
         let obsCompleta = dadosCliente.observacoes;
         if (dadosCliente.trocoPara > 0) {
-             obsCompleta += `\nTROCO NECESSÁRIO: Sim, para ${ui.formatarMoeda(dadosCliente.trocoPara)}`;
+             obsCompleta += `\nTROCO NECESSÁRIO: Sim, para ${formatarMoeda(dadosCliente.trocoPara)}`;
         } else if (formaPagamentoEl.value === 'Dinheiro') {
              obsCompleta += `\nTROCO NECESSÁRIO: Não`;
         }
         
-        obsCompleta = `${listaItens}\nSubtotal: ${ui.formatarMoeda(subTotalProdutos)}\nTaxa Entrega: ${ui.formatarMoeda(taxaEntrega)}\nTotal: ${ui.formatarMoeda(totalPedido)}\n\nOBSERVAÇÕES ADICIONAIS:\n${obsCompleta}`;
+        obsCompleta = `${listaItens}\nSubtotal: ${formatarMoeda(subTotalProdutos)}\nTaxa Entrega: ${formatarMoeda(taxaEntrega)}\nTotal: ${formatarMoeda(totalPedido)}\n\nOBSERVAÇÕES ADICIONAIS:\n${obsCompleta}`;
 
         return {
             ...dadosCliente,
@@ -122,9 +119,12 @@
     async function finalizarPedidoEEnviarWhatsApp() { 
         const dados = validarDados();
         if (!dados) return;
+        
+        const uiElementos = window.AppUI.elementos;
+        const formatarMoeda = window.AppUI.formatarMoeda;
 
-        ui.mostrarMensagem('Processando pedido...', 'info');
-        ui.elementos.finalizarDiretoBtn.disabled = true;
+        window.AppUI.mostrarMensagem('Processando pedido...', 'info');
+        uiElementos.finalizarDiretoBtn.disabled = true;
 
         try {
             const dadosPedidoSupabase = {
@@ -136,13 +136,12 @@
                 status: 'novo',
                 observacoes: dados.observacoes
             };
-            const novoPedido = await api.finalizarPedidoNoSupabase(dadosPedidoSupabase);
+            const novoPedido = await window.AppAPI.finalizarPedidoNoSupabase(dadosPedidoSupabase);
 
-            // CORREÇÃO: Acessa window.app diretamente
             for (const item of window.app.carrinho) {
                 const produtoNoEstoque = window.app.produtos.find(p => p.id === item.produto.id);
                 const novoEstoque = produtoNoEstoque.estoque_atual - item.quantidade;
-                await api.atualizarEstoqueNoSupabase(item.produto.id, novoEstoque);
+                await window.AppAPI.atualizarEstoqueNoSupabase(item.produto.id, novoEstoque);
             }
 
             let mensagem = `*PEDIDO ONLINE - DOCE CRIATIVO*\n\n`;
@@ -150,30 +149,27 @@
             mensagem += `*Telefone:* ${dados.telefone}\n`;
             mensagem += `*Endereço:* ${dados.endereco}\n`;
             mensagem += `*Pagamento:* ${dados.formaPagamento}\n`;
-            mensagem += `*TOTAL:* ${ui.formatarMoeda(dados.total)}\n\n`;
+            mensagem += `*TOTAL:* ${formatarMoeda(dados.total)}\n\n`;
             mensagem += `--- DETALHES ---\n`;
             mensagem += dados.observacoes;
 
-            // CORREÇÃO: Acessa window.app diretamente
             const url = `https://wa.me/${window.app.NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
             window.open(url, '_blank');
 
-            ui.mostrarMensagem('✅ Pedido registrado! Acompanhe o status na tela "Pedidos".', 'success');
+            window.AppUI.mostrarMensagem('✅ Pedido registrado! Acompanhe o status na tela "Pedidos".', 'success');
             
             localStorage.setItem('pedidoAtivoId', novoPedido.id);
-            // CORREÇÃO: Acessa window.app diretamente
             window.app.Rastreamento.iniciarRastreamento(novoPedido.id);
             
             window.app.Carrinho.limparFormularioECarrinho();
             await window.app.Cardapio.carregarDadosCardapio();
             
-            ui.alternarView('view-inicio');
+            window.AppUI.alternarView('view-inicio');
 
         } catch (error) {
             console.error("Erro ao finalizar pedido direto:", error);
-            ui.mostrarMensagem(`Erro ao enviar pedido: ${error.message}`, 'error');
+            window.AppUI.mostrarMensagem(`Erro ao enviar pedido: ${error.message}`, 'error');
         } finally {
-            // CORREÇÃO: Acessa window.app diretamente
             window.app.Cardapio.updateStoreStatus();
         }
     }

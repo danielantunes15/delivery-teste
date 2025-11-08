@@ -1,9 +1,9 @@
-// js/api.js - Módulo de API (Supabase e Serviços Externos)
+// js/api.js - Módulo de API (Supabase e Serviços Externos) (Corrigido)
 
 (function() {
     
     const supabase = window.supabase;
-    const ui = window.AppUI;
+    // const ui = window.AppUI; // <-- REMOVIDO
 
     /**
      * Busca as configurações da loja (taxa de entrega, horários).
@@ -21,7 +21,10 @@
             window.app.configLoja = data; // Salva no estado global
         } catch (error) {
             console.error("Erro ao carregar configurações da loja:", error);
-            ui.mostrarMensagem('Erro ao carregar status da loja.', 'error');
+            // CORREÇÃO: Acessa window.AppUI diretamente
+            if (window.AppUI) {
+                window.AppUI.mostrarMensagem('Erro ao carregar status da loja.', 'error');
+            }
             // O app continuará com os valores padrão
         }
     }
@@ -43,7 +46,10 @@
             return data || null;
         } catch (error) {
             console.error('Erro ao buscar cliente:', error);
-            ui.mostrarMensagem('Erro ao consultar banco de dados.', 'error');
+            // CORREÇÃO: Acessa window.AppUI diretamente
+            if (window.AppUI) {
+                window.AppUI.mostrarMensagem('Erro ao consultar banco de dados.', 'error');
+            }
             return null;
         }
     }
@@ -86,30 +92,37 @@
      * @param {string} cep - O CEP para buscar.
      */
     async function buscarCep(cep) {
+        // CORREÇÃO: Garante que AppUI exista antes de usá-lo
+        if (!window.AppUI) {
+            console.error("Módulo UI não está pronto para buscar CEP.");
+            return;
+        }
+        const uiElementos = window.AppUI.elementos;
+
         const cepLimpo = cep.replace(/\D/g, ''); 
         if (cepLimpo.length !== 8) return;
-        ui.mostrarMensagem('Buscando endereço...', 'info');
+        window.AppUI.mostrarMensagem('Buscando endereço...', 'info');
 
-        const isCadastro = ui.elementos.cadastroForm.style.display === 'block';
-        const isModal = ui.elementos.modalEditarEndereco.style.display === 'flex';
+        const isCadastro = uiElementos.cadastroForm.style.display === 'block';
+        const isModal = uiElementos.modalEditarEndereco.style.display === 'flex';
         
         let campos = {};
 
         if (isCadastro) {
             campos = {
-                rua: ui.elementos.cadastroRuaInput,
-                bairro: ui.elementos.cadastroBairroInput,
-                cidade: ui.elementos.cadastroCidadeInput,
-                estado: ui.elementos.cadastroEstadoInput,
-                numero: ui.elementos.cadastroNumeroInput
+                rua: uiElementos.cadastroRuaInput,
+                bairro: uiElementos.cadastroBairroInput,
+                cidade: uiElementos.cadastroCidadeInput,
+                estado: uiElementos.cadastroEstadoInput,
+                numero: uiElementos.cadastroNumeroInput
             };
         } else if (isModal) {
             campos = {
-                rua: ui.elementos.modalRuaInput,
-                bairro: ui.elementos.modalBairroInput,
-                cidade: ui.elementos.modalCidadeInput,
-                estado: ui.elementos.modalEstadoInput,
-                numero: ui.elementos.modalNumeroInput
+                rua: uiElementos.modalRuaInput,
+                bairro: uiElementos.modalBairroInput,
+                cidade: uiElementos.modalCidadeInput,
+                estado: uiElementos.modalEstadoInput,
+                numero: uiElementos.modalNumeroInput
             };
         } else {
             return;
@@ -120,8 +133,8 @@
             const data = await response.json();
             
             if (data.erro) {
-                ui.mostrarMensagem('CEP não encontrado. Digite o endereço manualmente.', 'warning');
-                Object.values(campos).forEach(campo => { if(campo.type !== 'hidden') campo.value = ''; });
+                window.AppUI.mostrarMensagem('CEP não encontrado. Digite o endereço manualmente.', 'warning');
+                Object.values(campos).forEach(campo => { if(campo.type !== 'hidden' && campo.type !== 'submit') campo.value = ''; });
                 campos.rua.focus();
                 return;
             }
@@ -136,9 +149,9 @@
             } else {
                 campos.rua.focus();
             }
-            ui.mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
+            window.AppUI.mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
         } catch (error) {
-            ui.mostrarMensagem('Erro ao buscar o CEP. Preencha manualmente.', 'error');
+            window.AppUI.mostrarMensagem('Erro ao buscar o CEP. Preencha manualmente.', 'error');
         }
     }
 
@@ -147,7 +160,6 @@
      * @returns {Promise<Array>} Lista de categorias.
      */
     async function carregarCategorias() {
-        // Usa a função já existente do supabase-vendas.js
         return await window.vendasSupabase.buscarCategorias();
     }
 
@@ -229,39 +241,21 @@
      * @param {number} novoEstoque - Nova quantidade em estoque.
      */
     async function atualizarEstoqueNoSupabase(produtoId, novoEstoque) {
-        // Usa a função já existente do supabase-vendas.js
         await window.vendasSupabase.actualizarEstoque(produtoId, novoEstoque);
     }
     
     // --- Funções (simuladas) para buscar opções e complementos ---
-    // (Estas funções estão prontas para quando você criar as tabelas)
     
     async function buscarOpcoesProduto(produtoId) {
-        // SIMULAÇÃO: Esta função buscaria na tabela 'produto_opcoes_grupos'
-        // const { data, error } = await supabase
-        //     .from('produto_opcoes_grupos')
-        //     .select(`*, opcoes:produto_opcoes(*)`)
-        //     .eq('produto_id', produtoId);
-        // if (error) throw error;
-        // return data;
-        
-        // Retorno mockado (simulado)
-        await new Promise(res => setTimeout(res, 200)); // Simula delay da rede
-        return []; // Retorna vazio por enquanto
+        // SIMULAÇÃO
+        await new Promise(res => setTimeout(res, 200)); 
+        return []; 
     }
     
     async function buscarComplementosProduto(produtoId) {
-        // SIMULAÇÃO: Esta função buscaria na tabela 'produto_complementos'
-        // const { data, error } = await supabase
-        //     .from('produto_complementos')
-        //     .select(`*`)
-        //     .eq('produto_id', produtoId);
-        // if (error) throw error;
-        // return data;
-        
-        // Retorno mockado (simulado)
-        await new Promise(res => setTimeout(res, 200)); // Simula delay da rede
-        return []; // Retorna vazio por enquanto
+        // SIMULAÇÃO
+        await new Promise(res => setTimeout(res, 200));
+        return []; 
     }
 
 
