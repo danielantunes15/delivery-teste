@@ -5,171 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Doce Criativo App</title>
     
-    <link rel="stylesheet" href="css/pedido.css">
+    <link rel="stylesheet" href="css/style.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        .badge-app-count {
-            background: var(--error-color, #f44336); 
-            color: white; border-radius: 50%; padding: 1px 6px;
-            font-size: 0.75rem; position: absolute; top: 5px; right: 5px; line-height: 1.2;
-        }
-        .modal-detalhes-produto-body { padding: 1.5rem; }
-        .modal-detalhes-produto-body h4 { color: var(--primary-dark, #db7093); margin-top: 1rem; }
-        .modal-detalhes-produto-body p { font-size: 0.9rem; color: var(--text-light, #666); }
-
-        /* Estilos do App Antigo (Login, Views, Modals) */
-        .app-body { padding-bottom: 70px; background-color: #f5f5f5; overflow-x: hidden; }
-        #app-container { width: 100%; height: 100%; position: relative; }
-        .app-view {
-            position: absolute; top: 0; left: 0; width: 100%;
-            min-height: 100vh; padding-top: 0; /* NOVO HTML TEM SEU PRÓPRIO HEADER */
-            padding-bottom: 65px; box-sizing: border-box;
-            overflow-y: hidden; display: none;
-        }
-        .app-view.active { display: block; }
-        .app-content-scroll {
-            height: 100%; overflow-y: auto; padding: 0; /* REMOVIDO PADDING */
-            box-sizing: border-box; -webkit-overflow-scrolling: touch; 
-        }
-        #view-cardapio .app-content-scroll {
-             padding-top: 70px; /* Espaço para o header fixo do novo layout */
-        }
-        .login-card-app {
-            background: white; padding: 2rem; border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); max-width: 350px;
-            margin: 0 auto; text-align: center;
-        }
-        .logo-app { color: var(--rosa-escuro, #db7093); font-size: 2rem; margin-bottom: 5px; }
-        .slogan-app { color: #666; margin-bottom: 2rem; }
-        .btn-login-app {
-            width: 100%; background: linear-gradient(135deg, #ff69b4, #db7093);
-            color: white; border: none; padding: 0.75rem; border-radius: 10px;
-            font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; margin-top: 1rem;
-        }
-        .auth-note { font-size: 0.85rem; color: #999; margin-top: 1rem; }
-        .form-row-cadastro { display: flex; gap: 1rem; }
-        .form-row-cadastro .form-group { flex: 1; }
-        .finalizar-app {
-            position: fixed; bottom: 65px; left: 0; width: 100%;
-            padding: 10px 15px; background-color: white;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 15;
-        }
-        .finalizar-actions { display: flex; gap: 10px; }
-        .finalizar-actions .btn-login-app { flex: 1; margin: 0; padding: 12px; }
-        .card-app {
-            background-color: white; border-radius: 10px;
-            padding: 15px; margin: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        /* Estilos de Pagamento (do sistema antigo) */
-        .opcoes-pagamento { display: flex; flex-direction: column; gap: 10px; }
-        .pagamento-opcao {
-            display: flex; align-items: center; gap: 10px; padding: 10px;
-            border: 2px solid #eee; border-radius: 8px; cursor: pointer;
-        }
-        .pagamento-opcao.selected { border-color: #ff69b4; background: #fff0f5; }
-        .pagamento-icone { font-size: 1.5rem; }
-        .pagamento-texto { display: flex; flex-direction: column; }
-        .pagamento-titulo { font-weight: bold; }
-        .pagamento-descricao { font-size: 0.85rem; color: #666; }
-        /* Modals (do sistema antigo) */
-        .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
-            align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background-color: white; margin: 5% auto; padding: 0;
-            border-radius: 12px; width: 90%; max-width: 500px;
-        }
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1.5rem; border-bottom: 1px solid #e9ecef;
-        }
-        .modal-header h3 { margin: 0; }
-        .close { font-size: 1.5rem; font-weight: bold; cursor: pointer; color: #6c757d; }
-        .modal-body, .modal-footer { padding: 1.5rem; }
-        .modal-footer { border-top: 1px solid #e9ecef; }
-        /* Histórico de Pedidos */
-        .card-pedido-historico { padding: 10px; border-bottom: 1px dashed #ccc; margin-bottom: 5px; cursor: pointer; }
-        .status-badge-history {
-            padding: 4px 8px; border-radius: 10px; font-size: 0.75rem;
-            font-weight: bold; text-transform: uppercase;
-        }
-        .status-NOVO, .status-novo { background-color: #ffb6c1; color: #db7093; }
-        .status-PREPARANDO, .status-preparando { background-color: #fff3cd; color: #cc8400; }
-        .status-PRONTO, .status-pronto { background-color: #e3f2fd; color: #1565c0; }
-        .status-ENTREGUE, .status-entregue { background-color: #e8f5e9; color: #2e7d32; }
-        .status-CANCELADO, .status-cancelado { background-color: #ffebee; color: #c62828; }
-
-        /* ============================================== */
-        /* === ADIÇÃO: PLACEHOLDERS DE IMAGEM (CSS) === */
-        /* ============================================== */
-
-        /* Para a lista "Mais Pedidos" (popular-scroll) */
-        .popular-item img {
-            width: 140px;
-            height: 140px;
-            border-radius: 10px;
-            object-fit: cover; /* Garante que a imagem preencha */
-        }
-
-        .popular-item-placeholder {
-            width: 140px;
-            height: 140px;
-            border-radius: 10px;
-            background: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: #ccc;
-        }
-        .popular-item-placeholder i {
-            color: #ccc;
-        }
-
-
-        /* Para a lista principal de produtos (products-list) */
-        .product-image img {
-            width: 90px;
-            height: 90px;
-            border-radius: 8px;
-            object-fit: cover; /* Garante que a imagem preencha */
-        }
-
-        .product-image-placeholder {
-            width: 90px;
-            height: 90px;
-            border-radius: 8px;
-            background: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #ccc;
-            flex-shrink: 0; /* Impede que o ícone seja esmagado */
-        }
-        .product-image-placeholder i {
-            color: #ccc;
-        }
-
-        /* Ajuste para a imagem (seja real ou placeholder) não ser esmagada */
-        .product-image {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Garante que o container da imagem na lista principal tenha o tamanho certo */
-        .product-item .product-image {
-            flex-basis: 90px; /* Define o tamanho base */
-            flex-shrink: 0; /* Impede de encolher */
-        }
-    </style>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -202,12 +40,10 @@
                         <label for="cadastro-nome">Nome Completo *</label>
                         <input type="text" id="cadastro-nome" required>
                     </div>
-                    
                     <div class="form-group">
                         <label for="cadastro-cep">CEP *</label>
-                        <input type="text" id="cadastro-cep" placeholder="99999-999" required onblur="buscarCep(this.value)">
+                        <input type="text" id="cadastro-cep" placeholder="99999-999" required>
                     </div>
-                    
                     <div class="form-row-cadastro">
                         <div class="form-group">
                             <label for="cadastro-rua">Rua/Avenida *</label>
@@ -218,12 +54,10 @@
                             <input type="text" id="cadastro-numero" required>
                         </div>
                     </div>
-
                     <div class="form-group">
                         <label for="cadastro-bairro">Bairro *</label>
                         <input type="text" id="cadastro-bairro" required>
                     </div>
-                    
                     <div class="form-row-cadastro">
                         <div class="form-group">
                             <label for="cadastro-cidade">Cidade *</label>
@@ -242,7 +76,36 @@
         </div>
         
         <div id="view-inicio" class="app-view">
-            <div class="app-content-scroll" style="padding-top: 70px;"> <section class="card-app">
+            <div class="app-content-scroll" style="padding-top: 70px;"> 
+                
+                <section class="card-app" id="rastreamento-pedido-ativo" style="display: none;">
+                    <h2><i class="fas fa-truck"></i> Acompanhe seu Pedido</h2>
+                    <p>Seu pedido <strong id="rastreamento-pedido-id">#...</strong> está a caminho!</p>
+                    <div class="rastreamento-status-bar">
+                        <div class="status-step active" id="step-novo">
+                            <i class="fas fa-box-open"></i>
+                            <span>Novo</span>
+                        </div>
+                        <div class="status-line"></div>
+                        <div class="status-step" id="step-preparando">
+                            <i class="fas fa-fire-alt"></i>
+                            <span>Preparando</span>
+                        </div>
+                        <div class="status-line"></div>
+                        <div class="status-step" id="step-pronto">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>Pronto</span>
+                        </div>
+                        <div class="status-line"></div>
+                        <div class="status-step" id="step-entregue">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Entregue</span>
+                        </div>
+                    </div>
+                    <p id="rastreamento-status-texto" style="text-align: center; margin-top: 10px; font-weight: bold;"></p>
+                </section>
+
+                <section class="card-app">
                     <h2>👋 Olá, <span id="home-cliente-nome">Cliente</span>!</h2>
                     <p>Gerencie seus dados e pedidos anteriores.</p>
                     <button id="logout-btn-app" class="btn-login-app" style="background: var(--error-color, #f44336); margin-top: 1rem;">
@@ -287,16 +150,19 @@
             <div class="app-content-scroll">
                 <section class="store-status">
                     <div class="status-content">
-                        <div class="status-indicator open">
+                        <div class="status-indicator">
                             <i class="fas fa-store"></i>
-                            <span class="status-text">Aberto</span>
+                            <span class="status-text">Carregando...</span>
                         </div>
                         <div class="store-hours">
-                            <p>Horário: 08:00 - 22:00</p>
+                            <p id="store-hours-text">Horário: --:-- - --:--</p>
                         </div>
                     </div>
                     <div class="attention-bar" style="display: none;">
                         <p>⚠️ Fechando em 30 minutos!</p>
+                    </div>
+                    <div class="store-closed-message" id="store-closed-message" style="display: none;">
+                        <p>A loja está fechada no momento. Você pode navegar pelo cardápio, mas não poderá finalizar o pedido.</p>
                     </div>
                 </section>
 
@@ -305,32 +171,32 @@
                     <div class="categories-container">
                         <div class="categories-scroll" id="categorias-container">
                             <div class="category-item active">Todos</div>
-                            </div>
+                        </div>
                     </div>
                 </section>
 
                 <section class="popular-section">
                     <h2>Os Mais Pedidos</h2>
                     <div class="popular-scroll" id="popular-scroll">
-                        </div>
+                    </div>
                 </section>
 
                 <section class="products-section" id="products-section">
                     <div class="category-products">
                         <h3 class="category-title">Carregando...</h3>
                         <div class="products-list">
-                            </div>
+                        </div>
                     </div>
                 </section>
             </div>
             
-            </div>
-
+        </div>
+        
         <div id="view-promocoes" class="app-view">
              <div class="app-content-scroll" style="padding-top: 70px;">
                  <section class="card-app" id="promocoes-list">
                     <h2>🔥 Ofertas do Dia</h2>
-                    <p>Esta seção será populada com produtos em promoção do seu banco de dados (recurso avançado).</p>
+                    <p>Em breve!</p>
                     <div id="promocoes-grid">
                         <p style="text-align: center; color: #666;">Nenhuma promoção definida.</p>
                     </div>
@@ -339,11 +205,24 @@
         </div>
 
         <div id="view-carrinho" class="app-view">
-            <div class="app-content-scroll" style="padding-top: 15px;"> <section class="carrinho card-app">
+            <div class="app-content-scroll" style="padding-top: 15px;"> 
+                <section class="carrinho card-app">
                     <h2 style="border: none;"><i class="fas fa-shopping-bag"></i> Seu Pedido</h2>
                     <div class="carrinho-itens" id="carrinho-itens"></div>
-                    <div class="carrinho-total">
-                        <strong>Total: R$ <span id="total-carrinho">0,00</span></strong>
+                    
+                    <div class="carrinho-total-detalhado">
+                        <div class="total-linha">
+                            <span>Subtotal</span>
+                            <span id="subtotal-carrinho">R$ 0,00</span>
+                        </div>
+                        <div class="total-linha">
+                            <span>Taxa de Entrega</span>
+                            <span id="taxa-entrega-carrinho">R$ 0,00</span>
+                        </div>
+                        <div class="total-linha final">
+                            <strong>Total:</strong>
+                            <strong>R$ <span id="total-carrinho">0,00</span></strong>
+                        </div>
                     </div>
                 </section>
                 
@@ -434,14 +313,10 @@
         // Configuração do Supabase
         const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
-
-
         window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
-
-    <script src="js/supabase-vendas.js"></script>
-    <script src="js/pedido.js"></script>
     
+    <script src="../js/supabase-vendas.js"></script> <script src="js/ui.js"></script>          <script src="js/api.js"></script>         <script src="js/auth.js"></script>        <script src="js/carrinho.js"></script>    <script src="js/cardapio.js"></script>    <script src="js/checkout.js"></script>    <script src="js/rastreamento.js"></script> <script src="js/app.js"></script>
     <div id="modal-editar-endereco" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 400px; margin-top: 10vh;">
             <div class="modal-header">
@@ -451,7 +326,7 @@
             <form id="form-editar-endereco" class="modal-body">
                 <div class="form-group">
                     <label for="modal-cep">CEP *</label>
-                    <input type="text" id="modal-cep" placeholder="99999-999" required onblur="buscarCep(this.value)">
+                    <input type="text" id="modal-cep" placeholder="99999-999" required>
                 </div>
                 
                 <div class="form-group">
@@ -468,25 +343,11 @@
                         <input type="text" id="modal-bairro" required>
                     </div>
                 </div>
+                <input type="hidden" id="modal-cidade">
+                <input type="hidden" id="modal-estado">
+                
                 <button type="submit" class="btn-login-app">Salvar Novo Endereço</button>
             </form>
-        </div>
-    </div>
-    
-    <div id="modal-detalhes-produto" class="modal">
-        <div class="modal-content" style="max-width: 400px; margin-top: 10vh;">
-            <div class="modal-header">
-                <h3 id="detalhes-titulo"></h3>
-                <span class="close" onclick="document.getElementById('modal-detalhes-produto').style.display='none';">&times;</span>
-            </div>
-            <div id="detalhes-produto-content" class="modal-detalhes-produto-body">
-                </div>
-            <div class="modal-footer" style="justify-content: space-between;">
-                <p style="font-size: 1.2rem; font-weight: bold; color: #ff69b4;" id="detalhes-preco-modal">R$ 0,00</p>
-                <button id="btn-adicionar-modal" class="btn-login-app" style="width: auto; padding: 8px 15px;">
-                    <i class="fas fa-cart-plus"></i> Adicionar
-                </button>
-            </div>
         </div>
     </div>
 
@@ -497,9 +358,48 @@
                 <span class="close" onclick="document.getElementById('modal-detalhes-pedido').style.display='none';">&times;</span>
             </div>
             <div id="detalhes-pedido-content" class="modal-detalhes-produto-body">
-                </div>
+            </div>
         </div>
     </div>
     
+    <div id="modal-opcoes-produto" class="modal">
+        <div class="modal-content" style="max-width: 450px; margin-top: 5vh; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h3 id="opcoes-titulo">Personalize seu item</h3>
+                <span class="close" onclick="document.getElementById('modal-opcoes-produto').style.display='none';">&times;</span>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; flex-grow: 1;">
+                <p id="opcoes-descricao" style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;"></p>
+                
+                <div id="opcoes-container">
+                    </div>
+                
+                <div id="complementos-container">
+                    </div>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="opcoes-observacao">Observações (ex: sem nozes, etc)</label>
+                    <textarea id="opcoes-observacao" rows="2" placeholder="Alguma observação para este item?"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                <div class="opcoes-quantidade-preco">
+                    <div class="opcoes-quantidade">
+                        <button id="opcoes-btn-remover" class="btn-remover"><i class="fas fa-minus"></i></button>
+                        <span id="opcoes-quantidade-valor">1</span>
+                        <button id="opcoes-btn-adicionar" class="btn-adicionar-carrinho"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div class="opcoes-preco-final">
+                        <span id="opcoes-preco-modal">R$ 0,00</span>
+                    </div>
+                </div>
+                <button id="btn-adicionar-opcoes" class="btn-login-app" style="width: 100%; margin: 0; padding: 12px;">
+                    <i class="fas fa-cart-plus"></i> Adicionar ao Carrinho
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
