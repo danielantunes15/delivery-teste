@@ -290,7 +290,7 @@
     /* --- INÍCIO DA ALTERAÇÃO: Lógica de Busca --- */
     function setupSearch() {
         // Lê o valor diretamente do input (que está em ui.elementos.searchIcon)
-        const searchTerm = window.AppUI.elementos.searchIcon.value.trim().toLowerCase();
+        const searchTerm = window.AppUI.elementos.headerSearchInput.value.trim().toLowerCase(); // <-- CORREÇÃO AQUI
 
         if (searchTerm) {
             // Se houver um termo de busca, filtra os produtos
