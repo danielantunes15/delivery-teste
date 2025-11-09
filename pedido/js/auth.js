@@ -1,237 +1,301 @@
-// js/auth.js - Módulo de Autenticação do Cliente (Corrigido)
+// js/auth.js - Módulo de Autenticação (Corrigido com verificações)
 
 (function() {
-    
-    // const ui = window.AppUI; // <-- REMOVIDO
-    // const api = window.AppAPI; // <-- REMOVIDO
 
     /**
-     * Verifica se há um cliente salvo no localStorage ao carregar a página.
+     * Inicia a sessão do usuário (login ou cadastro)
      */
-    async function verificarSessaoLocal() {
-        const telefoneSalvo = localStorage.getItem('clienteTelefone');
-        if (telefoneSalvo) {
-            // CORREÇÃO: Acessa window.AppAPI diretamente
-            const cliente = await window.AppAPI.buscarClientePorTelefone(telefoneSalvo);
+    async function iniciarSessao() {
+        const elementos = window.AppUI.elementos;
+        
+        // Verificar se os elementos existem
+        if (!elementos.authTelefone) {
+            console.error('Elemento authTelefone não encontrado');
+            window.AppUI.mostrarMensagem('Erro no sistema. Recarregue a página.', 'error');
+            return;
+        }
+        
+        const telefoneInput = elementos.authTelefone;
+        const telefone = telefoneInput.value.replace(/\D/g, '');
+
+        // Validação básica
+        if (telefone.length < 10) {
+            window.AppUI.mostrarMensagem('Por favor, digite um telefone válido com DDD.', 'error');
+            telefoneInput.focus();
+            return;
+        }
+
+        try {
+            window.AppUI.mostrarMensagem('Verificando seu número...', 'info');
+            
+            // Buscar cliente no banco
+            const cliente = await window.AppAPI.buscarClientePorTelefone(telefone);
+            
             if (cliente) {
-                window.app.clientePerfil = cliente;
-                window.app.clienteLogado = { id: cliente.telefone, email: cliente.telefone };
+                // Cliente existe - fazer login
+                await fazerLogin(cliente);
             } else {
-                 localStorage.removeItem('clienteTelefone');
-                 localStorage.removeItem('pedidoAtivoId');
+                // Cliente não existe - mostrar formulário de cadastro
+                mostrarFormularioCadastro(telefone);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao iniciar sessão:', error);
+            window.AppUI.mostrarMensagem('Erro ao verificar cadastro. Tente novamente.', 'error');
+        }
+    }
+
+    /**
+     * Realiza o login do cliente
+     */
+    async function fazerLogin(cliente) {
+        try {
+            window.app.clientePerfil = cliente;
+            window.app.clienteLogado = true;
+            
+            // Salvar no localStorage
+            localStorage.setItem('clientePerfil', JSON.stringify(cliente));
+            
+            window.AppUI.mostrarMensagem(`Bem-vindo(a) de volta, ${cliente.nome}!`, 'success');
+            
+            // Atualizar UI
+            window.app.atualizarUIposLogin();
+            
+        } catch (error) {
+            console.error('Erro no login:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Mostra o formulário de cadastro
+     */
+    function mostrarFormularioCadastro(telefone) {
+        const elementos = window.AppUI.elementos;
+        
+        // Verificar elementos necessários
+        if (!elementos.loginFormGroup || !elementos.cadastroForm || !elementos.cadastroTelefoneHidden) {
+            console.error('Elementos do formulário de cadastro não encontrados');
+            return;
+        }
+        
+        // Esconder formulário de login
+        elementos.loginFormGroup.style.display = 'none';
+        
+        // Mostrar formulário de cadastro
+        elementos.cadastroForm.style.display = 'block';
+        elementos.cadastroTelefoneHidden.value = telefone;
+        
+        window.AppUI.mostrarMensagem('Número não cadastrado. Complete seu cadastro!', 'info');
+    }
+
+    /**
+     * Finaliza o cadastro do cliente
+     */
+    async function finalizarCadastro(event) {
+        event.preventDefault();
+        
+        const elementos = window.AppUI.elementos;
+        
+        // Verificar se o botão existe
+        if (!elementos.btnFinalizarCadastro) {
+            console.error('Botão finalizar cadastro não encontrado');
+            return;
+        }
+        
+        const btnFinalizar = elementos.btnFinalizarCadastro;
+        
+        // Validar campos obrigatórios
+        const camposObrigatorios = [
+            { campo: elementos.cadastroNome, nome: 'Nome' },
+            { campo: elementos.cadastroCep, nome: 'CEP' },
+            { campo: elementos.cadastroRuaInput, nome: 'Rua' },
+            { campo: elementos.cadastroNumeroInput, nome: 'Número' },
+            { campo: elementos.cadastroBairroInput, nome: 'Bairro' },
+            { campo: elementos.cadastroCidadeInput, nome: 'Cidade' },
+            { campo: elementos.cadastroEstadoInput, nome: 'Estado' }
+        ];
+        
+        for (let { campo, nome } of camposObrigatorios) {
+            if (!campo || !campo.value.trim()) {
+                window.AppUI.mostrarMensagem(`Preencha o campo: ${nome}`, 'error');
+                if (campo) campo.focus();
+                return;
+            }
+        }
+        
+        try {
+            // Desabilitar botão durante o cadastro
+            btnFinalizar.disabled = true;
+            btnFinalizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
+            
+            const telefone = elementos.cadastroTelefoneHidden ? elementos.cadastroTelefoneHidden.value : '';
+            const enderecoCompleto = `${elementos.cadastroRuaInput.value}, ${elementos.cadastroNumeroInput.value} - ${elementos.cadastroBairroInput.value}, ${elementos.cadastroCidadeInput.value} - ${elementos.cadastroEstadoInput.value}`;
+            
+            const dadosCliente = {
+                telefone: telefone,
+                nome: elementos.cadastroNome.value.trim(),
+                endereco: enderecoCompleto,
+                created_at: new Date().toISOString()
+            };
+            
+            // Salvar no Supabase
+            const novoCliente = await window.AppAPI.finalizarCadastroNoSupabase(dadosCliente);
+            
+            // Fazer login automaticamente
+            await fazerLogin(novoCliente);
+            
+            window.AppUI.mostrarMensagem('Cadastro realizado com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro no cadastro:', error);
+            
+            if (error.message.includes('já está cadastrado')) {
+                window.AppUI.mostrarMensagem(error.message, 'warning');
+                // Voltar para o login
+                if (elementos.cadastroForm && elementos.loginFormGroup) {
+                    elementos.cadastroForm.style.display = 'none';
+                    elementos.loginFormGroup.style.display = 'block';
+                }
+            } else {
+                window.AppUI.mostrarMensagem('Erro ao realizar cadastro. Tente novamente.', 'error');
+            }
+            
+        } finally {
+            // Reabilitar botão
+            if (btnFinalizar) {
+                btnFinalizar.disabled = false;
+                btnFinalizar.textContent = 'Finalizar Cadastro';
             }
         }
     }
 
     /**
-     * Tenta logar ou iniciar o cadastro com um número de telefone.
+     * Salva a edição do endereço
      */
-    async function iniciarSessao(e) {
-        e.preventDefault();
-        // CORREÇÃO: Acessa window.AppUI diretamente
-        const uiElementos = window.AppUI.elementos;
-        const telefoneRaw = uiElementos.authTelefoneInput.value.trim();
-        const telefone = window.AppUI.formatarTelefone(telefoneRaw);
-
-        if (telefone.length < 10) { 
-            return window.AppUI.mostrarMensagem('Por favor, insira um telefone válido com DDD.', 'error');
-        }
-
-        uiElementos.btnIniciarSessao.disabled = true;
-        uiElementos.btnIniciarSessao.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
-
-        const cliente = await window.AppAPI.buscarClientePorTelefone(telefone);
-
-        if (cliente) {
-            window.app.clientePerfil = cliente;
-            window.AppUI.mostrarMensagem(`Bem-vindo de volta, ${cliente.nome.split(' ')[0]}!`, 'success');
-            logarClienteManual(true);
-        } else {
-            uiElementos.cadastroTelefoneHidden.value = telefone;
-            uiElementos.loginFormGroup.style.display = 'none';
-            uiElementos.cadastroForm.style.display = 'block';
-            window.AppUI.mostrarMensagem('Novo cliente detectado! Complete seu cadastro.', 'info');
-        }
-
-        uiElementos.btnIniciarSessao.disabled = false;
-        uiElementos.btnIniciarSessao.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar ou Cadastrar';
-    }
-
-    /**
-     * Finaliza o cadastro de um novo cliente.
-     */
-    async function finalizarCadastro(e) {
-        e.preventDefault();
-        // CORREÇÃO: Acessa window.AppUI diretamente
-        const uiElementos = window.AppUI.elementos;
-        const nome = uiElementos.cadastroNomeInput.value.trim();
-        const telefone = uiElementos.cadastroTelefoneHidden.value;
-        const cep = uiElementos.cadastroCepInput.value.trim();
-        const rua = uiElementos.cadastroRuaInput.value.trim();
-        const numero = uiElementos.cadastroNumeroInput.value.trim();
-        const bairro = uiElementos.cadastroBairroInput.value.trim();
-        const cidade = uiElementos.cadastroCidadeInput.value.trim();
-        const estado = uiElementos.cadastroEstadoInput.value.trim();
-
-        const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
-
-        if (!nome || !rua || !numero || !bairro || !cidade || !estado) {
-            return window.AppUI.mostrarMensagem('Preencha o Nome e todos os campos de Endereço.', 'error');
-        }
+    async function salvarEdicaoEndereco(event) {
+        event.preventDefault();
         
-        uiElementos.btnFinalizarCadastro.disabled = true;
-        uiElementos.btnFinalizarCadastro.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando...';
-
-        try {
-            const dadosCliente = {
-                nome: nome,
-                telefone: telefone,
-                endereco: enderecoCompleto, 
-                auth_id: 'guest-' + telefone
-            };
-            const novoCliente = await window.AppAPI.finalizarCadastroNoSupabase(dadosCliente);
-
-            window.app.clientePerfil = novoCliente;
-            window.AppUI.mostrarMensagem(`Cadastro de ${nome.split(' ')[0]} concluído!`, 'success');
-            logarClienteManual(true);
-
-        } catch (error) {
-            console.error('Erro no cadastro:', error);
-            window.AppUI.mostrarMensagem('Erro ao finalizar cadastro: ' + error.message, 'error');
-        } finally {
-            uiElementos.btnFinalizarCadastro.disabled = false;
-            uiElementos.btnFinalizarCadastro.innerHTML = 'Finalizar Cadastro';
-        }
-    }
-    
-    /**
-     * Atualiza a UI após o login e inicia o rastreamento, se houver.
-     */
-    function logarClienteManual(mostrarMensagemBemVindo = true) {
-        localStorage.setItem('clienteTelefone', window.app.clientePerfil.telefone);
-        window.app.clienteLogado = { id: window.app.clientePerfil.telefone, email: window.app.clientePerfil.telefone }; 
-        
-        // CORREÇÃO: Acessa window.AppUI diretamente
-        const uiElementos = window.AppUI.elementos;
-        
-        uiElementos.authScreen.classList.remove('active');
-        uiElementos.mobileNav.style.display = 'flex';
-        
-        if(mostrarMensagemBemVindo) {
-            window.AppUI.alternarView('view-cardapio');
-        }
-        
-        uiElementos.navItems.forEach(item => item.classList.remove('active'));
-        document.querySelector('.bottom-nav .nav-item[data-view="view-cardapio"]')?.classList.add('active');
-
-        atualizarPerfilUI();
-        
-        const pedidoIdSalvo = localStorage.getItem('pedidoAtivoId');
-        if (pedidoIdSalvo) {
-            window.app.Rastreamento.iniciarRastreamento(pedidoIdSalvo);
-        } else {
-            window.app.Rastreamento.carregarStatusUltimoPedido();
-        }
-    }
-
-    /**
-     * Desloga o cliente e limpa a sessão.
-     */
-    function fazerLogoutApp() {
-        localStorage.removeItem('clienteTelefone');
-        localStorage.removeItem('pedidoAtivoId');
-        
-        window.app.Rastreamento.pararRastreamento();
-        
-        window.app.clienteLogado = null;
-        window.app.clientePerfil = { nome: null, telefone: null, endereco: null };
-        
-        // CORREÇÃO: Acessa window.AppUI diretamente
-        const uiElementos = window.AppUI.elementos;
-        uiElementos.mobileNav.style.display = 'none';
-        
-        uiElementos.authTelefoneInput.value = '';
-        uiElementos.cadastroForm.style.display = 'none';
-        uiElementos.loginFormGroup.style.display = 'block';
-
-        window.AppUI.mostrarMensagem('Sessão encerrada.', 'info');
-        window.AppUI.alternarView('auth-screen');
-    }
-
-    /**
-     * Atualiza os elementos da UI com dados do perfil do cliente.
-     */
-    function atualizarPerfilUI() {
-        const perfil = window.app.clientePerfil;
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const elementos = window.AppUI.elementos;
         
-        if (window.app.clienteLogado) {
-            if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = perfil.nome.split(' ')[0];
-            if (elementos.carrinhoClienteNomeDisplay) elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
-            if (elementos.carrinhoEnderecoDisplay) elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
-            if (elementos.addressText) elementos.addressText.textContent = perfil.endereco.split(',')[0] || 'Seu Endereço'; // Nome da rua no header
-            
-            // Define o endereço atual no campo oculto para que o checkout use
-            if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = perfil.endereco || ''; 
-            
-            if (elementos.homeEndereco) elementos.homeEndereco.innerHTML = `<strong>Endereço Atual:</strong><br>${perfil.endereco || 'Endereço não cadastrado.'}`;
-        } else {
-            if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = 'Visitante';
-        }
-    }
-    
-    /**
-     * Salva o endereço editado no modal.
-     */
-    async function salvarEdicaoEndereco(e) {
-        e.preventDefault();
-        const telefone = window.app.clientePerfil.telefone;
-        // CORREÇÃO: Acessa window.AppUI diretamente
-        const uiElementos = window.AppUI.elementos;
-        const cep = uiElementos.modalCepInput.value.trim();
-        const rua = uiElementos.modalRuaInput.value.trim();
-        const numero = uiElementos.modalNumeroInput.value.trim();
-        const bairro = uiElementos.modalBairroInput.value.trim();
-        const cidade = uiElementos.modalCidadeInput.value.trim();
-        const estado = uiElementos.modalEstadoInput.value.trim();
-        
-        // CORREÇÃO: Valida se o CEP/Rua/Número estão presentes
-        if (!rua || !numero || !bairro || !cep || !cidade || !estado) {
-            return window.AppUI.mostrarMensagem('Preencha todos os campos do endereço (Rua, Número, Bairro, CEP, Cidade e Estado).', 'error');
+        // Verificar se o formulário existe
+        if (!elementos.formEditarEndereco) {
+            console.error('Formulário de edição de endereço não encontrado');
+            return;
         }
         
-        const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
-
+        const btnSalvar = elementos.formEditarEndereco.querySelector('button[type="submit"]');
+        
+        // Validar campos
+        const camposEndereco = [
+            { campo: elementos.modalRuaInput, nome: 'Rua' },
+            { campo: elementos.modalNumeroInput, nome: 'Número' },
+            { campo: elementos.modalBairroInput, nome: 'Bairro' },
+            { campo: elementos.modalCidade, nome: 'Cidade' },
+            { campo: elementos.modalEstado, nome: 'Estado' }
+        ];
+        
+        for (let { campo, nome } of camposEndereco) {
+            if (!campo || !campo.value.trim()) {
+                window.AppUI.mostrarMensagem(`Preencha o campo: ${nome}`, 'error');
+                if (campo) campo.focus();
+                return;
+            }
+        }
+        
         try {
-            // CORREÇÃO CRÍTICA: Remove a desestruturação do retorno (que é undefined)
-            await window.AppAPI.salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto);
+            // Desabilitar botão
+            if (btnSalvar) {
+                btnSalvar.disabled = true;
+                btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            }
             
+            const enderecoCompleto = `${elementos.modalRuaInput.value}, ${elementos.modalNumeroInput.value} - ${elementos.modalBairroInput.value}, ${elementos.modalCidade.value} - ${elementos.modalEstado.value}`;
+            
+            // Atualizar no Supabase
+            await window.AppAPI.salvarEdicaoEnderecoNoSupabase(
+                window.app.clientePerfil.telefone, 
+                enderecoCompleto
+            );
+            
+            // Atualizar localmente
             window.app.clientePerfil.endereco = enderecoCompleto;
-            window.AppUI.mostrarMensagem('✅ Endereço atualizado com sucesso!', 'success');
-            window.AppUI.fecharModal(uiElementos.modalEditarEndereco);
+            localStorage.setItem('clientePerfil', JSON.stringify(window.app.clientePerfil));
             
-            // Atualiza todas as telas que usam o endereço
-            atualizarPerfilUI(); 
-            window.AppCarrinho.atualizarCarrinho();
-            window.app.Rastreamento.carregarStatusUltimoPedido(); 
-
+            // Atualizar UI
+            window.app.atualizarUIposLogin();
+            
+            // Fechar modal
+            if (elementos.modalEditarEndereco) {
+                window.AppUI.fecharModal(elementos.modalEditarEndereco);
+            }
+            
+            window.AppUI.mostrarMensagem('Endereço atualizado com sucesso!', 'success');
+            
         } catch (error) {
             console.error('Erro ao salvar endereço:', error);
-            // Captura o erro detalhado do throw em api.js
-            window.AppUI.mostrarMensagem(`Erro ao salvar endereço: ${error.message || 'Verifique sua conexão.'}`, 'error'); 
+            window.AppUI.mostrarMensagem('Erro ao atualizar endereço. Tente novamente.', 'error');
+            
+        } finally {
+            // Reabilitar botão
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.textContent = 'Salvar Novo Endereço';
+            }
+        }
+    }
+
+    /**
+     * Realiza logout do usuário
+     */
+    function fazerLogout() {
+        if (confirm('Tem certeza que deseja sair?')) {
+            // Limpar dados locais
+            window.app.clienteLogado = false;
+            window.app.clientePerfil = null;
+            window.app.carrinhoItens = [];
+            window.app.pedidoAtivoId = null;
+            
+            // Parar rastreamento
+            if (window.AppRastreamento) {
+                window.AppRastreamento.pararRastreamento();
+            }
+            
+            // Limpar localStorage
+            localStorage.removeItem('clientePerfil');
+            localStorage.removeItem('pedidoAtivoId');
+            localStorage.removeItem('carrinhoItens');
+            
+            // Resetar UI
+            if (window.app.elementos.cadastroForm) {
+                window.app.elementos.cadastroForm.style.display = 'none';
+            }
+            if (window.app.elementos.loginFormGroup) {
+                window.app.elementos.loginFormGroup.style.display = 'block';
+            }
+            if (window.app.elementos.authTelefone) {
+                window.app.elementos.authTelefone.value = '';
+            }
+            
+            // Esconder navegação mobile
+            if (window.app.elementos.mobileBottomNav) {
+                window.app.elementos.mobileBottomNav.style.display = 'none';
+            }
+            
+            // Mostrar tela de auth
+            window.app.mostrarView('auth-screen');
+            
+            window.AppUI.mostrarMensagem('Logout realizado com sucesso!', 'success');
         }
     }
 
     // Expõe as funções para o objeto global AppAuth
     window.AppAuth = {
-        verificarSessaoLocal,
         iniciarSessao,
+        fazerLogin,
         finalizarCadastro,
-        logarClienteManual,
-        fazerLogoutApp,
-        atualizarPerfilUI,
-        salvarEdicaoEndereco
+        salvarEdicaoEndereco,
+        fazerLogout
     };
 
 })();

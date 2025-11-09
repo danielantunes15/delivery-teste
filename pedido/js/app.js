@@ -1,4 +1,4 @@
-// js/app.js - Arquivo Principal do App (Versão Atualizada)
+// js/app.js - Arquivo Principal do App (Versão Corrigida)
 
 (function() {
     
@@ -42,6 +42,7 @@
             cadastroCidadeInput: document.getElementById('cadastro-cidade'),
             cadastroEstadoInput: document.getElementById('cadastro-estado'),
             btnFinalizarCadastro: document.getElementById('btn-finalizar-cadastro'),
+            loginFormGroup: document.getElementById('login-form-group'),
             
             // View Inicio
             homeClienteNome: document.getElementById('home-cliente-nome'),
@@ -180,9 +181,23 @@
         init: function() {
             console.log('Iniciando App Doce Criativo...');
             
+            this.verificarElementos();
             this.inicializarEventListeners();
             this.carregarConfiguracoesIniciais();
             this.verificarLoginAnterior();
+        },
+
+        // Verificar se todos os elementos essenciais existem
+        verificarElementos: function() {
+            const elementosEssenciais = [
+                'authTelefone', 'btnIniciarSessao', 'loginFormGroup', 'cadastroForm'
+            ];
+            
+            for (const elemento of elementosEssenciais) {
+                if (!this.elementos[elemento]) {
+                    console.error(`Elemento essencial não encontrado: ${elemento}`);
+                }
+            }
         },
 
         // Carregar Configurações Iniciais
@@ -209,15 +224,20 @@
                     // Se há um pedido ativo, inicia o rastreamento
                     if (pedidoAtivo) {
                         this.pedidoAtivoId = pedidoAtivo;
-                        window.AppRastreamento.iniciarRastreamento(pedidoAtivo);
+                        if (window.AppRastreamento) {
+                            window.AppRastreamento.iniciarRastreamento(pedidoAtivo);
+                        }
                     } else {
                         // Carrega o histórico de pedidos
-                        window.AppRastreamento.carregarStatusUltimoPedido();
+                        if (window.AppRastreamento) {
+                            window.AppRastreamento.carregarStatusUltimoPedido();
+                        }
                     }
                     
                 } catch (e) {
                     console.error('Erro ao recuperar dados do cliente:', e);
                     localStorage.removeItem('clientePerfil');
+                    this.mostrarView('auth-screen');
                 }
             } else {
                 this.mostrarView('auth-screen');
@@ -228,9 +248,22 @@
         inicializarEventListeners: function() {
             const el = this.elementos;
 
-            // Auth Screen
-            el.btnIniciarSessao.addEventListener('click', () => window.AppAuth.iniciarSessao());
-            el.cadastroForm.addEventListener('submit', (e) => window.AppAuth.finalizarCadastro(e));
+            // Auth Screen - Verificar se elementos existem antes de adicionar listeners
+            if (el.btnIniciarSessao) {
+                el.btnIniciarSessao.addEventListener('click', () => {
+                    if (window.AppAuth && window.AppAuth.iniciarSessao) {
+                        window.AppAuth.iniciarSessao();
+                    }
+                });
+            }
+            
+            if (el.cadastroForm) {
+                el.cadastroForm.addEventListener('submit', (e) => {
+                    if (window.AppAuth && window.AppAuth.finalizarCadastro) {
+                        window.AppAuth.finalizarCadastro(e);
+                    }
+                });
+            }
             
             // Input de telefone com máscara
             if (el.authTelefone) {
@@ -252,20 +285,31 @@
             }
 
             // CEP - Busca automática
-            [el.cadastroCep, el.modalCep].forEach(cepInput => {
-                if (cepInput) {
-                    cepInput.addEventListener('blur', function(e) {
-                        const cep = e.target.value.replace(/\D/g, '');
-                        if (cep.length === 8) {
-                            window.AppAPI.buscarCep(cep);
-                        }
-                    });
-                }
-            });
+            if (el.cadastroCep) {
+                el.cadastroCep.addEventListener('blur', function(e) {
+                    const cep = e.target.value.replace(/\D/g, '');
+                    if (cep.length === 8 && window.AppAPI && window.AppAPI.buscarCep) {
+                        window.AppAPI.buscarCep(cep);
+                    }
+                });
+            }
+
+            if (el.modalCep) {
+                el.modalCep.addEventListener('blur', function(e) {
+                    const cep = e.target.value.replace(/\D/g, '');
+                    if (cep.length === 8 && window.AppAPI && window.AppAPI.buscarCep) {
+                        window.AppAPI.buscarCep(cep);
+                    }
+                });
+            }
 
             // Logout
             if (el.logoutBtnApp) {
-                el.logoutBtnApp.addEventListener('click', () => window.AppAuth.fazerLogout());
+                el.logoutBtnApp.addEventListener('click', () => {
+                    if (window.AppAuth && window.AppAuth.fazerLogout) {
+                        window.AppAuth.fazerLogout();
+                    }
+                });
             }
 
             // Header Cardápio
@@ -282,48 +326,64 @@
             }
 
             // Navegação Mobile
-            el.navItems.forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const view = item.getAttribute('data-view');
-                    this.mostrarView(view);
-                    
-                    // Atualizar estado ativo
-                    el.navItems.forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
+            if (el.navItems && el.navItems.length > 0) {
+                el.navItems.forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const view = item.getAttribute('data-view');
+                        this.mostrarView(view);
+                        
+                        // Atualizar estado ativo
+                        el.navItems.forEach(nav => nav.classList.remove('active'));
+                        item.classList.add('active');
+                    });
                 });
-            });
+            }
 
             // Modal Editar Endereço
             if (el.abrirModalEditarEndereco) {
                 el.abrirModalEditarEndereco.addEventListener('click', () => {
                     this.preencherModalEndereco();
-                    el.modalEditarEndereco.style.display = 'flex';
+                    if (el.modalEditarEndereco) {
+                        el.modalEditarEndereco.style.display = 'flex';
+                    }
                 });
             }
 
             if (el.formEditarEndereco) {
-                el.formEditarEndereco.addEventListener('submit', (e) => window.AppAuth.salvarEdicaoEndereco(e));
+                el.formEditarEndereco.addEventListener('submit', (e) => {
+                    if (window.AppAuth && window.AppAuth.salvarEdicaoEndereco) {
+                        window.AppAuth.salvarEdicaoEndereco(e);
+                    }
+                });
             }
 
             // Fechar Modais
             document.querySelectorAll('.close').forEach(closeBtn => {
                 closeBtn.addEventListener('click', function() {
                     const modal = this.closest('.modal');
-                    window.AppUI.fecharModal(modal);
+                    if (window.AppUI && window.AppUI.fecharModal) {
+                        window.AppUI.fecharModal(modal);
+                    }
                 });
             });
 
             // Clique fora do modal para fechar
             window.addEventListener('click', function(e) {
                 if (e.target.classList.contains('modal')) {
-                    window.AppUI.fecharModal(e.target);
+                    if (window.AppUI && window.AppUI.fecharModal) {
+                        window.AppUI.fecharModal(e.target);
+                    }
                 }
             });
 
             // Carrinho
             if (el.limparCarrinhoBtn) {
-                el.limparCarrinhoBtn.addEventListener('click', () => window.AppCarrinho.limparCarrinho());
+                el.limparCarrinhoBtn.addEventListener('click', () => {
+                    if (window.AppCarrinho && window.AppCarrinho.limparCarrinho) {
+                        window.AppCarrinho.limparCarrinho();
+                    }
+                });
             }
 
             if (el.addMoreItemsBtn) {
@@ -332,63 +392,97 @@
 
             if (el.trocarEnderecoBtn) {
                 el.trocarEnderecoBtn.addEventListener('click', () => {
-                    el.modalEditarEndereco.style.display = 'flex';
+                    if (el.modalEditarEndereco) {
+                        el.modalEditarEndereco.style.display = 'flex';
+                    }
                 });
             }
 
             // Cupom
             if (el.aplicarCupomBtn) {
-                el.aplicarCupomBtn.addEventListener('click', () => window.AppCarrinho.aplicarCupom());
+                el.aplicarCupomBtn.addEventListener('click', () => {
+                    if (window.AppCarrinho && window.AppCarrinho.aplicarCupom) {
+                        window.AppCarrinho.aplicarCupom();
+                    }
+                });
             }
 
             if (el.cupomInput) {
                 el.cupomInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        window.AppCarrinho.aplicarCupom();
+                        if (window.AppCarrinho && window.AppCarrinho.aplicarCupom) {
+                            window.AppCarrinho.aplicarCupom();
+                        }
                     }
                 });
             }
 
             // Pagamento
-            el.opcoesPagamento.forEach(opcao => {
-                opcao.addEventListener('click', function() {
-                    el.opcoesPagamento.forEach(o => o.classList.remove('selected'));
-                    this.classList.add('selected');
+            if (el.opcoesPagamento && el.opcoesPagamento.length > 0) {
+                el.opcoesPagamento.forEach(opcao => {
+                    opcao.addEventListener('click', function() {
+                        el.opcoesPagamento.forEach(o => o.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
                 });
-            });
+            }
 
             // Finalizar Pedido
             if (el.finalizarPedidoDireto) {
-                el.finalizarPedidoDireto.addEventListener('click', () => window.AppCheckout.finalizarPedido());
+                el.finalizarPedidoDireto.addEventListener('click', () => {
+                    if (window.AppCheckout && window.AppCheckout.finalizarPedido) {
+                        window.AppCheckout.finalizarPedido();
+                    }
+                });
             }
 
             if (el.finalNovoPedidoBtn) {
                 el.finalNovoPedidoBtn.addEventListener('click', () => {
-                    el.pedidoConfirmadoSection.style.display = 'none';
-                    el.checkoutMainView.style.display = 'block';
+                    if (el.pedidoConfirmadoSection) {
+                        el.pedidoConfirmadoSection.style.display = 'none';
+                    }
+                    if (el.checkoutMainView) {
+                        el.checkoutMainView.style.display = 'block';
+                    }
                     this.mostrarView('view-cardapio');
-                    window.AppCarrinho.limparCarrinho();
+                    if (window.AppCarrinho && window.AppCarrinho.limparCarrinho) {
+                        window.AppCarrinho.limparCarrinho();
+                    }
                 });
             }
 
             // Opções de Produto Modal
             if (el.opcoesBtnRemover) {
-                el.opcoesBtnRemover.addEventListener('click', () => window.AppCardapio.alterarQuantidadeOpcoes(-1));
+                el.opcoesBtnRemover.addEventListener('click', () => {
+                    if (window.AppCardapio && window.AppCardapio.alterarQuantidadeOpcoes) {
+                        window.AppCardapio.alterarQuantidadeOpcoes(-1);
+                    }
+                });
             }
 
             if (el.opcoesBtnAdicionar) {
-                el.opcoesBtnAdicionar.addEventListener('click', () => window.AppCardapio.alterarQuantidadeOpcoes(1));
+                el.opcoesBtnAdicionar.addEventListener('click', () => {
+                    if (window.AppCardapio && window.AppCardapio.alterarQuantidadeOpcoes) {
+                        window.AppCardapio.alterarQuantidadeOpcoes(1);
+                    }
+                });
             }
 
             if (el.btnAdicionarOpcoes) {
-                el.btnAdicionarOpcoes.addEventListener('click', () => window.AppCardapio.adicionarAoCarrinhoComOpcoes());
+                el.btnAdicionarOpcoes.addEventListener('click', () => {
+                    if (window.AppCardapio && window.AppCardapio.adicionarAoCarrinhoComOpcoes) {
+                        window.AppCardapio.adicionarAoCarrinhoComOpcoes();
+                    }
+                });
             }
 
             // Busca no Header
             if (el.headerSearchInput) {
                 el.headerSearchInput.addEventListener('input', (e) => {
-                    window.AppCardapio.filtrarProdutos(e.target.value);
+                    if (window.AppCardapio && window.AppCardapio.filtrarProdutos) {
+                        window.AppCardapio.filtrarProdutos(e.target.value);
+                    }
                 });
             }
 
@@ -398,10 +492,12 @@
         // Toggle Busca no Header
         toggleBuscaHeader: function() {
             const el = this.elementos;
-            el.headerV2.classList.toggle('search-active');
-            
-            if (el.headerV2.classList.contains('search-active')) {
-                setTimeout(() => el.headerSearchInput.focus(), 300);
+            if (el.headerV2) {
+                el.headerV2.classList.toggle('search-active');
+                
+                if (el.headerV2.classList.contains('search-active') && el.headerSearchInput) {
+                    setTimeout(() => el.headerSearchInput.focus(), 300);
+                }
             }
         },
 
@@ -411,6 +507,11 @@
             
             const endereco = this.clientePerfil.endereco;
             const el = this.elementos;
+            
+            // Verificar se os elementos existem
+            if (!el.modalRuaInput || !el.modalNumeroInput || !el.modalBairroInput || !el.modalCidade || !el.modalEstado) {
+                return;
+            }
             
             // Assume que o endereço está no formato "Rua, Número - Bairro, Cidade - Estado"
             const partes = endereco.split(', ');
@@ -454,7 +555,9 @@
                 
                 if (el.carrinhoEnderecoDisplay && this.clientePerfil.endereco) {
                     el.carrinhoEnderecoDisplay.textContent = this.clientePerfil.endereco;
-                    el.carrinhoEnderecoInput.value = this.clientePerfil.endereco;
+                    if (el.carrinhoEnderecoInput) {
+                        el.carrinhoEnderecoInput.value = this.clientePerfil.endereco;
+                    }
                 }
                 
                 // Mostrar navegação mobile
@@ -479,39 +582,41 @@
             const el = this.elementos;
             
             // Esconder todas as views
-            el.authScreen.classList.remove('active');
-            el.viewInicio.classList.remove('active');
-            el.viewCardapio.classList.remove('active');
-            el.viewPromocoes.classList.remove('active');
-            el.viewCarrinho.classList.remove('active');
+            if (el.authScreen) el.authScreen.classList.remove('active');
+            if (el.viewInicio) el.viewInicio.classList.remove('active');
+            if (el.viewCardapio) el.viewCardapio.classList.remove('active');
+            if (el.viewPromocoes) el.viewPromocoes.classList.remove('active');
+            if (el.viewCarrinho) el.viewCarrinho.classList.remove('active');
             
             // Mostrar view solicitada
             switch(viewId) {
                 case 'auth-screen':
-                    el.authScreen.classList.add('active');
+                    if (el.authScreen) el.authScreen.classList.add('active');
                     break;
                 case 'view-inicio':
-                    el.viewInicio.classList.add('active');
+                    if (el.viewInicio) el.viewInicio.classList.add('active');
                     // Atualizar dados sempre que abrir a view de início
                     if (this.clienteLogado) {
                         this.atualizarUIposLogin();
-                        window.AppRastreamento.carregarStatusUltimoPedido();
+                        if (window.AppRastreamento && window.AppRastreamento.carregarStatusUltimoPedido) {
+                            window.AppRastreamento.carregarStatusUltimoPedido();
+                        }
                     }
                     break;
                 case 'view-cardapio':
-                    el.viewCardapio.classList.add('active');
+                    if (el.viewCardapio) el.viewCardapio.classList.add('active');
                     // Carregar cardápio se necessário
-                    if (typeof window.AppCardapio !== 'undefined') {
+                    if (typeof window.AppCardapio !== 'undefined' && window.AppCardapio.inicializarCardapio) {
                         window.AppCardapio.inicializarCardapio();
                     }
                     break;
                 case 'view-promocoes':
-                    el.viewPromocoes.classList.add('active');
+                    if (el.viewPromocoes) el.viewPromocoes.classList.add('active');
                     break;
                 case 'view-carrinho':
-                    el.viewCarrinho.classList.add('active');
+                    if (el.viewCarrinho) el.viewCarrinho.classList.add('active');
                     // Atualizar carrinho
-                    if (typeof window.AppCarrinho !== 'undefined') {
+                    if (typeof window.AppCarrinho !== 'undefined' && window.AppCarrinho.atualizarCarrinho) {
                         window.AppCarrinho.atualizarCarrinho();
                     }
                     break;
