@@ -2,7 +2,7 @@
 
 (function() {
 
-    // NOTA: window.app.todosPedidosCliente é acessado, mas não declarado localmente.
+    // NOTA: window.app.todosPedidosCliente é inicializado em app.js.
     
     /**
      * Inicia o ouvinte de Realtime do Supabase para um pedido específico.

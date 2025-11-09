@@ -40,8 +40,9 @@ window.app = {
 // O evento DOMContentLoaded garante que o HTML foi carregado
 document.addEventListener('DOMContentLoaded', async function() {
     
-    // 1. Vincula os módulos ao 'app' global
-    // (Neste ponto, 'defer' garantiu que ui.js, api.js, etc., já rodaram e criaram seus objetos globais)
+    // 1. Vincula os módulos ao 'app' global com verificação detalhada
+    console.log('🔍 Verificando carregamento dos módulos...');
+    
     app.UI = window.AppUI;
     app.API = window.AppAPI;
     app.Auth = window.AppAuth;
@@ -50,12 +51,34 @@ document.addEventListener('DOMContentLoaded', async function() {
     app.Checkout = window.AppCheckout;
     app.Rastreamento = window.AppRastreamento;
 
-    // Verifica se os módulos essenciais carregaram
-    if (!app.UI || !app.API || !app.Auth || !app.Carrinho || !app.Cardapio || !app.Checkout || !app.Rastreamento) {
-        console.error("❌ ERRO GRAVE: Um ou mais módulos falharam ao carregar.");
-        alert("Erro crítico ao carregar o aplicativo. Verifique o console.");
+    // Verificação detalhada de cada módulo
+    const modules = {
+        'AppUI': window.AppUI,
+        'AppAPI': window.AppAPI,
+        'AppAuth': window.AppAuth,
+        'AppCardapio': window.AppCardapio,
+        'AppCarrinho': window.AppCarrinho,
+        'AppCheckout': window.AppCheckout,
+        'AppRastreamento': window.AppRastreamento
+    };
+
+    let missingModules = [];
+    for (const [name, module] of Object.entries(modules)) {
+        if (!module) {
+            missingModules.push(name);
+            console.error(`❌ Módulo ${name} não carregou`);
+        } else {
+            console.log(`✅ Módulo ${name} carregado com sucesso`);
+        }
+    }
+
+    if (missingModules.length > 0) {
+        console.error("❌ ERRO GRAVE: Módulos faltando:", missingModules.join(', '));
+        alert(`Erro crítico: Módulos ${missingModules.join(', ')} falharam ao carregar. Verifique o console.`);
         return;
     }
+
+    console.log('🎉 Todos os módulos carregados com sucesso!');
 
     /**
      * Configura todos os event listeners principais da aplicação.
@@ -68,6 +91,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.error("❌ Falha crítica: Módulo de UI não carregou os elementos.");
             return;
         }
+        
+        console.log('🔧 Configurando event listeners...');
         
         // Listeners de Autenticação
         if (ui.btnIniciarSessao) ui.btnIniciarSessao.addEventListener('click', app.Auth.iniciarSessao);
@@ -161,6 +186,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         /* --- FIM DA ALTERAÇÃO --- */
+
+        console.log('✅ Event listeners configurados com sucesso!');
     }
 
     /**
@@ -168,43 +195,54 @@ document.addEventListener('DOMContentLoaded', async function() {
      */
     (async function() {
         try {
+            console.log('🚀 Iniciando aplicação...');
+            
             if (!window.supabase) throw new Error('Cliente Supabase não encontrado.');
 
             // 1. Carrega configurações da loja
+            console.log('📋 Carregando configurações da loja...');
             await app.API.carregarConfiguracoesLoja();
 
             // 2. Verifica se há um cliente logado
+            console.log('🔐 Verificando sessão local...');
             await app.Auth.verificarSessaoLocal();
             
             // 3. Prepara a interface inicial
+            console.log('🎨 Preparando interface...');
             
             // CORREÇÃO: Remove a classe 'active' da tela de login (já feito no HTML) e navega diretamente.
             app.UI.elementos.mobileNav.style.display = 'flex';
             
             if (app.clienteLogado) {
-                 console.log(`Cliente ${app.clientePerfil.nome} carregado.`);
+                 console.log(`👋 Cliente ${app.clientePerfil.nome} carregado.`);
                  // Se logado, vai direto para o cardápio, loga e carrega status.
                  app.Auth.logarClienteManual(false); 
                  app.UI.alternarView('view-cardapio');
             } else {
-                 console.log("Nenhum cliente logado, iniciando como convidado.");
+                 console.log("👤 Nenhum cliente logado, iniciando como convidado.");
                  // Se não logado, vai para o cardápio e mantém a navegação bloqueada para Carrinho/Pedidos.
                  app.UI.alternarView('view-cardapio');
                  // O 'auth-screen' fica acessível apenas pelo menu inferior ou tentativa de checkout.
             }
             
             // 4. Carrega os dados do cardápio
+            console.log('🍽️ Carregando dados do cardápio...');
             await app.Cardapio.carregarDadosCardapio();
             
             // 5. Configura o status da loja e busca
+            console.log('⏰ Configurando status da loja...');
             app.Cardapio.updateStoreStatus();
             setInterval(app.Cardapio.updateStoreStatus, 60000);
 
             // 6. Configura todos os botões e cliques
+            console.log('🖱️ Configurando event listeners...');
             configurarEventListenersGlobais();
             
             // 7. Atualiza o carrinho
+            console.log('🛒 Atualizando carrinho...');
             app.Carrinho.atualizarCarrinho();
+
+            console.log('🎊 Aplicação carregada com sucesso!');
 
         } catch (error) {
             console.error('❌ Erro na inicialização:', error);
