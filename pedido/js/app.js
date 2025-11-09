@@ -11,14 +11,15 @@ window.app = {
     supabaseChannel: null,
     
     // **NOVAS PROPRIEDADES DE ESTADO GLOBAL ADICIONADAS AQUI**
-    passoAtual: 1, // FIX: Define o estado inicial aqui.
-    cupomAplicado: null, // FIX: Define o estado inicial aqui.
+    passoAtual: 1, 
+    cupomAplicado: null, 
     
     // Estado dos Módulos (serão preenchidos por eles)
     carrinho: [],
     categorias: [],
     produtos: [],
     historicoPedidos: [],
+    todosPedidosCliente: [], // <-- CORREÇÃO: Inicializa a lista de todos os pedidos aqui.
     produtoSelecionadoModal: null,
     precoBaseModal: 0,
     

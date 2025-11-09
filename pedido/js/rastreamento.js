@@ -2,8 +2,7 @@
 
 (function() {
 
-    // const ui = window.AppUI; // <-- REMOVIDO
-    // const api = window.AppAPI; // <-- REMOVIDO
+    // NOTA: window.app.todosPedidosCliente é acessado, mas não declarado localmente.
     
     /**
      * Inicia o ouvinte de Realtime do Supabase para um pedido específico.
@@ -152,6 +151,70 @@
     }
 
     /**
+     * Função auxiliar para renderizar a lista de pedidos.
+     */
+    function renderizarListaPedidos(pedidos) {
+         let htmlHistorico = '';
+         
+         // Novo Design: Título do histórico mais limpo
+         htmlHistorico += `
+            <div style="padding: 10px 0;">
+                <h4 style="font-size: 1rem; color: #333; margin-bottom: 5px;">Últimos ${pedidos.length} Pedidos:</h4>
+                <p style="font-size: 0.85rem; color: #666;">Clique para ver detalhes e opções.</p>
+            </div>`;
+
+         pedidos.forEach((p) => {
+             const dataPedido = new Date(p.created_at).toLocaleDateString('pt-BR');
+             const status = (p.status || 'novo').toUpperCase();
+             
+            // Lógica para extrair o item principal
+            let listaItens = 'Detalhes do pedido';
+            const obsLines = p.observacoes.split('\n');
+            let isItemList = false;
+
+            for (const line of obsLines) {
+                if (line.includes('Itens:')) {
+                    isItemList = true;
+                    continue;
+                }
+                if (isItemList && line.trim().startsWith('*')) { 
+                    // Limita a 40 caracteres para não quebrar o layout da lista
+                    listaItens = line.replace('*', '').trim().split('(')[0].substring(0, 40) + '...';
+                    break;
+                }
+                if (line.includes('Subtotal:')) break; 
+            }
+             
+            const tempoEntregaMinutos = window.app.configLoja.tempo_entrega || 60;
+            const criadoEm = new Date(p.created_at);
+            const dataPrevisao = new Date(criadoEm.getTime() + tempoEntregaMinutos * 60000);
+            const horaPrevisao = dataPrevisao.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            const statusAcompanhamento = ['NOVO', 'PREPARANDO', 'PRONTO'];
+            const previsaoHtml = statusAcompanhamento.includes(status)
+                ? `<span style="color: var(--warning-color); font-weight: bold;">(Previsão: ${horaPrevisao})</span>`
+                : '';
+             
+             htmlHistorico += `
+                 <div class="card-pedido-historico" 
+                      onclick="window.AppRastreamento.abrirModalDetalhesPedido(${p.id})">
+                     <p style="font-weight: bold; margin: 0;">Pedido #${p.id} - ${dataPedido} ${previsaoHtml}</p>
+                     <p style="font-size: 0.9rem; margin: 0; color: #555;">${listaItens}</p>
+                     <p style="font-size: 0.9rem; margin: 0;">Status: 
+                         <span class="status-badge-history status-${status}">
+                             ${status}
+                         </span>
+                         | Total: ${window.AppUI.formatarMoeda(p.total)}
+                     </p>
+                 </div>
+             `;
+         });
+         
+         return htmlHistorico;
+    }
+
+
+    /**
      * Carrega o histórico de pedidos antigos (se nenhum pedido estiver ativo).
      */
     async function carregarStatusUltimoPedido() {
@@ -170,69 +233,37 @@
         }
 
         try {
-            // CORREÇÃO: A API agora busca os últimos 5 pedidos
-            const pedidos = await window.AppAPI.buscarHistoricoPedidos(window.app.clientePerfil.telefone);
-            window.app.historicoPedidos = pedidos;
+            // A API busca até 100 pedidos (limite alto para o 'Ver Todos')
+            const todosPedidos = await window.AppAPI.buscarHistoricoPedidos(window.app.clientePerfil.telefone, 100);
+            // CORREÇÃO: Define a variável de estado global corretamente
+            window.app.todosPedidosCliente = todosPedidos;
+            
+            // Exibe apenas os 3 mais recentes
+            const pedidosParaExibir = todosPedidos.slice(0, 3);
             
             let htmlHistorico = '';
-            if (pedidos.length > 0) {
-                 // Novo Design: Título do histórico mais limpo
-                 htmlHistorico += `
-                    <div style="padding: 10px 0;">
-                        <h4 style="font-size: 1rem; color: #333; margin-bottom: 5px;">Últimos ${pedidos.length} Pedidos:</h4>
-                        <p style="font-size: 0.85rem; color: #666;">Clique para ver detalhes e opções.</p>
-                    </div>`;
+            
+            if (pedidosParaExibir.length > 0) {
+                 htmlHistorico += renderizarListaPedidos(pedidosParaExibir);
 
-                 pedidos.forEach((p) => {
-                     const dataPedido = new Date(p.created_at).toLocaleDateString('pt-BR');
-                     const status = (p.status || 'novo').toUpperCase();
-                     
-                    // Lógica para extrair o item principal
-                    let listaItens = 'Detalhes do pedido';
-                    const obsLines = p.observacoes.split('\n');
-                    let isItemList = false;
-
-                    for (const line of obsLines) {
-                        if (line.includes('Itens:')) {
-                            isItemList = true;
-                            continue;
-                        }
-                        if (isItemList && line.trim().startsWith('*')) { 
-                            listaItens = line.replace('*', '').trim().split('(')[0].substring(0, 40) + '...';
-                            break;
-                        }
-                        if (line.includes('Subtotal:')) break; 
-                    }
-                     
-                    const tempoEntregaMinutos = window.app.configLoja.tempo_entrega || 60;
-                    const criadoEm = new Date(p.created_at);
-                    const dataPrevisao = new Date(criadoEm.getTime() + tempoEntregaMinutos * 60000);
-                    const horaPrevisao = dataPrevisao.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    
-                    const statusAcompanhamento = ['NOVO', 'PREPARANDO', 'PRONTO'];
-                    const previsaoHtml = statusAcompanhamento.includes(status)
-                        ? `<span style="color: var(--warning-color); font-weight: bold;">(Previsão: ${horaPrevisao})</span>`
-                        : '';
-                     
-                     htmlHistorico += `
-                         <div class="card-pedido-historico" 
-                              onclick="abrirModalDetalhesPedido(${p.id})">
-                             <p style="font-weight: bold; margin: 0;">Pedido #${p.id} - ${dataPedido} ${previsaoHtml}</p>
-                             <p style="font-size: 0.9rem; margin: 0; color: #555;">${listaItens}</p>
-                             <p style="font-size: 0.9rem; margin: 0;">Status: 
-                                 <span class="status-badge-history status-${status}">
-                                     ${status}
-                                 </span>
-                                 | Total: ${window.AppUI.formatarMoeda(p.total)}
-                             </p>
-                         </div>
-                     `;
-                 });
+                 if (todosPedidos.length > 3) {
+                      htmlHistorico += `
+                         <button id="btn-ver-todos-pedidos" class="btn-login-app" style="background: #8a2be2; margin-top: 1rem; width: 100%;">
+                             <i class="fas fa-list-ul"></i> Ver Todos os ${todosPedidos.length} Pedidos
+                         </button>`;
+                 }
             } else {
                  htmlHistorico = 'Você ainda não fez nenhum pedido conosco!';
             }
             
             elementos.statusUltimoPedido.innerHTML = htmlHistorico;
+            
+            // Adiciona o listener para o novo botão 'Ver Todos'
+            const btnVerTodos = document.getElementById('btn-ver-todos-pedidos');
+            if (btnVerTodos) {
+                // CORREÇÃO: Liga o botão à função que abre o modal
+                btnVerTodos.addEventListener('click', abrirModalTodosPedidos);
+            }
             
         } catch (error) {
             elementos.statusUltimoPedido.innerHTML = 'Erro ao carregar histórico.';
@@ -241,10 +272,40 @@
     }
     
     /**
+     * Abre o modal com a lista completa de todos os pedidos.
+     */
+    function abrirModalTodosPedidos() {
+        const elementos = window.AppUI.elementos;
+        const pedidos = window.app.todosPedidosCliente;
+
+        if (pedidos.length === 0) {
+             window.AppUI.mostrarMensagem('Nenhum pedido encontrado.', 'warning');
+             return;
+        }
+
+        // Gera o HTML da lista completa de pedidos
+        let htmlListaCompleta = renderizarListaPedidos(pedidos);
+        
+        // Define o conteúdo do novo modal e abre
+        elementos.detalhesModalTitulo.innerHTML = '<i class="fas fa-list-ul"></i> Todos os Pedidos';
+        // CORREÇÃO: Limpa o ID do pedido no título do modal
+        elementos.detalhesPedidoId.textContent = ''; 
+        elementos.detalhesPedidoContent.innerHTML = `
+            <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+                ${htmlListaCompleta}
+            </div>
+        `;
+        
+        elementos.modalDetalhesPedido.style.display = 'flex';
+    }
+
+
+    /**
      * Abre o modal com os detalhes de um pedido do histórico.
      */
     function abrirModalDetalhesPedido(pedidoId) {
-        const pedido = window.app.historicoPedidos.find(p => p.id.toString() === pedidoId);
+        // Agora busca em window.app.todosPedidosCliente para garantir que funcione para todos
+        const pedido = window.app.todosPedidosCliente.find(p => p.id.toString() === pedidoId.toString()); 
         if (!pedido) {
             window.AppUI.mostrarMensagem('Detalhes do pedido não encontrados.', 'error');
             return;
@@ -278,7 +339,9 @@
         elementos.detalhesPedidoId.textContent = `#${pedido.id}`;
         
         // Lógica de cancelamento (só permite cancelar se status for NOVO ou PREPARANDO)
-        const podeCancelar = status === 'NOVO' || status === 'PREPARANDO';
+        const statusParaCancelamento = ['NOVO', 'PREPARANDO', 'EM ABERTO', 'NOVO (ADMIN)']; // Inclui variações de 'novo' e 'em aberto'
+        const podeCancelar = statusParaCancelamento.includes(status);
+        
         const cancelBtnHtml = podeCancelar
             ? `<button id="btn-cancelar-pedido-cliente" data-id="${pedido.id}" class="btn-login-app" style="background: var(--error-color, #f44336); margin-top: 15px;">
                  <i class="fas fa-trash-alt"></i> Cancelar Pedido
@@ -291,15 +354,16 @@
         const dataPrevisao = new Date(criadoEm.getTime() + tempoEntregaMinutos * 60000);
         const horaPrevisao = dataPrevisao.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-        const previsaoText = (status === 'ENTREGUE' || status === 'CANCELADO') 
-            ? '' 
-            : `<p style="font-size: 0.9rem; margin: 5px 0;"><strong>Previsão de Entrega:</strong> <span style="color: var(--warning-color); font-weight: bold;">${horaPrevisao}</span></p>`;
+        const statusAtivo = ['NOVO', 'PREPARANDO', 'PRONTO'];
+        const previsaoText = statusAtivo.includes(status)
+            ? `<p style="font-size: 0.9rem; margin: 5px 0;"><strong>Previsão de Entrega:</strong> <span style="color: var(--warning-color); font-weight: bold;">${horaPrevisao}</span></p>`
+            : '';
 
 
         elementos.detalhesPedidoContent.innerHTML = `
             <div style="text-align: center; margin-bottom: 15px;">
                 <h4 style="margin: 0; font-size: 1.5rem;">${window.AppUI.formatarMoeda(pedido.total)}</h4>
-                <span class="status-badge-history status-${status}" style="margin-top: 5px;">
+                <span class="status-badge-history status-${status}">
                     <i class="fas fa-info-circle"></i> STATUS: ${status}
                 </span>
             </div>
@@ -327,9 +391,12 @@
         elementos.modalDetalhesPedido.style.display = 'flex';
         
         if (podeCancelar) {
-             document.getElementById('btn-cancelar-pedido-cliente').addEventListener('click', () => {
-                 cancelarPedidoCliente(pedido.id);
-             });
+             const novoBtn = document.getElementById('btn-cancelar-pedido-cliente');
+             if (novoBtn) {
+                 novoBtn.addEventListener('click', () => {
+                     cancelarPedidoCliente(pedido.id);
+                 });
+             }
         }
     }
     
@@ -374,6 +441,7 @@
         atualizarTrackerUI,
         carregarStatusUltimoPedido,
         abrirModalDetalhesPedido,
+        abrirModalTodosPedidos,
         cancelarPedidoCliente
     };
 
