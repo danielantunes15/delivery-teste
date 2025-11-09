@@ -103,6 +103,7 @@
         if (cepLimpo.length !== 8) return;
         window.AppUI.mostrarMensagem('Buscando endereço...', 'info');
 
+        // Determina se estamos no modal de cadastro ou de edição
         const isCadastro = uiElementos.cadastroForm.style.display === 'block';
         const isModal = uiElementos.modalEditarEndereco.style.display === 'flex';
         
@@ -133,23 +134,36 @@
             const data = await response.json();
             
             if (data.erro) {
+                // CORREÇÃO CRÍTICA: Se falhar, NÃO APAGA A RUA/BAIRRO JÁ DIGITADOS
                 window.AppUI.mostrarMensagem('CEP não encontrado. Digite o endereço manualmente.', 'warning');
-                Object.values(campos).forEach(campo => { if(campo.type !== 'hidden' && campo.type !== 'submit') campo.value = ''; });
+                
+                // Apenas limpa cidade/estado (se existirem) e foca na rua
+                if(campos.cidade) campos.cidade.value = '';
+                if(campos.estado) campos.estado.value = '';
                 campos.rua.focus();
                 return;
             }
+            
+            // ----------------------------------------------------
+            // Se o CEP for encontrado: Preenche
+            // ----------------------------------------------------
+            
+            // Só preenche a rua/bairro se o ViaCEP retornar algo novo (não vazio)
+            if (data.logradouro) campos.rua.value = data.logradouro;
+            if (data.bairro) campos.bairro.value = data.bairro;
 
-            campos.rua.value = data.logradouro || '';
-            campos.bairro.value = data.bairro || '';
             campos.cidade.value = data.localidade || '';
             campos.estado.value = data.uf || '';
 
-            if (data.logradouro) {
+            if (data.logradouro || data.bairro) {
                 campos.numero.focus();
+                window.AppUI.mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
             } else {
+                // Caso de CEP Único (só retorna cidade/estado)
                 campos.rua.focus();
+                window.AppUI.mostrarMensagem('CEP encontrado (cidade/estado). Digite a Rua e Bairro.', 'warning');
             }
-            window.AppUI.mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
+
         } catch (error) {
             window.AppUI.mostrarMensagem('Erro ao buscar o CEP. Preencha manualmente.', 'error');
         }

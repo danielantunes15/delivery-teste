@@ -81,31 +81,27 @@
         popularScroll: document.getElementById('popular-scroll'),
         productsSection: document.getElementById('products-section'),
         
-        // Carrinho (view-carrinho) - ATUALIZADO PARA STEPS
+        // Carrinho (view-carrinho) - ATUALIZADO PARA TELA ÚNICA
         carrinhoBadge: document.getElementById('carrinho-badge'),
         cartCountNav: document.querySelector('.bottom-nav .cart-count'),
         pedidoObservacoes: document.getElementById('pedido-observacoes'),
         trocoParaInput: document.getElementById('troco-para'),
         carrinhoItens: document.getElementById('carrinho-itens'),
         
-        // Resumo de Valores - ATUALIZADO
+        // Resumo de Valores
         subtotalCarrinho: document.getElementById('subtotal-carrinho'),
         taxaEntregaCarrinho: document.getElementById('taxa-entrega-carrinho'),
         totalCarrinho: document.getElementById('total-carrinho'),
         
-        // Elementos do Checkout Step
-        stepCarrinho: document.getElementById('step-carrinho'),
-        stepEntrega: document.getElementById('step-entrega'),
-        stepPagamento: document.getElementById('step-pagamento'),
-        btnContinuar: document.getElementById('btn-continuar'),
-        btnPassoAnterior: document.getElementById('btn-passo-anterior'),
+        // Botões e Campos da Tela Única
+        finalizarPedidoDireto: document.getElementById('finalizar-pedido-direto'), 
         limparCarrinhoBtn: document.getElementById('limpar-carrinho-btn'),
         addMoreItemsBtn: document.getElementById('add-more-items-btn'),
         trocarEnderecoBtn: document.getElementById('trocar-endereco-btn'),
         tempoEntregaDisplay: document.getElementById('tempo-entrega-display'),
         taxaEntregaStep: document.getElementById('taxa-entrega-step'),
         
-        // Cupom - NOVO
+        // Cupom
         cupomInput: document.getElementById('cupom-input'),
         aplicarCupomBtn: document.getElementById('aplicar-cupom-btn'),
         cupomMessage: document.getElementById('cupom-message'),
@@ -113,13 +109,10 @@
         descontoTipoDisplay: document.getElementById('desconto-tipo-display'),
         resumoDescontoLinha: document.getElementById('resumo-desconto-linha'),
         
-        // Finalizar
-        finalizarPedidoDireto: document.getElementById('finalizar-pedido-direto'), // Botão FINALIZAR
-        
         // Dados de Cliente/Entrega
         carrinhoEnderecoDisplay: document.getElementById('carrinho-endereco-display'),
         carrinhoClienteNomeDisplay: document.getElementById('carrinho-cliente-nome'),
-        carrinhoEnderecoInput: document.getElementById('carrinho-endereco-input'), // Campo oculto para editar
+        carrinhoEnderecoInput: document.getElementById('carrinho-endereco-input'), // Campo oculto que guarda o valor
         opcoesPagamento: document.querySelectorAll('.opcoes-pagamento .pagamento-opcao'),
 
         // Modais
@@ -149,49 +142,40 @@
         opcoesPrecoModal: document.getElementById('opcoes-preco-modal'),
         btnAdicionarOpcoes: document.getElementById('btn-adicionar-opcoes'),
         
-        /* --- INÍCIO DA ALTERAÇÃO --- */
-        // --- ELEMENTOS DO NOVO HEADER v2 ---
+        // Header v2
         headerV2: document.getElementById('header-v2'),
         headerV2Logo: document.getElementById('header-v2-logo'),
         headerV2Actions: document.getElementById('header-v2-actions'),
         headerV2SearchToggle: document.getElementById('header-v2-search-toggle'),
         headerV2SearchContainer: document.getElementById('header-v2-search-container'),
-        headerSearchInput: document.getElementById('header-search-input'), // Renomeado de 'searchIcon'
+        headerSearchInput: document.getElementById('header-search-input'), 
         loginBtn: document.getElementById('header-v2-login-btn'),
         addressBtn: document.getElementById('header-v2-address-btn'),
         addressText: document.getElementById('header-v2-address-text'),
         
-        // --- ELEMENTOS DO NOVO HEADER CART v2 ---
+        // Header Cart v2
         headerCartBtn: document.getElementById('header-v2-cart-btn'),
         headerCartItems: document.getElementById('header-v2-cart-items'),
         headerCartTotal: document.getElementById('header-v2-cart-total'),
         
-        // --- ELEMENTOS DO MODAL DE OPÇÕES ---
+        // Elementos do Modal de Opções
         opcoesImagemProduto: document.getElementById('opcoes-imagem-produto'),
         opcoesImagemPlaceholder: document.getElementById('opcoes-imagem-placeholder')
-        /* --- FIM DA ALTERAÇÃO --- */
     };
 
     /**
      * Exibe uma mensagem de alerta no topo da tela.
-     * @param {string} mensagem - O texto a ser exibido.
-     * @param {string} [tipo='info'] - O tipo de alerta ('info', 'success', 'warning', 'error').
      */
     function mostrarMensagem(mensagem, tipo = 'info') {
-        // As mensagens agora só aparecerão no console do navegador (F12)
         console.log(`[Mensagem Oculta - ${tipo}]: ${mensagem}`);
     }
 
     /**
      * Alterna a visualização das "páginas" do app.
-     * @param {string} viewId - O ID da view a ser mostrada (ex: 'view-cardapio').
      */
     function alternarView(viewId) {
-        // Guarda de Rota
+        // Lógica de Bloqueio: Se tentar ir para Pedidos/Carrinho sem logar, vai para Login.
         if ((viewId === 'view-inicio' || viewId === 'view-carrinho') && !window.app.clienteLogado) {
-            // A função mostrarMensagem() agora está desativada,
-            // mas a lógica de bloqueio de rota continua.
-            mostrarMensagem('Você precisa fazer login para acessar esta área.', 'info');
             viewId = 'auth-screen';
         }
         
@@ -206,7 +190,6 @@
              console.error(`❌ ERRO: View com ID "${viewId}" não encontrada.`);
         }
         
-        // Sincroniza o menu novo (bottom-nav)
         elementos.navItems.forEach(item => {
              item.classList.toggle('active', item.getAttribute('data-view') === viewId);
         });
@@ -225,22 +208,44 @@
              mostrarMensagem('Faça login para editar seu endereço.', 'error');
              return;
         }
-        const perfil = window.app.clientePerfil;
-        const cepMatch = perfil.endereco ? perfil.endereco.match(/\(CEP:\s?(\d{5}-?\d{3})\)/) : null;
         
+        const perfil = window.app.clientePerfil;
+        const enderecoSalvo = perfil.endereco || '';
+        
+        // Expressões Regulares para extrair componentes do endereço salvo
+        const cepMatch = enderecoSalvo.match(/\(CEP:\s?(\d{5}-?\d{3})\)/);
+        const cidadeEstadoMatch = enderecoSalvo.match(/\s-\s(.*?)\/([A-Z]{2})\s/);
+        
+        // 1. Tenta extrair CEP, Cidade, Estado
         elementos.modalCepInput.value = cepMatch ? cepMatch[1] : '';
-        elementos.modalRuaInput.value = '';
-        elementos.modalNumeroInput.value = '';
-        elementos.modalBairroInput.value = '';
-        elementos.modalCidadeInput.value = '';
-        elementos.modalEstadoInput.value = '';
+        elementos.modalCidadeInput.value = cidadeEstadoMatch ? cidadeEstadoMatch[1].trim() : '';
+        elementos.modalEstadoInput.value = cidadeEstadoMatch ? cidadeEstadoMatch[2].trim() : '';
+        
+        // 2. Tenta extrair Rua, Número e Bairro da primeira parte da string
+        const parteInicial = enderecoSalvo.split(' - ')[0];
+        
+        // Padrão: Rua, Número, Bairro
+        const partesEndereco = parteInicial.split(',').map(p => p.trim());
+        
+        if (partesEndereco.length >= 3) {
+            // Se conseguimos identificar as 3 partes principais
+            elementos.modalRuaInput.value = partesEndereco[0] || '';
+            elementos.modalNumeroInput.value = partesEndereco[1] || '';
+            elementos.modalBairroInput.value = partesEndereco[2] || '';
+        } else {
+             // Caso falhe, limpa os campos para o usuário digitar
+            elementos.modalRuaInput.value = '';
+            elementos.modalNumeroInput.value = '';
+            elementos.modalBairroInput.value = '';
+        }
         
         elementos.modalEditarEndereco.style.display = 'flex';
+        // Limpa mensagens de erro
+        document.getElementById('form-editar-endereco')?.reset();
     }
     
     /**
      * Fecha um modal específico.
-     * @param {HTMLElement} modalElement - O elemento do modal a ser fechado.
      */
     function fecharModal(modalElement) {
         if(modalElement) {

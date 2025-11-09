@@ -170,8 +170,9 @@
             if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = perfil.nome.split(' ')[0];
             if (elementos.carrinhoClienteNomeDisplay) elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
             if (elementos.carrinhoEnderecoDisplay) elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
+            if (elementos.addressText) elementos.addressText.textContent = perfil.endereco.split(',')[0] || 'Seu Endereço'; // Nome da rua no header
             
-            // CORREÇÃO CRÍTICA: Adiciona a verificação de existência do elemento antes de tentar definir 'value'
+            // Define o endereço atual no campo oculto para que o checkout use
             if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = perfil.endereco || ''; 
             
             if (elementos.homeEndereco) elementos.homeEndereco.innerHTML = `<strong>Endereço Atual:</strong><br>${perfil.endereco || 'Endereço não cadastrado.'}`;
@@ -195,24 +196,30 @@
         const cidade = uiElementos.modalCidadeInput.value.trim();
         const estado = uiElementos.modalEstadoInput.value.trim();
         
+        // CORREÇÃO: Valida se o CEP/Rua/Número estão presentes
         if (!rua || !numero || !bairro || !cep || !cidade || !estado) {
-            return window.AppUI.mostrarMensagem('Preencha a Rua, Número, Bairro, CEP, Cidade e Estado.', 'error');
+            return window.AppUI.mostrarMensagem('Preencha todos os campos do endereço (Rua, Número, Bairro, CEP, Cidade e Estado).', 'error');
         }
         
         const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
 
         try {
+            // CORREÇÃO CRÍTICA: Remove a desestruturação do retorno (que é undefined)
             await window.AppAPI.salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto);
             
             window.app.clientePerfil.endereco = enderecoCompleto;
             window.AppUI.mostrarMensagem('✅ Endereço atualizado com sucesso!', 'success');
             window.AppUI.fecharModal(uiElementos.modalEditarEndereco);
+            
+            // Atualiza todas as telas que usam o endereço
             atualizarPerfilUI(); 
+            window.AppCarrinho.atualizarCarrinho();
             window.app.Rastreamento.carregarStatusUltimoPedido(); 
 
         } catch (error) {
             console.error('Erro ao salvar endereço:', error);
-            window.AppUI.mostrarMensagem('Erro ao salvar endereço. Verifique sua conexão.', 'error');
+            // Captura o erro detalhado do throw em api.js
+            window.AppUI.mostrarMensagem(`Erro ao salvar endereço: ${error.message || 'Verifique sua conexão.'}`, 'error'); 
         }
     }
 
