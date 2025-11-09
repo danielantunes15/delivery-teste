@@ -90,7 +90,7 @@
         if (!confirm("Tem certeza que deseja limpar toda a sacola?")) return;
         window.app.carrinho = [];
         window.app.cupomAplicado = null;
-        window.AppUI.elementos.cupomInput.value = '';
+        if (window.AppUI.elementos.cupomInput) window.AppUI.elementos.cupomInput.value = '';
         atualizarCarrinho();
         window.AppUI.mostrarMensagem("Carrinho limpo!", "info");
     }
@@ -155,8 +155,8 @@
                 </div>
             `;
             // Desabilita botões de passo
-            elementos.finalizarPedidoDireto.disabled = true;
-            elementos.btnContinuar.disabled = true;
+            if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = true;
+            if (elementos.btnContinuar) elementos.btnContinuar.disabled = true;
         } else {
             elementos.carrinhoItens.innerHTML = '';
             carrinho.forEach((item, index) => {
@@ -207,8 +207,12 @@
             }));
             
             // Habilita botões de passo
-            elementos.finalizarPedidoDireto.disabled = !window.app.clienteLogado;
-            elementos.btnContinuar.disabled = !window.app.clienteLogado;
+            const isLojaAberta = elementos.storeStatusText?.textContent === 'Aberto';
+            const isReady = window.app.clienteLogado && isLojaAberta; 
+
+            // FIX: Adiciona proteção contra null antes de acessar 'disabled'
+            if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = !isReady;
+            if (elementos.btnContinuar) elementos.btnContinuar.disabled = !isReady;
         }
         
         // 4. Renderiza Resumo de Valores
@@ -218,16 +222,18 @@
         
         // 5. Renderiza Desconto (NOVO)
         if (calculo.valorDesconto > 0) {
-            elementos.resumoDescontoLinha.style.display = 'flex';
-            elementos.descontoValorDisplay.textContent = `- ${formatarMoeda(calculo.valorDesconto)}`;
-            elementos.descontoTipoDisplay.textContent = window.app.cupomAplicado.tipo === 'percentual' 
+            if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'flex';
+            if (elementos.descontoValorDisplay) elementos.descontoValorDisplay.textContent = `- ${formatarMoeda(calculo.valorDesconto)}`;
+            if (elementos.descontoTipoDisplay) elementos.descontoTipoDisplay.textContent = window.app.cupomAplicado.tipo === 'percentual' 
                 ? `${window.app.cupomAplicado.valor}%`
                 : formatarMoeda(window.app.cupomAplicado.valor);
-            elementos.cupomMessage.textContent = `✅ Cupom ${window.app.cupomAplicado.codigo} aplicado com sucesso.`;
-            elementos.cupomMessage.style.color = '#2e7d32';
+            if (elementos.cupomMessage) {
+                elementos.cupomMessage.textContent = `✅ Cupom ${window.app.cupomAplicado.codigo} aplicado com sucesso.`;
+                elementos.cupomMessage.style.color = '#2e7d32';
+            }
         } else {
-            elementos.resumoDescontoLinha.style.display = 'none';
-            if (!window.app.cupomAplicado) {
+            if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'none';
+            if (!window.app.cupomAplicado && elementos.cupomMessage) {
                 elementos.cupomMessage.textContent = 'Nenhum cupom aplicado.';
                 elementos.cupomMessage.style.color = '#999';
             }
@@ -260,12 +266,11 @@
         // Renderiza dados de entrega no Step 2
         const elementos = window.AppUI.elementos;
         const perfil = window.app.clientePerfil;
-        elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
-        elementos.taxaEntregaStep.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
+        if (elementos.tempoEntregaDisplay) elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
+        if (elementos.taxaEntregaStep) elementos.taxaEntregaStep.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
 
-        // Define o passo inicial
-        window.app.passoAtual = 1;
-        window.app.Checkout.alternarPasso(1);
+        // Não é mais um stepper, então o layout já está no Passo 1 (Sacola)
+        // window.app.Checkout.alternarPasso(1);
 
         atualizarCarrinho();
     }
@@ -276,6 +281,7 @@
     function limparFormularioECarrinho() { 
         window.app.carrinho = [];
         window.app.cupomAplicado = null;
+        if (window.AppUI.elementos.cupomInput) window.AppUI.elementos.cupomInput.value = '';
         atualizarCarrinho();
         
         const elementos = window.AppUI.elementos;

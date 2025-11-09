@@ -1,123 +1,21 @@
-// js/checkout.js - Módulo de Finalização de Pedido (Corrigido)
+// js/checkout.js - Módulo de Finalização de Pedido (Corrigido para TELA ÚNICA)
 
 (function() {
     
-    // Define o estado inicial do passo no app global
-    // REMOVIDO: window.app.passoAtual = 1; (Agora definido em app.js)
-    // REMOVIDO: window.app.cupomAplicado = null; (Agora definido em app.js)
+    // NOTA: A navegação por passos foi removida.
+    // O botão de finalizar agora chama 'finalizarPedidoEEnviarWhatsApp' diretamente.
     
-    /**
-     * Alterna entre os passos (1, 2, 3) do checkout.
-     * @param {number} novoPasso - O número do passo a ser exibido.
-     */
-    function alternarPasso(novoPasso) {
-        const elementos = window.AppUI.elementos;
-        window.app.passoAtual = novoPasso;
-
-        [elementos.stepCarrinho, elementos.stepEntrega, elementos.stepPagamento].forEach(step => {
-            step.classList.remove('active');
-        });
-
-        if (novoPasso === 1) {
-            elementos.stepCarrinho.classList.add('active');
-            elementos.btnPassoAnterior.style.display = 'none';
-            elementos.btnContinuar.style.display = 'flex';
-            elementos.finalizarPedidoDireto.style.display = 'none';
-        } else if (novoPasso === 2) {
-            elementos.stepEntrega.classList.add('active');
-            elementos.btnPassoAnterior.style.display = 'flex';
-            elementos.btnContinuar.style.display = 'flex';
-            elementos.finalizarPedidoDireto.style.display = 'none';
-            // Recarrega os dados de endereço na tela
-            window.app.Auth.atualizarPerfilUI();
-        } else if (novoPasso === 3) {
-            elementos.stepPagamento.classList.add('active');
-            elementos.btnPassoAnterior.style.display = 'flex';
-            elementos.btnContinuar.style.display = 'none';
-            elementos.finalizarPedidoDireto.style.display = 'flex';
-        }
-    }
-    
-    /**
-     * Valida o passo atual e avança para o próximo ou volta.
-     */
-    function navegarPasso(direcao) {
-        let proximoPasso = window.app.passoAtual + direcao;
-
-        if (proximoPasso === 2) {
-            // Validação do Passo 1 (Carrinho)
-            if (window.app.carrinho.length === 0) {
-                 return window.AppUI.mostrarMensagem('Adicione itens à sacola para continuar!', 'error');
-            }
-        }
-        if (proximoPasso === 3) {
-            // Validação do Passo 2 (Entrega)
-            if (!window.app.clientePerfil.endereco || window.app.clientePerfil.endereco.length < 10) {
-                 return window.AppUI.mostrarMensagem('O endereço de entrega está incompleto. Use o botão "Trocar" para corrigir.', 'error');
-            }
-        }
-
-        if (proximoPasso >= 1 && proximoPasso <= 3) {
-            alternarPasso(proximoPasso);
-        }
-    }
-    
-    /**
-     * Simula a validação e aplicação de um cupom de desconto.
-     */
-    function aplicarCupom() {
-        const elementos = window.AppUI.elementos;
-        const codigo = elementos.cupomInput.value.toUpperCase().trim();
-        const subTotal = window.app.Carrinho.calcularTotalComAjustes(0).subTotal;
-        
-        if (subTotal === 0) {
-            elementos.cupomMessage.textContent = 'Adicione itens à sacola antes de usar o cupom.';
-            elementos.cupomMessage.style.color = 'var(--warning-color)';
-            return;
-        }
-
-        // Simulação de cupons válidos
-        const cuponsValidos = {
-            'GANHE10': { tipo: 'percentual', valor: 10, codigo: 'GANHE10' },
-            'DESCONTO20': { tipo: 'valor', valor: 20.00, codigo: 'DESCONTO20' },
-            'FREE': { tipo: 'valor', valor: 0.00, codigo: 'FREE' } // Para remover
-        };
-
-        if (window.app.cupomAplicado && codigo === window.app.cupomAplicado.codigo) {
-             window.app.cupomAplicado = null;
-             window.app.Carrinho.atualizarCarrinho();
-             elementos.cupomMessage.textContent = 'Cupom removido.';
-             elementos.cupomMessage.style.color = 'var(--info-color)';
-             return;
-        }
-
-        if (cuponsValidos[codigo]) {
-            const cupom = cuponsValidos[codigo];
-            window.app.cupomAplicado = cupom;
-            window.app.Carrinho.atualizarCarrinho();
-            window.AppUI.mostrarMensagem(`Cupom ${codigo} aplicado!`, 'success');
-        } else {
-            window.app.cupomAplicado = null;
-            window.app.Carrinho.atualizarCarrinho();
-            elementos.cupomMessage.textContent = '❌ Código de cupom inválido.';
-            elementos.cupomMessage.style.color = 'var(--error-color)';
-        }
-    }
-
-
     /**
      * Coleta os dados do cliente logado.
      */
     function obterDadosCliente() {
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const elementos = window.AppUI.elementos;
         
-        // CORREÇÃO CRÍTICA: Assume que o endereço vem do perfil/estado
-        // (O campo de input direto no checkout foi removido).
+        // Assume que o endereço vem do perfil/estado (que é atualizado pelo modal de edição)
         const endereco = window.app.clientePerfil.endereco.trim();
         
-        const trocoPara = parseFloat(elementos.trocoParaInput.value) || 0; 
-        const observacoes = elementos.pedidoObservacoes.value.trim(); 
+        const trocoPara = parseFloat(elementos.trocoParaInput?.value) || 0; 
+        const observacoes = elementos.pedidoObservacoes?.value.trim() || ''; 
 
         if (window.app.clienteLogado) {
              const nome = window.app.clientePerfil.nome;
@@ -150,13 +48,12 @@
     function validarDados() {
         const dadosCliente = obterDadosCliente();
         const formaPagamentoEl = document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked');
-        const calculo = window.app.Carrinho.calcularTotalComAjustes(0); // Passa 0 para forçar o recálculo do subtotal interno
+        const calculo = window.app.Carrinho.calcularTotalComAjustes(0); 
         
         const subTotalProdutos = calculo.subTotal;
-        const totalPedido = calculo.totalFinal; // Já inclui desconto e taxa
+        const totalPedido = calculo.totalFinal; 
         
         const carrinho = window.app.carrinho;
-        const formatarMoeda = window.AppUI.formatarMoeda;
 
         if (carrinho.length === 0) {
             window.AppUI.mostrarMensagem('Sua sacola está vazia!', 'error');
@@ -165,10 +62,9 @@
         
         if (!dadosCliente) return null;
         
-        // Validação Final de Endereço/Nome
-        if (!dadosCliente.nome || !dadosCliente.telefone || !dadosCliente.endereco || dadosCliente.endereco.length < 10) {
-            window.AppUI.mostrarMensagem('Dados de cliente ou endereço incompletos. Por favor, corrija no Passo 2.', 'error');
-            alternarPasso(2); // Volta para o passo de entrega
+        // Validação de Endereço Mínima
+        if (!dadosCliente.endereco || dadosCliente.endereco.length < 10) {
+            window.AppUI.mostrarMensagem('O endereço de entrega está incompleto. Use o botão "Trocar Endereço" para corrigir.', 'error');
             return null;
         }
         
@@ -220,8 +116,8 @@
         
         let obsCompleta = dadosCliente.observacoes;
         if (dadosCliente.trocoPara > 0) {
-             obsCompleta += `\nTROCO NECESSÁRIO: Sim, para ${formatarMoeda(dadosCliente.trocoPara)}`;
-        } else if (document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked').value === 'Dinheiro') {
+             obsCompleta += `\nTROCO NECESSÁRIO: Sim, para ${window.AppUI.formatarMoeda(dadosCliente.trocoPara)}`;
+        } else if (document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked')?.value === 'Dinheiro') {
              obsCompleta += `\nTROCO NECESSÁRIO: Não`;
         }
         
@@ -236,20 +132,19 @@ Total: ${formatarMoeda(totalPedido)}
     }
 
     /**
-     * Orquestra a finalização do pedido, salvando no Supabase e abrindo o WhatsApp.
+     * Finaliza o pedido, salva no Supabase e abre o link do WhatsApp.
      */
     async function finalizarPedidoEEnviarWhatsApp() { 
         const dados = validarDados();
         if (!dados) return;
         
         const uiElementos = window.AppUI.elementos;
-        const formatarMoeda = window.AppUI.formatarMoeda;
 
         window.AppUI.mostrarMensagem('Processando pedido...', 'info');
-        uiElementos.finalizarPedidoDireto.disabled = true;
+        if (uiElementos.finalizarPedidoDireto) uiElementos.finalizarPedidoDireto.disabled = true;
 
         try {
-            // 1. Criar o pedido_online
+            // 1. Criar o pedido_online (Salva no DB)
             const dadosPedidoSupabase = {
                 nome_cliente: dados.nome,
                 telefone_cliente: dados.telefone,
@@ -274,23 +169,21 @@ Total: ${formatarMoeda(totalPedido)}
             mensagem += `*Telefone:* ${dados.telefone}\n`;
             mensagem += `*Endereço:* ${dados.endereco}\n`;
             mensagem += `*Pagamento:* ${dados.formaPagamento}\n`;
-            mensagem += `*TOTAL:* ${formatarMoeda(dados.total)}\n\n`;
+            mensagem += `*TOTAL:* ${window.AppUI.formatarMoeda(dados.total)}\n\n`;
             mensagem += `--- DETALHES ---\n`;
             mensagem += dados.observacoes;
 
             const url = `https://wa.me/${window.app.NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
 
-            // 4. Limpar o estado e preparar o redirect
-            
-            // Iniciar Rastreamento e Limpar Carrinho
+            // 4. Limpar o estado e iniciar rastreamento
             localStorage.setItem('pedidoAtivoId', novoPedido.id);
             window.app.Rastreamento.iniciarRastreamento(novoPedido.id);
             
-            window.app.Carrinho.limparFormularioECarrinho(); // Limpa o carrinho e reseta os forms
-            await window.app.Cardapio.carregarDadosCardapio(); // Recarrega produtos
+            window.app.Carrinho.limparFormularioECarrinho(); 
+            await window.app.Cardapio.carregarDadosCardapio(); 
             
-            // 5. Redirecionar para a tela de pedidos e abrir o WhatsApp
-            window.AppUI.alternarView('view-inicio'); // Vai para a tela de rastreio/pedidos
+            // 5. Redirecionar e abrir o WhatsApp
+            window.AppUI.alternarView('view-inicio'); 
             window.AppUI.mostrarMensagem('✅ Pedido registrado com sucesso! Redirecionando e enviando WhatsApp...', 'success');
             
             // Abre o link do WhatsApp
@@ -298,9 +191,9 @@ Total: ${formatarMoeda(totalPedido)}
 
 
         } catch (error) {
-            console.error("Erro ao finalizar pedido direto:", error);
+            console.error("Erro ao finalizar pedido:", error);
             window.AppUI.mostrarMensagem(`Erro ao enviar pedido: ${error.message}`, 'error');
-            uiElementos.finalizarPedidoDireto.disabled = false; // Habilita o botão em caso de erro
+            if (uiElementos.finalizarPedidoDireto) uiElementos.finalizarPedidoDireto.disabled = false;
             
         } finally {
             window.app.Cardapio.updateStoreStatus();
@@ -308,21 +201,32 @@ Total: ${formatarMoeda(totalPedido)}
     }
     
     /**
-     * Configura os listeners específicos do novo stepper.
+     * Configura os listeners específicos do novo layout.
      */
-    function configurarListenersStepper() {
+    function configurarListenersSingleScreen() {
         const elementos = window.AppUI.elementos;
 
-        if (elementos.btnContinuar) elementos.btnContinuar.addEventListener('click', () => navegarPasso(1));
-        if (elementos.btnPassoAnterior) elementos.btnPassoAnterior.addEventListener('click', () => navegarPasso(-1));
-        if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.addEventListener('click', finalizarPedidoEEnviarWhatsApp);
+        // Botão Finalizar (Chama a função que faz tudo)
+        if (elementos.finalizarPedidoDireto) {
+            elementos.finalizarPedidoDireto.addEventListener('click', finalizarPedidoEEnviarWhatsApp);
+        }
         
-        if (elementos.limparCarrinhoBtn) elementos.limparCarrinhoBtn.addEventListener('click', window.app.Carrinho.limparCarrinho);
-        if (elementos.addMoreItemsBtn) elementos.addMoreItemsBtn.addEventListener('click', () => window.AppUI.alternarView('view-cardapio'));
+        // Botão Adicionar Mais Itens (Volta para o cardápio)
+        if (elementos.addMoreItemsBtn) {
+            elementos.addMoreItemsBtn.addEventListener('click', () => window.AppUI.alternarView('view-cardapio'));
+        }
         
-        if (elementos.trocarEnderecoBtn) elementos.trocarEnderecoBtn.addEventListener('click', window.AppUI.abrirModalEditarEndereco);
+        // Botão Trocar Endereço (Abre o modal)
+        if (elementos.trocarEnderecoBtn) {
+            elementos.trocarEnderecoBtn.addEventListener('click', window.AppUI.abrirModalEditarEndereco);
+        }
 
-        // Lógica de Cupom
+        // Botão Limpar Carrinho
+        if (elementos.limparCarrinhoBtn) {
+            elementos.limparCarrinhoBtn.addEventListener('click', window.app.Carrinho.limparCarrinho);
+        }
+
+        // Lógica de Cupom (mantida a lógica de simulação)
         if (elementos.aplicarCupomBtn) elementos.aplicarCupomBtn.addEventListener('click', aplicarCupom);
         if (elementos.cupomInput) elementos.cupomInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -338,14 +242,14 @@ Total: ${formatarMoeda(totalPedido)}
         obterDadosCliente,
         validarDados,
         finalizarPedidoEEnviarWhatsApp,
-        alternarPasso, // Exposto para o carrinho poder inicializar
-        configurarListenersStepper
+        // Renomeada para melhor contexto
+        configurarListenersSingleScreen 
     };
 
-    // Adiciona o listener principal do stepper ao app.js
+    // Adiciona o listener principal ao app.js
     document.addEventListener('DOMContentLoaded', () => {
-         if(window.app.Checkout && window.app.Checkout.configurarListenersStepper) {
-            window.app.Checkout.configurarListenersStepper();
+         if(window.app.Checkout && window.app.Checkout.configurarListenersSingleScreen) {
+            window.app.Checkout.configurarListenersSingleScreen();
          }
     });
 

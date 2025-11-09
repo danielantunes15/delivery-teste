@@ -153,10 +153,6 @@
                             <i class="fas fa-search"></i>
                         </button>
                         
-                        <button class="header-v2-icon-btn" id="header-v2-login-btn" title="Minha Conta">
-                            <i class="fas fa-user"></i>
-                        </button>
-                        
                         <button class="header-v2-cart-btn" id="header-v2-cart-btn" title="Ver Carrinho">
                             <i class="fas fa-shopping-bag"></i>
                             <div class="header-v2-cart-summary">
@@ -277,12 +273,9 @@
                         </div>
                     </div>
 
-                </div>
+                    <h3 style="margin-top: 2rem;"><i class="fas fa-map-marker-alt"></i> Entrega</h3>
 
-                <div id="step-entrega" class="checkout-step card-app">
-                    <h3><i class="fas fa-map-marker-alt"></i> 2. Entrega</h3>
-
-                    <h4 style="font-size: 1.1rem; color: #db7093;">Endereço de Entrega</h4>
+                    <h4 style="font-size: 1.1rem; color: #db7093;">Seu Endereço</h4>
                     <div class="carrinho-list-card" style="padding: 15px;">
                         <p style="font-size: 1rem;">
                             Entregar em: 
@@ -294,21 +287,18 @@
                         <input type="hidden" id="carrinho-endereco-input" value="">
 
                         <button id="trocar-endereco-btn" class="btn-link" style="margin-top: 5px; font-size: 0.9rem;">
-                            <i class="fas fa-edit"></i> Trocar
+                            <i class="fas fa-edit"></i> Trocar Endereço
                         </button>
                     </div>
                     
-                    <h4 style="font-size: 1.1rem; color: #db7093; margin-top: 2rem;">Opções de Entrega</h4>
+                    <h4 style="font-size: 1.1rem; color: #db7093; margin-top: 2rem;">Opção de Entrega</h4>
                     <div id="delivery-option-default" class="delivery-option-card">
                         <h4 style="margin: 0;">Padrão</h4>
-                        <p>Tempo de Entrega: <span id="tempo-entrega-display">60 min</span></p>
+                        <p>Tempo estimado: <span id="tempo-entrega-display">60 min</span></p>
                         <p style="margin-top: 5px;">Taxa: <span id="taxa-entrega-step">R$ 0,00</span></p>
                     </div>
-                    
-                </div>
 
-                <div id="step-pagamento" class="checkout-step card-app">
-                    <h3><i class="fas fa-credit-card"></i> 3. Pagamento</h3>
+                    <h3 style="margin-top: 2rem;"><i class="fas fa-credit-card"></i> Pagamento</h3>
 
                     <h4 style="font-size: 1.1rem; color: #db7093;">Forma de Pagamento</h4>
                     <div class="opcoes-pagamento">
@@ -348,20 +338,13 @@
                         <label for="troco-para">Precisa de Troco? (Para Pagamentos em Dinheiro)</label>
                         <input type="number" id="troco-para" step="0.01" min="0" placeholder="Ex: 50.00 (Troco para R$50)">
                     </div>
-
                 </div>
 
             </div>
             
             <footer class="checkout-footer" id="checkout-footer">
                  <div class="finalizar-actions">
-                    <button id="btn-passo-anterior" class="btn-login-app" style="background: #ccc; width: 100px; margin: 0; padding: 12px; display: none;">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </button>
-                    <button id="btn-continuar" class="btn-login-app" style="background: var(--rosa-escuro, #db7093); flex-grow: 1;">
-                        Continuar <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button id="finalizar-pedido-direto" class="btn-login-app" style="background: var(--rosa-escuro, #db7093); flex-grow: 1; display: none;">
+                    <button id="finalizar-pedido-direto" class="btn-login-app" style="background: var(--rosa-escuro, #db7093); width: 100%;">
                         <i class="fas fa-check-circle"></i> Finalizar Pedido
                     </button>
                  </div>
