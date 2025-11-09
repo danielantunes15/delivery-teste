@@ -1111,4 +1111,223 @@ body {
     color: #ccc;
 }
 
-/* --- FIM: NOVOS ESTILOS --- */
+/* --- NOVO BLOCO: ESTILOS DE CHECKOUT / FINALIZAÇÃO --- */
+
+.checkout-section h2 {
+    color: #db7093;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed #eee;
+}
+
+/* Container do Carrinho (Layout mais limpo) */
+.carrinho-list-card {
+    padding: 15px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Título de Confirmação */
+.final-success-container {
+    padding: 2rem 1rem;
+    text-align: center;
+    background-color: #e8f5e9;
+    border: 2px solid #2e7d32;
+    border-radius: 15px;
+    margin: 2rem 0;
+    animation: fadeInScale 0.5s ease-out;
+}
+.final-success-container i {
+    font-size: 4rem;
+    color: #2e7d32;
+    margin-bottom: 1rem;
+}
+.final-success-container h3 {
+    font-size: 1.8rem;
+    color: #2e7d32;
+    margin-bottom: 0.5rem;
+}
+.final-success-container p {
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+.btn-whatsapp-final {
+    background: #25d366; /* WhatsApp Green */
+    color: white;
+    font-size: 1.1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.4);
+    transition: all 0.3s ease;
+}
+.btn-whatsapp-final:hover {
+    background: #128c7e;
+    transform: translateY(-2px);
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* --- ESTILOS DO STEPPER (CARRINHO CLEAN) --- */
+
+#view-carrinho .app-content-scroll {
+    max-width: 600px; /* Limita a largura para visualização clean */
+    margin: 0 auto;
+    padding-top: 15px; 
+}
+.cart-header-minimal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    background-color: white; /* Garante que o header da sacola seja branco */
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.cart-header-minimal h2 {
+    font-size: 1.5rem;
+    color: #db7093;
+    margin: 0;
+}
+.limpar-carrinho-btn {
+    background: none;
+    border: none;
+    color: #f44336;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Estilos de Card de Passo */
+.checkout-step {
+    display: none;
+    padding: 15px; /* Adiciona padding de volta ao step */
+    min-height: 50vh;
+}
+.checkout-step.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Itens - Remove estilos de card e deixa apenas a lista */
+#step-carrinho .carrinho-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+#step-carrinho .carrinho-item:last-child {
+    border-bottom: none;
+}
+
+/* Adicionar mais itens */
+.add-more-items-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+    margin-top: 1rem;
+    background: none;
+    border: 1px dashed #ff69b4;
+    color: #ff69b4;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Área de Cupom */
+.cupom-area {
+    margin-top: 1.5rem;
+    padding: 15px;
+    background: #fdfdff;
+    border: 1px solid #ffb6c1;
+    border-radius: 8px;
+}
+.cupom-area .form-group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    margin-bottom: 0;
+}
+.cupom-area input {
+    flex-grow: 1;
+    text-transform: uppercase;
+}
+
+/* Resumo de Valores */
+.resumo-valores-cart {
+    padding: 1rem 0;
+    margin-top: 1.5rem;
+    border-top: 2px solid #ffb6c1;
+}
+.resumo-valores-cart .total-linha {
+    font-size: 1.1rem;
+}
+.resumo-valores-cart .total-linha.final {
+    margin-top: 10px;
+    font-size: 1.3rem;
+}
+#resumo-desconto-linha {
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+/* Card de Opção de Entrega */
+.delivery-option-card {
+    background: #fdfdff;
+    border: 1px solid #ffb6c1;
+    border-left: 4px solid #ff69b4;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 1rem;
+}
+.delivery-option-card h4 {
+    color: #db7093;
+    margin-bottom: 0.5rem;
+}
+.delivery-option-card p {
+    font-size: 0.95rem;
+    color: #333;
+}
+.delivery-option-card span {
+    font-weight: 600;
+}
+
+/* Borda dos Steps */
+#step-entrega h3, #step-pagamento h3 {
+    font-size: 1.3rem;
+    color: #db7093;
+    margin-bottom: 1.5rem;
+}
+
+/* Botoes no Footer (Agora é um Step Footer) */
+.checkout-footer {
+    position: fixed; bottom: 65px; left: 0; width: 100%;
+    padding: 10px 15px; 
+    background-color: white;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1); 
+    z-index: 15;
+}
+.checkout-footer .finalizar-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+.checkout-footer .btn-login-app {
+    margin: 0;
+}
+.checkout-footer #btn-continuar,
+.checkout-footer #finalizar-pedido-direto {
+    flex-grow: 1; /* Garante que os botões maiores ocupem o espaço */
+}
+
+/* --- FIM NOVO BLOCO --- */

@@ -167,13 +167,16 @@
         const elementos = window.AppUI.elementos;
         
         if (window.app.clienteLogado) {
-            elementos.homeClienteNome.textContent = perfil.nome.split(' ')[0];
-            elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
-            elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
-            elementos.carrinhoEnderecoInput.value = perfil.endereco || '';
-            elementos.homeEndereco.innerHTML = `<strong>Endereço Atual:</strong><br>${perfil.endereco || 'Endereço não cadastrado.'}`;
+            if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = perfil.nome.split(' ')[0];
+            if (elementos.carrinhoClienteNomeDisplay) elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
+            if (elementos.carrinhoEnderecoDisplay) elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
+            
+            // CORREÇÃO CRÍTICA: Adiciona a verificação de existência do elemento antes de tentar definir 'value'
+            if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = perfil.endereco || ''; 
+            
+            if (elementos.homeEndereco) elementos.homeEndereco.innerHTML = `<strong>Endereço Atual:</strong><br>${perfil.endereco || 'Endereço não cadastrado.'}`;
         } else {
-            elementos.homeClienteNome.textContent = 'Visitante';
+            if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = 'Visitante';
         }
     }
     

@@ -28,11 +28,16 @@
                     return;
                 }
             } else {
-                window.app.carrinho.push({ 
-                    produto: produto, 
-                    quantidade: 1, 
-                    precoFinalItem: produto.preco_venda 
-                });
+                if (produto.estoque_atual > 0) {
+                    window.app.carrinho.push({ 
+                        produto: produto, 
+                        quantidade: 1, 
+                        precoFinalItem: produto.preco_venda 
+                    });
+                } else {
+                    window.AppUI.mostrarMensagem(`Produto ${produto.nome} sem estoque disponível.`, 'error');
+                    return;
+                }
             }
         } else {
             window.app.carrinho.push({
@@ -79,25 +84,83 @@
     }
     
     /**
+     * Limpa o carrinho e reseta o cupom.
+     */
+    function limparCarrinho() {
+        if (!confirm("Tem certeza que deseja limpar toda a sacola?")) return;
+        window.app.carrinho = [];
+        window.app.cupomAplicado = null;
+        window.AppUI.elementos.cupomInput.value = '';
+        atualizarCarrinho();
+        window.AppUI.mostrarMensagem("Carrinho limpo!", "info");
+    }
+
+    /**
+     * Calcula o total do carrinho com desconto e taxa.
+     */
+    function calcularTotalComAjustes(subTotal) {
+        const ajustes = window.app.cupomAplicado;
+        const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        let totalAjustado = subTotal;
+        let valorDesconto = 0;
+        
+        if (ajustes) {
+            if (ajustes.tipo === 'percentual') {
+                valorDesconto = subTotal * (ajustes.valor / 100);
+                totalAjustado -= valorDesconto;
+            } else if (ajustes.tipo === 'valor') {
+                valorDesconto = ajustes.valor;
+                totalAjustado -= valorDesconto;
+            }
+            // Garante que o total não seja negativo
+            totalAjustado = Math.max(0, totalAjustado);
+        }
+        
+        const totalFinal = totalAjustado + taxaEntrega;
+        
+        return {
+            subTotal: subTotal,
+            totalAjustado: totalAjustado,
+            valorDesconto: valorDesconto,
+            totalFinal: totalFinal
+        };
+    }
+    
+    /**
      * Atualiza todo o display do carrinho (itens, totais, badges).
      */
     function atualizarCarrinho() {
         let subTotal = 0;
         let totalItens = 0;
-        // CORREÇÃO: Acessa window.app e window.AppUI diretamente
-        const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        
         const elementos = window.AppUI.elementos;
         const carrinho = window.app.carrinho;
         const formatarMoeda = window.AppUI.formatarMoeda;
-            
+        
+        // 1. Calcula os totais (subTotal)
+        carrinho.forEach(item => {
+            subTotal += item.precoFinalItem * item.quantidade;
+            totalItens += item.quantidade;
+        });
+        
+        // 2. Aplica ajustes e calcula totais finais
+        const calculo = calcularTotalComAjustes(subTotal);
+
+        // 3. Renderiza Itens
         if (carrinho.length === 0) {
-            elementos.carrinhoItens.innerHTML = `<p style="text-align: center; color: #666;">Sua sacola está vazia.</p>`;
+            elementos.carrinhoItens.innerHTML = `
+                <div style="text-align: center; padding: 2rem 0; color: #666;">
+                    <i class="fas fa-shopping-cart" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Sua sacola está vazia.</p>
+                </div>
+            `;
+            // Desabilita botões de passo
+            elementos.finalizarPedidoDireto.disabled = true;
+            elementos.btnContinuar.disabled = true;
         } else {
             elementos.carrinhoItens.innerHTML = '';
             carrinho.forEach((item, index) => {
                 const itemSubtotal = item.precoFinalItem * item.quantidade;
-                subTotal += itemSubtotal;
-                totalItens += item.quantidade; 
                 
                 let opcoesHtml = '';
                 if (item.opcoes || item.complementos || item.observacao) {
@@ -120,12 +183,13 @@
                 itemElement.className = 'carrinho-item';
                 itemElement.innerHTML = `
                     <div class="carrinho-item-info">
-                        <div class="carrinho-item-nome">${item.quantidade}x ${item.produto.nome}</div>
+                        <div class="carrinho-item-nome">${item.produto.nome}</div>
                         <div class="carrinho-item-preco">${formatarMoeda(item.precoFinalItem)} (un)</div>
                         ${opcoesHtml}
                     </div>
                     <div class="carrinho-item-controles">
                         <button class="btn-remover" data-index="${index}"><i class="fas fa-minus"></i></button>
+                        <span class="carrinho-item-quantidade">${item.quantidade}</span>
                         <button class="btn-adicionar-carrinho" data-index="${index}"><i class="fas fa-plus"></i></button>
                     </div>
                     <div class="carrinho-item-subtotal">
@@ -141,24 +205,36 @@
             elementos.carrinhoItens.querySelectorAll('.btn-adicionar-carrinho').forEach(btn => btn.addEventListener('click', function() {
                 aumentarQuantidade(parseInt(this.getAttribute('data-index')));
             }));
+            
+            // Habilita botões de passo
+            elementos.finalizarPedidoDireto.disabled = !window.app.clienteLogado;
+            elementos.btnContinuar.disabled = !window.app.clienteLogado;
+        }
+        
+        // 4. Renderiza Resumo de Valores
+        if (elementos.subtotalCarrinho) elementos.subtotalCarrinho.textContent = formatarMoeda(calculo.subTotal);
+        if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(window.app.configLoja.taxa_entrega || 0);
+        if (elementos.totalCarrinho) elementos.totalCarrinho.textContent = calculo.totalFinal.toFixed(2).replace('.', ',');
+        
+        // 5. Renderiza Desconto (NOVO)
+        if (calculo.valorDesconto > 0) {
+            elementos.resumoDescontoLinha.style.display = 'flex';
+            elementos.descontoValorDisplay.textContent = `- ${formatarMoeda(calculo.valorDesconto)}`;
+            elementos.descontoTipoDisplay.textContent = window.app.cupomAplicado.tipo === 'percentual' 
+                ? `${window.app.cupomAplicado.valor}%`
+                : formatarMoeda(window.app.cupomAplicado.valor);
+            elementos.cupomMessage.textContent = `✅ Cupom ${window.app.cupomAplicado.codigo} aplicado com sucesso.`;
+            elementos.cupomMessage.style.color = '#2e7d32';
+        } else {
+            elementos.resumoDescontoLinha.style.display = 'none';
+            if (!window.app.cupomAplicado) {
+                elementos.cupomMessage.textContent = 'Nenhum cupom aplicado.';
+                elementos.cupomMessage.style.color = '#999';
+            }
         }
 
-        const totalFinal = subTotal + taxaEntrega;
-        
-        elementos.subtotalCarrinho.textContent = formatarMoeda(subTotal);
-        elementos.taxaEntregaCarrinho.textContent = formatarMoeda(taxaEntrega);
-        elementos.totalCarrinho.textContent = totalFinal.toFixed(2).replace('.', ',');
-        
-        const isLojaAberta = elementos.storeStatusText.textContent === 'Aberto';
-        const isReady = carrinho.length > 0 && window.app.clienteLogado && isLojaAberta; 
-        
-        if (elementos.finalizarDiretoBtn) {
-            elementos.finalizarDiretoBtn.disabled = !isReady;
-        }
-        if (!isLojaAberta && carrinho.length > 0) {
-            window.AppUI.mostrarMensagem('A loja está fechada. Não é possível finalizar o pedido.', 'warning');
-        }
-        
+
+        // 6. Atualiza Badges e Headers
         if (elementos.carrinhoBadge) {
             elementos.carrinhoBadge.textContent = totalItens;
             elementos.carrinhoBadge.style.display = totalItens > 0 ? 'block' : 'none';
@@ -167,15 +243,12 @@
             elementos.cartCountNav.textContent = totalItens;
             elementos.cartCountNav.style.display = totalItens > 0 ? 'flex' : 'none';
         }
-
-        /* --- INÍCIO DA ALTERAÇÃO: Atualizar Header Cart v2 --- */
-        if (elementos.headerCartItems) { // ID: header-v2-cart-items
+        if (elementos.headerCartItems) { 
             elementos.headerCartItems.textContent = totalItens === 1 ? '1 item' : `${totalItens} itens`;
         }
-        if (elementos.headerCartTotal) { // ID: header-v2-cart-total
-            elementos.headerCartTotal.textContent = formatarMoeda(totalFinal);
+        if (elementos.headerCartTotal) { 
+            elementos.headerCartTotal.textContent = formatarMoeda(calculo.totalFinal);
         }
-        /* --- FIM DA ALTERAÇÃO --- */
     }
     
     /**
@@ -183,6 +256,17 @@
      */
     function atualizarCarrinhoDisplay() {
         window.app.Auth.atualizarPerfilUI(); 
+        
+        // Renderiza dados de entrega no Step 2
+        const elementos = window.AppUI.elementos;
+        const perfil = window.app.clientePerfil;
+        elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
+        elementos.taxaEntregaStep.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
+
+        // Define o passo inicial
+        window.app.passoAtual = 1;
+        window.app.Checkout.alternarPasso(1);
+
         atualizarCarrinho();
     }
     
@@ -191,6 +275,7 @@
      */
     function limparFormularioECarrinho() { 
         window.app.carrinho = [];
+        window.app.cupomAplicado = null;
         atualizarCarrinho();
         
         const elementos = window.AppUI.elementos;
@@ -218,7 +303,9 @@
         removerDoCarrinho,
         atualizarCarrinho,
         atualizarCarrinhoDisplay,
-        limparFormularioECarrinho
+        limparFormularioECarrinho,
+        calcularTotalComAjustes, // Exposto para o checkout
+        limparCarrinho // Exposto para o botão de limpeza
     };
 
 })();

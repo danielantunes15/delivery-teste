@@ -10,6 +10,10 @@ window.app = {
     pedidoAtivoId: null,
     supabaseChannel: null,
     
+    // **NOVAS PROPRIEDADES DE ESTADO GLOBAL ADICIONADAS AQUI**
+    passoAtual: 1, // FIX: Define o estado inicial aqui.
+    cupomAplicado: null, // FIX: Define o estado inicial aqui.
+    
     // Estado dos Módulos (serão preenchidos por eles)
     carrinho: [],
     categorias: [],
@@ -82,8 +86,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Listeners do Checkout
-        if (ui.finalizarDiretoBtn) ui.finalizarDiretoBtn.addEventListener('click', app.Checkout.finalizarPedidoEEnviarWhatsApp);
+        // Listeners do Checkout (Botões de Continuar/Voltar são configurados em checkout.js)
+        // O botão finalizar-pedido-direto foi movido para o Step 3 em checkout.js
+        
         if (ui.carrinhoEnderecoInput) {
             ui.carrinhoEnderecoInput.addEventListener('change', (e) => {
                  if (app.clientePerfil) app.clientePerfil.endereco = e.target.value.trim();

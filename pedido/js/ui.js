@@ -81,19 +81,45 @@
         popularScroll: document.getElementById('popular-scroll'),
         productsSection: document.getElementById('products-section'),
         
-        // Carrinho (view-carrinho)
+        // Carrinho (view-carrinho) - ATUALIZADO PARA STEPS
         carrinhoBadge: document.getElementById('carrinho-badge'),
         cartCountNav: document.querySelector('.bottom-nav .cart-count'),
         pedidoObservacoes: document.getElementById('pedido-observacoes'),
         trocoParaInput: document.getElementById('troco-para'),
         carrinhoItens: document.getElementById('carrinho-itens'),
+        
+        // Resumo de Valores - ATUALIZADO
         subtotalCarrinho: document.getElementById('subtotal-carrinho'),
         taxaEntregaCarrinho: document.getElementById('taxa-entrega-carrinho'),
         totalCarrinho: document.getElementById('total-carrinho'),
-        finalizarDiretoBtn: document.getElementById('finalizar-pedido-direto'),
+        
+        // Elementos do Checkout Step
+        stepCarrinho: document.getElementById('step-carrinho'),
+        stepEntrega: document.getElementById('step-entrega'),
+        stepPagamento: document.getElementById('step-pagamento'),
+        btnContinuar: document.getElementById('btn-continuar'),
+        btnPassoAnterior: document.getElementById('btn-passo-anterior'),
+        limparCarrinhoBtn: document.getElementById('limpar-carrinho-btn'),
+        addMoreItemsBtn: document.getElementById('add-more-items-btn'),
+        trocarEnderecoBtn: document.getElementById('trocar-endereco-btn'),
+        tempoEntregaDisplay: document.getElementById('tempo-entrega-display'),
+        taxaEntregaStep: document.getElementById('taxa-entrega-step'),
+        
+        // Cupom - NOVO
+        cupomInput: document.getElementById('cupom-input'),
+        aplicarCupomBtn: document.getElementById('aplicar-cupom-btn'),
+        cupomMessage: document.getElementById('cupom-message'),
+        descontoValorDisplay: document.getElementById('desconto-valor-display'),
+        descontoTipoDisplay: document.getElementById('desconto-tipo-display'),
+        resumoDescontoLinha: document.getElementById('resumo-desconto-linha'),
+        
+        // Finalizar
+        finalizarPedidoDireto: document.getElementById('finalizar-pedido-direto'), // Botão FINALIZAR
+        
+        // Dados de Cliente/Entrega
         carrinhoEnderecoDisplay: document.getElementById('carrinho-endereco-display'),
         carrinhoClienteNomeDisplay: document.getElementById('carrinho-cliente-nome'),
-        carrinhoEnderecoInput: document.getElementById('carrinho-endereco-input'),
+        carrinhoEnderecoInput: document.getElementById('carrinho-endereco-input'), // Campo oculto para editar
         opcoesPagamento: document.querySelectorAll('.opcoes-pagamento .pagamento-opcao'),
 
         // Modais

@@ -225,68 +225,121 @@
         </div>
 
         <div id="view-carrinho" class="app-view">
-            <div class="app-content-scroll" style="padding-top: 15px;"> 
-                <section class="carrinho card-app">
-                    <h2 style="border: none;"><i class="fas fa-shopping-bag"></i> Seu Pedido</h2>
-                    <div class="carrinho-itens" id="carrinho-itens"></div>
+            <div class="app-content-scroll"> 
+                
+                <header class="cart-header-minimal card-app">
+                    <h2>🛒 Sacola</h2>
+                    <button id="limpar-carrinho-btn" class="limpar-carrinho-btn">
+                        <i class="fas fa-trash-alt"></i> Limpar
+                    </button>
+                </header>
+
+                <div id="step-carrinho" class="checkout-step active card-app">
                     
-                    <div class="carrinho-total-detalhado">
+                    <div id="carrinho-itens-container">
+                        <div class="carrinho-itens" id="carrinho-itens">
+                            </div>
+                    </div>
+
+                    <button id="add-more-items-btn" class="add-more-items-btn">
+                        <i class="fas fa-plus"></i> Adicionar mais itens
+                    </button>
+                    
+                    <div class="cupom-area">
+                        <h4 style="font-size: 1rem; color: #db7093;"><i class="fas fa-tag"></i> Cupom de Desconto (Opcional)</h4>
+                        <div class="form-group">
+                            <input type="text" id="cupom-input" placeholder="Digite o código do cupom" maxlength="15" style="text-transform: uppercase;">
+                            <button id="aplicar-cupom-btn" class="btn-login-app" style="width: 100px; margin: 0; padding: 10px 5px; font-size: 0.85rem;">
+                                Aplicar
+                            </button>
+                        </div>
+                        <p id="cupom-message" style="font-size: 0.8rem; margin-top: 5px; color: #999;">
+                            <i class="fas fa-info-circle"></i> Nenhum cupom aplicado.
+                        </p>
+                    </div>
+
+                    <div class="resumo-valores-cart">
                         <div class="total-linha">
                             <span>Subtotal</span>
                             <span id="subtotal-carrinho">R$ 0,00</span>
+                        </div>
+                        <div class="total-linha" id="resumo-desconto-linha" style="display: none;">
+                            <span>Desconto (<span id="desconto-tipo-display"></span>)</span>
+                            <span id="desconto-valor-display">- R$ 0,00</span>
                         </div>
                         <div class="total-linha">
                             <span>Taxa de Entrega</span>
                             <span id="taxa-entrega-carrinho">R$ 0,00</span>
                         </div>
                         <div class="total-linha final">
-                            <strong>Total:</strong>
+                            <strong>Total (Com Entrega):</strong>
                             <strong>R$ <span id="total-carrinho">0,00</span></strong>
                         </div>
                     </div>
-                </section>
-                
-                <section class="card-pedido card-app">
-                    <h2><i class="fas fa-map-marker-alt"></i> Entrega e Pagamento</h2>
-                    <p>Entrega para: <strong id="carrinho-endereco-display">N/A</strong></p>
-                    <p>Cliente: <strong id="carrinho-cliente-nome">N/A</strong></p>
-                    
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label for="carrinho-endereco-input">Alterar Endereço (se necessário)</label>
-                        <textarea id="carrinho-endereco-input" rows="2" required></textarea>
-                    </div>
 
-                    <div class="pagamento" style="margin-top: 1.5rem;">
-                        <label style="font-weight: bold; margin-bottom: 5px; display: block;">Forma de Pagamento</label>
-                        <div class="opcoes-pagamento">
-                            <label class="pagamento-opcao selected">
-                                <input type="radio" name="pagamento" value="Dinheiro" checked style="display: none;">
-                                <span class="pagamento-icone">💵</span>
-                                <span class="pagamento-texto">
-                                    <span class="pagamento-titulo">Dinheiro</span>
-                                    <span class="pagamento-descricao">Pagar na entrega</span>
-                                </span>
-                            </label>
-                            <label class="pagamento-opcao">
-                                <input type="radio" name="pagamento" value="PIX" style="display: none;">
-                                <span class="pagamento-icone">📱</span>
-                                <span class="pagamento-texto">
-                                    <span class="pagamento-titulo">PIX</span>
-                                    <span class="pagamento-descricao">Pagar na entrega</span>
-                                </span>
-                            </label>
-                            <label class="pagamento-opcao">
-                                <input type="radio" name="pagamento" value="Cartão (Maquininha)" style="display: none;">
-                                <span class="pagamento-icone">💳</span>
-                                <span class="pagamento-texto">
-                                    <span class="pagamento-titulo">Cartão (Maquininha)</span>
-                                    <span class="pagamento-descricao">Débito ou Crédito na entrega</span>
-                                </span>
-                            </label>
-                        </div>
+                </div>
+
+                <div id="step-entrega" class="checkout-step card-app">
+                    <h3><i class="fas fa-map-marker-alt"></i> 2. Entrega</h3>
+
+                    <h4 style="font-size: 1.1rem; color: #db7093;">Endereço de Entrega</h4>
+                    <div class="carrinho-list-card" style="padding: 15px;">
+                        <p style="font-size: 1rem;">
+                            Entregar em: 
+                            <strong id="carrinho-endereco-display">N/A</strong>
+                        </p>
+                        <p style="font-size: 0.9rem; color: #666;">
+                            Cliente: <span id="carrinho-cliente-nome">N/A</span>
+                        </p>
+                        <input type="hidden" id="carrinho-endereco-input" value="">
+
+                        <button id="trocar-endereco-btn" class="btn-link" style="margin-top: 5px; font-size: 0.9rem;">
+                            <i class="fas fa-edit"></i> Trocar
+                        </button>
                     </div>
                     
-                    <div class="form-group" style="margin-top: 1.5rem;">
+                    <h4 style="font-size: 1.1rem; color: #db7093; margin-top: 2rem;">Opções de Entrega</h4>
+                    <div id="delivery-option-default" class="delivery-option-card">
+                        <h4 style="margin: 0;">Padrão</h4>
+                        <p>Tempo de Entrega: <span id="tempo-entrega-display">60 min</span></p>
+                        <p style="margin-top: 5px;">Taxa: <span id="taxa-entrega-step">R$ 0,00</span></p>
+                    </div>
+                    
+                </div>
+
+                <div id="step-pagamento" class="checkout-step card-app">
+                    <h3><i class="fas fa-credit-card"></i> 3. Pagamento</h3>
+
+                    <h4 style="font-size: 1.1rem; color: #db7093;">Forma de Pagamento</h4>
+                    <div class="opcoes-pagamento">
+                        <label class="pagamento-opcao selected">
+                            <input type="radio" name="pagamento" value="Dinheiro" checked style="display: none;">
+                            <span class="pagamento-icone">💵</span>
+                            <span class="pagamento-texto">
+                                <span class="pagamento-titulo">Dinheiro</span>
+                                <span class="pagamento-descricao">Pagar na entrega</span>
+                            </span>
+                        </label>
+                        <label class="pagamento-opcao">
+                            <input type="radio" name="pagamento" value="PIX" style="display: none;">
+                            <span class="pagamento-icone">📱</span>
+                            <span class="pagamento-texto">
+                                <span class="pagamento-titulo">PIX</span>
+                                <span class="pagamento-descricao">Pagar na entrega</span>
+                            </span>
+                        </label>
+                        <label class="pagamento-opcao">
+                            <input type="radio" name="pagamento" value="Cartão (Maquininha)" style="display: none;">
+                            <span class="pagamento-icone">💳</span>
+                            <span class="pagamento-texto">
+                                <span class="pagamento-titulo">Cartão (Maquininha)</span>
+                                <span class="pagamento-descricao">Débito ou Crédito na entrega</span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <h4 style="font-size: 1.1rem; color: #db7093; margin-top: 2rem;">Detalhes Adicionais</h4>
+                    <div class="form-group" style="margin-top: 1rem;">
                         <label for="pedido-observacoes">Observações do Pedido (Opcional)</label>
                         <textarea id="pedido-observacoes" rows="2" placeholder="Ex: Entregar para o porteiro..."></textarea>
                     </div>
@@ -296,12 +349,19 @@
                         <input type="number" id="troco-para" step="0.01" min="0" placeholder="Ex: 50.00 (Troco para R$50)">
                     </div>
 
-                </section>
+                </div>
+
             </div>
             
-            <footer class="finalizar-app">
+            <footer class="checkout-footer" id="checkout-footer">
                  <div class="finalizar-actions">
-                    <button id="finalizar-pedido-direto" class="btn-login-app" style="background: var(--rosa-escuro, #db7093); width: 100%;">
+                    <button id="btn-passo-anterior" class="btn-login-app" style="background: #ccc; width: 100px; margin: 0; padding: 12px; display: none;">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
+                    <button id="btn-continuar" class="btn-login-app" style="background: var(--rosa-escuro, #db7093); flex-grow: 1;">
+                        Continuar <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button id="finalizar-pedido-direto" class="btn-login-app" style="background: var(--rosa-escuro, #db7093); flex-grow: 1; display: none;">
                         <i class="fas fa-check-circle"></i> Finalizar Pedido
                     </button>
                  </div>
