@@ -107,7 +107,7 @@
                 item.opcoes.forEach(op => { listaItens += `  - ${op.grupo}: ${op.nome}\n`; });
             }
             if(item.complementos && item.complementos.length > 0) {
-                listaItens += `  - Adicionais: ${item.complementos.map(c => c.nome).join(', ')}\n`;
+                listaItemOs += `  - Adicionais: ${item.complementos.map(c => c.nome).join(', ')}\n`;
             }
             if(item.observacao) {
                 listaItens += `  - Obs: ${item.observacao}\n`;
@@ -182,12 +182,24 @@ Total: ${formatarMoeda(totalPedido)}
             window.app.Carrinho.limparFormularioECarrinho(); 
             await window.app.Cardapio.carregarDadosCardapio(); 
             
-            // 5. Redirecionar e abrir o WhatsApp
-            window.AppUI.alternarView('view-inicio'); 
-            window.AppUI.mostrarMensagem('✅ Pedido registrado com sucesso! Redirecionando e enviando WhatsApp...', 'success');
+            // 5. ATUALIZAÇÃO CRÍTICA: Esconde o checkout e mostra a confirmação
             
-            // Abre o link do WhatsApp
-            window.open(url, '_blank');
+            document.getElementById('checkout-main-view').style.display = 'none';
+            document.getElementById('checkout-footer').style.display = 'none';
+            document.getElementById('pedido-confirmado-section').style.display = 'block';
+            
+            // Popula os dados na tela de confirmação
+            document.getElementById('final-pedido-id').textContent = novoPedido.id;
+            document.getElementById('final-total').textContent = window.AppUI.formatarMoeda(dados.total);
+            document.getElementById('final-whatsapp-link').href = url;
+            
+            // Adiciona listener para o botão de voltar ao cardápio na tela de sucesso
+            document.getElementById('final-novo-pedido-btn').addEventListener('click', () => {
+                document.getElementById('pedido-confirmado-section').style.display = 'none';
+                window.AppUI.alternarView('view-cardapio');
+            });
+            
+            window.AppUI.mostrarMensagem('✅ Pedido registrado! Envie o WhatsApp para a loja.', 'success');
 
 
         } catch (error) {
