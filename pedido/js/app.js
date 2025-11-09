@@ -86,15 +86,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Listeners do Checkout (Botões de Continuar/Voltar são configurados em checkout.js)
-        // O botão finalizar-pedido-direto foi movido para o Step 3 em checkout.js
+        // Listeners do Checkout (Single Screen)
+        if (ui.finalizarPedidoDireto) ui.finalizarPedidoDireto.addEventListener('click', app.Checkout.finalizarPedidoEEnviarWhatsApp);
         
-        if (ui.carrinhoEnderecoInput) {
-            ui.carrinhoEnderecoInput.addEventListener('change', (e) => {
-                 if (app.clientePerfil) app.clientePerfil.endereco = e.target.value.trim();
-                 if (app.UI.elementos.carrinhoEnderecoDisplay) app.UI.elementos.carrinhoEnderecoDisplay.textContent = e.target.value.trim();
-            });
-        }
+        // Botões Limpar, Adicionar mais, Trocar Endereço
+        if (ui.limparCarrinhoBtn) ui.limparCarrinhoBtn.addEventListener('click', app.Carrinho.limparCarrinho);
+        if (ui.addMoreItemsBtn) ui.addMoreItemsBtn.addEventListener('click', () => app.UI.alternarView('view-cardapio'));
+        if (ui.trocarEnderecoBtn) ui.trocarEnderecoBtn.addEventListener('click', app.UI.abrirModalEditarEndereco);
+        
+        // Lógica de Pagamento
         if (ui.opcoesPagamento) {
             ui.opcoesPagamento.forEach(opcao => {
                 if(opcao) opcao.addEventListener('click', () => {
@@ -174,17 +174,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // 2. Verifica se há um cliente logado
             await app.Auth.verificarSessaoLocal();
-
+            
             // 3. Prepara a interface inicial
-            app.UI.elementos.authScreen.classList.remove('active');
+            
+            // CORREÇÃO: Remove a classe 'active' da tela de login (já feito no HTML) e navega diretamente.
             app.UI.elementos.mobileNav.style.display = 'flex';
-            app.UI.alternarView('view-cardapio');
             
             if (app.clienteLogado) {
                  console.log(`Cliente ${app.clientePerfil.nome} carregado.`);
-                 app.Auth.logarClienteManual(false);
+                 // Se logado, vai direto para o cardápio, loga e carrega status.
+                 app.Auth.logarClienteManual(false); 
+                 app.UI.alternarView('view-cardapio');
             } else {
                  console.log("Nenhum cliente logado, iniciando como convidado.");
+                 // Se não logado, vai para o cardápio e mantém a navegação bloqueada para Carrinho/Pedidos.
+                 app.UI.alternarView('view-cardapio');
+                 // O 'auth-screen' fica acessível apenas pelo menu inferior ou tentativa de checkout.
             }
             
             // 4. Carrega os dados do cardápio
@@ -205,6 +210,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (app.UI) {
                 app.UI.mostrarMensagem('Erro ao carregar o app: ' + error.message, 'error');
             }
+            // Se houver um erro crítico, mostra a tela de login como fallback
             if (app.UI && app.UI.elementos.authScreen) {
                 app.UI.elementos.authScreen.classList.add('active');
             }
