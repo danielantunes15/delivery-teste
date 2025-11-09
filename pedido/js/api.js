@@ -80,6 +80,7 @@
      * @param {string} enderecoCompleto - Novo endereço.
      */
     async function salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto) {
+        // CORREÇÃO: Remove a desestruturação do retorno
         const { error } = await supabase.from('clientes_delivery')
             .update({ endereco: enderecoCompleto })
             .eq('telefone', telefone);
@@ -104,8 +105,8 @@
         window.AppUI.mostrarMensagem('Buscando endereço...', 'info');
 
         // Determina se estamos no modal de cadastro ou de edição
-        const isCadastro = uiElementos.cadastroForm.style.display === 'block';
-        const isModal = uiElementos.modalEditarEndereco.style.display === 'flex';
+        const isCadastro = uiElementos.cadastroForm?.style.display === 'block';
+        const isModal = uiElementos.modalEditarEndereco?.style.display === 'flex';
         
         let campos = {};
 
@@ -134,21 +135,13 @@
             const data = await response.json();
             
             if (data.erro) {
-                // CORREÇÃO CRÍTICA: Se falhar, NÃO APAGA A RUA/BAIRRO JÁ DIGITADOS
                 window.AppUI.mostrarMensagem('CEP não encontrado. Digite o endereço manualmente.', 'warning');
-                
-                // Apenas limpa cidade/estado (se existirem) e foca na rua
                 if(campos.cidade) campos.cidade.value = '';
                 if(campos.estado) campos.estado.value = '';
                 campos.rua.focus();
                 return;
             }
             
-            // ----------------------------------------------------
-            // Se o CEP for encontrado: Preenche
-            // ----------------------------------------------------
-            
-            // Só preenche a rua/bairro se o ViaCEP retornar algo novo (não vazio)
             if (data.logradouro) campos.rua.value = data.logradouro;
             if (data.bairro) campos.bairro.value = data.bairro;
 
@@ -212,11 +205,12 @@
      * @returns {Promise<Array>} Lista de pedidos.
      */
     async function buscarHistoricoPedidos(telefone) {
+        // CORREÇÃO: Busca até 5 pedidos (para performance)
         const { data, error } = await supabase.from('pedidos_online')
             .select(`id, created_at, total, forma_pagamento, status, observacoes, telefone_cliente, endereco_entrega, nome_cliente`)
             .eq('telefone_cliente', telefone) 
             .order('created_at', { ascending: false })
-            .limit(3); 
+            .limit(5); 
         if (error) throw error;
         return data || [];
     }
@@ -228,7 +222,7 @@
      */
     async function buscarPedidoParaRastreamento(pedidoId) {
         const { data: pedido, error } = await supabase.from('pedidos_online')
-            .select('id, status')
+            .select('id, status, created_at') // CORREÇÃO: Adiciona created_at para cálculo de previsão
             .eq('id', pedidoId)
             .single();
         if (error || !pedido) return null;
@@ -258,18 +252,36 @@
         await window.vendasSupabase.actualizarEstoque(produtoId, novoEstoque);
     }
     
-    // --- Funções (simuladas) para buscar opções e complementos ---
-    
-    async function buscarOpcoesProduto(produtoId) {
-        // SIMULAÇÃO
-        await new Promise(res => setTimeout(res, 200)); 
-        return []; 
-    }
-    
-    async function buscarComplementosProduto(produtoId) {
-        // SIMULAÇÃO
-        await new Promise(res => setTimeout(res, 200));
-        return []; 
+    /**
+     * Cliente solicita o cancelamento do pedido.
+     */
+    async function cancelarPedidoNoSupabase(pedidoId) {
+        // 1. Verifica o status atual
+        const { data: pedido, error: fetchError } = await supabase.from('pedidos_online')
+            .select('status')
+            .eq('id', pedidoId)
+            .single();
+
+        if (fetchError || !pedido) {
+            throw new Error('Pedido não encontrado ou erro de conexão.');
+        }
+
+        const statusPermitidos = ['novo', 'preparando'];
+        
+        if (!statusPermitidos.includes(pedido.status)) {
+            // Se o status já avançou, retorna falso para o JS mostrar a mensagem de aviso
+            return false; 
+        }
+
+        // 2. Tenta atualizar o status para cancelado
+        const { error: updateError } = await supabase
+            .from('pedidos_online')
+            .update({ status: 'cancelado' })
+            .eq('id', pedidoId);
+
+        if (updateError) throw updateError;
+        
+        return true; // Cancelamento bem-sucedido
     }
 
 
@@ -287,8 +299,7 @@
         buscarPedidoParaRastreamento,
         finalizarPedidoNoSupabase,
         atualizarEstoqueNoSupabase,
-        buscarOpcoesProduto,
-        buscarComplementosProduto
+        cancelarPedidoNoSupabase // Adicionada a função de cancelamento
     };
 
 })();
