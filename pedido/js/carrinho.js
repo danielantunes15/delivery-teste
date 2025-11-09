@@ -2,20 +2,19 @@
 
 (function() {
 
-    // const ui = window.AppUI; // <-- REMOVIDO
-
     /**
      * Adiciona um item ao carrinho.
      */
     function adicionarAoCarrinho(produto, detalhes = null) {
         if (produto.estoque_atual <= 0) {
-            // CORREÇÃO: Acessa window.AppUI diretamente
+            // *** CORREÇÃO: Acessa window.AppUI diretamente ***
             window.AppUI.mostrarMensagem(`Desculpe, ${produto.nome} está esgotado.`, 'error');
             return;
         }
-
+        
+        // *** CORREÇÃO: Usa window.app.carrinhoItens ***
         if (!detalhes) {
-            const itemExistente = window.app.carrinho.find(item => 
+            const itemExistente = window.app.carrinhoItens.find(item => 
                 item.produto.id === produto.id && 
                 !item.opcoes && !item.complementos && !item.observacao
             );
@@ -29,7 +28,7 @@
                 }
             } else {
                 if (produto.estoque_atual > 0) {
-                    window.app.carrinho.push({ 
+                    window.app.carrinhoItens.push({ 
                         produto: produto, 
                         quantidade: 1, 
                         precoFinalItem: produto.preco_venda 
@@ -40,7 +39,7 @@
                 }
             }
         } else {
-            window.app.carrinho.push({
+            window.app.carrinhoItens.push({
                 produto: produto,
                 quantidade: detalhes.quantidade,
                 precoFinalItem: detalhes.precoFinalItem,
@@ -58,7 +57,8 @@
      * Aumenta a quantidade de um item no carrinho.
      */
     function aumentarQuantidade(index) {
-        const item = window.app.carrinho[index];
+        // *** CORREÇÃO: Usa window.app.carrinhoItens ***
+        const item = window.app.carrinhoItens[index];
         const produtoEstoque = window.app.produtos.find(p => p.id === item.produto.id).estoque_atual;
         
         if (item.quantidade < produtoEstoque) {
@@ -73,11 +73,12 @@
      * Remove ou diminui a quantidade de um item no carrinho.
      */
     function removerDoCarrinho(index) {
-        const produtoNome = window.app.carrinho[index].produto.nome;
-        if (window.app.carrinho[index].quantidade > 1) {
-            window.app.carrinho[index].quantidade -= 1;
+        // *** CORREÇÃO: Usa window.app.carrinhoItens ***
+        const produtoNome = window.app.carrinhoItens[index].produto.nome;
+        if (window.app.carrinhoItens[index].quantidade > 1) {
+            window.app.carrinhoItens[index].quantidade -= 1;
         } else {
-            window.app.carrinho.splice(index, 1);
+            window.app.carrinhoItens.splice(index, 1);
         }
         atualizarCarrinho();
         window.AppUI.mostrarMensagem(`${produtoNome} removido da sacola.`, 'info');
@@ -88,7 +89,8 @@
      */
     function limparCarrinho() {
         if (!confirm("Tem certeza que deseja limpar toda a sacola?")) return;
-        window.app.carrinho = [];
+        // *** CORREÇÃO: Usa window.app.carrinhoItens ***
+        window.app.carrinhoItens = [];
         window.app.cupomAplicado = null;
         if (window.AppUI.elementos.cupomInput) window.AppUI.elementos.cupomInput.value = '';
         atualizarCarrinho();
@@ -112,7 +114,6 @@
                 valorDesconto = ajustes.valor;
                 totalAjustado -= valorDesconto;
             }
-            // Garante que o total não seja negativo
             totalAjustado = Math.max(0, totalAjustado);
         }
         
@@ -133,20 +134,18 @@
         let subTotal = 0;
         let totalItens = 0;
         
+        // *** CORREÇÃO: Acessa elementos via window.AppUI ***
         const elementos = window.AppUI.elementos;
-        const carrinho = window.app.carrinho;
+        const carrinho = window.app.carrinhoItens; // *** CORREÇÃO: Usa carrinhoItens ***
         const formatarMoeda = window.AppUI.formatarMoeda;
         
-        // 1. Calcula os totais (subTotal)
         carrinho.forEach(item => {
             subTotal += item.precoFinalItem * item.quantidade;
             totalItens += item.quantidade;
         });
         
-        // 2. Aplica ajustes e calcula totais finais
         const calculo = calcularTotalComAjustes(subTotal);
 
-        // 3. Renderiza Itens
         if (carrinho.length === 0) {
             elementos.carrinhoItens.innerHTML = `
                 <div style="text-align: center; padding: 2rem 0; color: #666;">
@@ -154,9 +153,7 @@
                     <p>Sua sacola está vazia.</p>
                 </div>
             `;
-            // Desabilita botões de passo
             if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = true;
-            if (elementos.btnContinuar) elementos.btnContinuar.disabled = true;
         } else {
             elementos.carrinhoItens.innerHTML = '';
             carrinho.forEach((item, index) => {
@@ -206,21 +203,17 @@
                 aumentarQuantidade(parseInt(this.getAttribute('data-index')));
             }));
             
-            // Habilita botões de passo
+            // *** CORREÇÃO: Acessa elementos do AppUI ***
             const isLojaAberta = elementos.storeStatusText?.textContent === 'Aberto';
             const isReady = window.app.clienteLogado && isLojaAberta; 
 
-            // FIX: Adiciona proteção contra null antes de acessar 'disabled'
             if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = !isReady;
-            if (elementos.btnContinuar) elementos.btnContinuar.disabled = !isReady;
         }
         
-        // 4. Renderiza Resumo de Valores
         if (elementos.subtotalCarrinho) elementos.subtotalCarrinho.textContent = formatarMoeda(calculo.subTotal);
         if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(window.app.configLoja.taxa_entrega || 0);
         if (elementos.totalCarrinho) elementos.totalCarrinho.textContent = calculo.totalFinal.toFixed(2).replace('.', ',');
         
-        // 5. Renderiza Desconto (NOVO)
         if (calculo.valorDesconto > 0) {
             if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'flex';
             if (elementos.descontoValorDisplay) elementos.descontoValorDisplay.textContent = `- ${formatarMoeda(calculo.valorDesconto)}`;
@@ -233,14 +226,13 @@
             }
         } else {
             if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'none';
-            if (!window.app.cupomAplicado && elementos.cupomMessage) {
+            if (window.app.cupomAplicado === null && elementos.cupomMessage) { // *** CORREÇÃO: Verifica se cupom é null ***
                 elementos.cupomMessage.textContent = 'Nenhum cupom aplicado.';
                 elementos.cupomMessage.style.color = '#999';
             }
         }
 
 
-        // 6. Atualiza Badges e Headers
         if (elementos.carrinhoBadge) {
             elementos.carrinhoBadge.textContent = totalItens;
             elementos.carrinhoBadge.style.display = totalItens > 0 ? 'block' : 'none';
@@ -249,11 +241,11 @@
             elementos.cartCountNav.textContent = totalItens;
             elementos.cartCountNav.style.display = totalItens > 0 ? 'flex' : 'none';
         }
-        if (elementos.headerCartItems) { 
-            elementos.headerCartItems.textContent = totalItens === 1 ? '1 item' : `${totalItens} itens`;
+        if (elementos.headerV2CartItems) { // *** CORREÇÃO: Nome do elemento do header v2 ***
+            elementos.headerV2CartItems.textContent = totalItens === 1 ? '1 item' : `${totalItens} itens`;
         }
-        if (elementos.headerCartTotal) { 
-            elementos.headerCartTotal.textContent = formatarMoeda(calculo.totalFinal);
+        if (elementos.headerV2CartTotal) { // *** CORREÇÃO: Nome do elemento do header v2 ***
+            elementos.headerV2CartTotal.textContent = formatarMoeda(calculo.totalFinal);
         }
     }
     
@@ -261,16 +253,21 @@
      * Atualiza a UI do perfil e do carrinho com dados do cliente.
      */
     function atualizarCarrinhoDisplay() {
-        window.app.Auth.atualizarPerfilUI(); 
+        // *** CORREÇÃO: Chama a função de UI do AppAuth ***
+        if (window.AppAuth && window.AppAuth.atualizarPerfilUI) {
+            window.AppAuth.atualizarPerfilUI(); 
+        } else {
+            // Fallback caso AppAuth não esteja pronto (improvável)
+            if (window.app.clienteLogado && window.app.clientePerfil) {
+                window.AppUI.elementos.carrinhoClienteNomeDisplay.textContent = window.app.clientePerfil.nome;
+                window.AppUI.elementos.carrinhoEnderecoDisplay.textContent = window.app.clientePerfil.endereco;
+                window.AppUI.elementos.carrinhoEnderecoInput.value = window.app.clientePerfil.endereco;
+            }
+        }
         
-        // Renderiza dados de entrega no Step 2
         const elementos = window.AppUI.elementos;
-        const perfil = window.app.clientePerfil;
         if (elementos.tempoEntregaDisplay) elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
         if (elementos.taxaEntregaStep) elementos.taxaEntregaStep.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
-
-        // Não é mais um stepper, então o layout já está no Passo 1 (Sacola)
-        // window.app.Checkout.alternarPasso(1);
 
         atualizarCarrinho();
     }
@@ -279,23 +276,22 @@
      * Limpa o carrinho e reseta os formulários.
      */
     function limparFormularioECarrinho() { 
-        window.app.carrinho = [];
+        // *** CORREÇÃO: Usa window.app.carrinhoItens ***
+        window.app.carrinhoItens = [];
         window.app.cupomAplicado = null;
         if (window.AppUI.elementos.cupomInput) window.AppUI.elementos.cupomInput.value = '';
         atualizarCarrinho();
         
         const elementos = window.AppUI.elementos;
         if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = window.app.clientePerfil.endereco || '';
-        if (elementos.cadastroForm) elementos.cadastroForm.reset();
         
-        document.querySelectorAll('.opcoes-pagamento input[name="pagamento"]').forEach(input => input.checked = false);
-        const defaultPayment = document.querySelector('.opcoes-pagamento input[value="Dinheiro"]');
-        if(defaultPayment) defaultPayment.checked = true;
-        
+        // Reseta formulário de pagamento
         elementos.opcoesPagamento.forEach(op => op.classList.remove('selected'));
-        const defaultPaymentLabel = document.querySelector('.opcoes-pagamento .pagamento-opcao');
+        const defaultPaymentLabel = elementos.opcoesPagamento[0]; // Pega o primeiro (Dinheiro)
         if (defaultPaymentLabel) {
             defaultPaymentLabel.classList.add('selected');
+            const input = defaultPaymentLabel.querySelector('input[type="radio"]');
+            if (input) input.checked = true;
         }
         
         if (elementos.pedidoObservacoes) elementos.pedidoObservacoes.value = ''; 
@@ -310,8 +306,8 @@
         atualizarCarrinho,
         atualizarCarrinhoDisplay,
         limparFormularioECarrinho,
-        calcularTotalComAjustes, // Exposto para o checkout
-        limparCarrinho // Exposto para o botão de limpeza
+        calcularTotalComAjustes,
+        limparCarrinho 
     };
 
 })();
