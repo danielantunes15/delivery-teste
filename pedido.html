@@ -113,9 +113,47 @@
                     </button>
                 </section>
                 
+                <!-- NOVA SEÇÃO DE HISTÓRICO DE PEDIDOS MODERNA -->
                 <section class="card-app" id="historico-pedidos-section">
                     <h2><i class="fas fa-history"></i> Meu Histórico de Pedidos</h2>
-                    <div id="status-ultimo-pedido"></div>
+                    
+                    <!-- Status dos Pedidos Ativos -->
+                    <div id="pedidos-ativos-container" class="pedidos-ativos-container" style="display: none;">
+                        <h3 style="color: #db7093; margin-bottom: 15px; font-size: 1.1rem;">
+                            <i class="fas fa-sync-alt"></i> Pedidos em Andamento
+                        </h3>
+                        <div id="pedidos-ativos-list" class="pedidos-ativos-list">
+                            <!-- Pedidos ativos serão inseridos aqui via JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Histórico dos Últimos Pedidos -->
+                    <div id="historico-ultimos-pedidos">
+                        <div class="historico-header">
+                            <h3 style="color: #333; margin-bottom: 10px; font-size: 1rem;">
+                                Últimos Pedidos
+                            </h3>
+                        </div>
+                        <div id="lista-ultimos-pedidos" class="lista-pedidos">
+                            <!-- Últimos 4 pedidos serão inseridos aqui -->
+                        </div>
+                        
+                        <!-- Botão Ver Todos -->
+                        <button id="btn-ver-todos-pedidos" class="btn-ver-todos" style="display: none;">
+                            <i class="fas fa-list-ul"></i> Ver Todos os Pedidos
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Mensagem quando não há pedidos -->
+                    <div id="sem-pedidos-message" style="display: none; text-align: center; padding: 2rem;">
+                        <i class="fas fa-shopping-bag" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                        <p style="color: #666;">Você ainda não fez nenhum pedido!</p>
+                        <button class="btn-login-app" onclick="window.AppUI.mostrarView('view-cardapio')" 
+                                style="margin-top: 1rem; background: #db7093;">
+                            <i class="fas fa-utensils"></i> Fazer Meu Primeiro Pedido
+                        </button>
+                    </div>
                 </section>
                 
                 <section class="card-app">
@@ -396,7 +434,6 @@
         </button>
     </nav>
 
-
     <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
@@ -404,7 +441,6 @@
         window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     
-    <!-- CORREÇÃO: Caminhos dos arquivos JS corrigidos -->
     <script src="js/supabase-vendas.js" defer></script> 
     <script src="pedido/js/ui.js" defer></script>         
     <script src="pedido/js/api.js" defer></script>         
