@@ -1,7 +1,10 @@
-// js/rastreamento.js - Módulo de Rastreamento de Pedidos e Histórico (Versão Moderna)
+// js/rastreamento.js - Módulo de Rastreamento de Pedidos e Histórico (Corrigido)
 
 (function() {
 
+    // const ui = window.AppUI; // <-- REMOVIDO
+    // const api = window.AppAPI; // <-- REMOVIDO
+    
     /**
      * Inicia o ouvinte de Realtime do Supabase para um pedido específico.
      */
@@ -25,6 +28,7 @@
             return;
         }
         
+        // CORREÇÃO: Passa o objeto completo, incluindo a data de criação
         atualizarTrackerUI(pedido); 
 
         window.app.supabaseChannel = window.supabase.channel(`pedido-${pedidoId}`)
@@ -148,257 +152,99 @@
     }
 
     /**
-     * Carrega o histórico de pedidos com layout moderno
+     * Carrega o histórico de pedidos antigos (se nenhum pedido estiver ativo).
      */
     async function carregarStatusUltimoPedido() {
         const elementos = window.AppUI.elementos;
-        const container = elementos.statusUltimoPedido;
-        
         if (window.app.pedidoAtivoId) {
-            container.innerHTML = '';
+            elementos.statusUltimoPedido.innerHTML = '';
             return;
         }
         
-        container.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Carregando seus pedidos...</div>';
+        elementos.rastreamentoContainer.style.display = 'none';
+        elementos.statusUltimoPedido.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando histórico...';
         
         if (!window.app.clienteLogado) {
-            container.innerHTML = '<p>Faça login para ver o status e o histórico de pedidos.</p>';
+            elementos.statusUltimoPedido.innerHTML = '<p>Faça login para ver o status e o histórico de pedidos.</p>';
             return;
         }
 
         try {
-            const todosPedidos = await window.AppAPI.buscarHistoricoPedidos(window.app.clientePerfil.telefone, 100);
-            window.app.todosPedidosCliente = todosPedidos;
+            // CORREÇÃO: A API agora busca os últimos 5 pedidos
+            const pedidos = await window.AppAPI.buscarHistoricoPedidos(window.app.clientePerfil.telefone);
+            window.app.historicoPedidos = pedidos;
             
-            if (todosPedidos.length === 0) {
-                elementos.semPedidosMessage.style.display = 'block';
-                elementos.historicoUltimosPedidos.style.display = 'none';
-                elementos.pedidosAtivosContainer.style.display = 'none';
-                return;
-            }
+            let htmlHistorico = '';
+            if (pedidos.length > 0) {
+                 // Novo Design: Título do histórico mais limpo
+                 htmlHistorico += `
+                    <div style="padding: 10px 0;">
+                        <h4 style="font-size: 1rem; color: #333; margin-bottom: 5px;">Últimos ${pedidos.length} Pedidos:</h4>
+                        <p style="font-size: 0.85rem; color: #666;">Clique para ver detalhes e opções.</p>
+                    </div>`;
 
-            // Separar pedidos ativos e finalizados
-            const pedidosAtivos = todosPedidos.filter(pedido => 
-                !['entregue', 'cancelado'].includes(pedido.status?.toLowerCase())
-            );
+                 pedidos.forEach((p) => {
+                     const dataPedido = new Date(p.created_at).toLocaleDateString('pt-BR');
+                     const status = (p.status || 'novo').toUpperCase();
+                     
+                    // Lógica para extrair o item principal
+                    let listaItens = 'Detalhes do pedido';
+                    const obsLines = p.observacoes.split('\n');
+                    let isItemList = false;
+
+                    for (const line of obsLines) {
+                        if (line.includes('Itens:')) {
+                            isItemList = true;
+                            continue;
+                        }
+                        if (isItemList && line.trim().startsWith('*')) { 
+                            listaItens = line.replace('*', '').trim().split('(')[0].substring(0, 40) + '...';
+                            break;
+                        }
+                        if (line.includes('Subtotal:')) break; 
+                    }
+                     
+                    const tempoEntregaMinutos = window.app.configLoja.tempo_entrega || 60;
+                    const criadoEm = new Date(p.created_at);
+                    const dataPrevisao = new Date(criadoEm.getTime() + tempoEntregaMinutos * 60000);
+                    const horaPrevisao = dataPrevisao.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    const statusAcompanhamento = ['NOVO', 'PREPARANDO', 'PRONTO'];
+                    const previsaoHtml = statusAcompanhamento.includes(status)
+                        ? `<span style="color: var(--warning-color); font-weight: bold;">(Previsão: ${horaPrevisao})</span>`
+                        : '';
+                     
+                     htmlHistorico += `
+                         <div class="card-pedido-historico" 
+                              onclick="abrirModalDetalhesPedido(${p.id})">
+                             <p style="font-weight: bold; margin: 0;">Pedido #${p.id} - ${dataPedido} ${previsaoHtml}</p>
+                             <p style="font-size: 0.9rem; margin: 0; color: #555;">${listaItens}</p>
+                             <p style="font-size: 0.9rem; margin: 0;">Status: 
+                                 <span class="status-badge-history status-${status}">
+                                     ${status}
+                                 </span>
+                                 | Total: ${window.AppUI.formatarMoeda(p.total)}
+                             </p>
+                         </div>
+                     `;
+                 });
+            } else {
+                 htmlHistorico = 'Você ainda não fez nenhum pedido conosco!';
+            }
             
-            const pedidosFinalizados = todosPedidos.filter(pedido => 
-                ['entregue', 'cancelado'].includes(pedido.status?.toLowerCase())
-            );
-
-            // Mostrar pedidos ativos
-            if (pedidosAtivos.length > 0) {
-                elementos.pedidosAtivosContainer.style.display = 'block';
-                elementos.pedidosAtivosList.innerHTML = pedidosAtivos.map(pedido => 
-                    criarCardPedidoAtivo(pedido)
-                ).join('');
-            } else {
-                elementos.pedidosAtivosContainer.style.display = 'none';
-            }
-
-            // Mostrar últimos 4 pedidos finalizados
-            const ultimosPedidos = pedidosFinalizados.slice(0, 4);
-            elementos.listaUltimosPedidos.innerHTML = ultimosPedidos.map(pedido => 
-                criarCardPedidoResumo(pedido)
-            ).join('');
-
-            // Mostrar botão "Ver Todos" se houver mais pedidos
-            if (todosPedidos.length > 4) {
-                elementos.btnVerTodosPedidos.style.display = 'block';
-                elementos.btnVerTodosPedidos.innerHTML = `<i class="fas fa-list-ul"></i> Ver Todos os ${todosPedidos.length} Pedidos <i class="fas fa-chevron-right"></i>`;
-            } else {
-                elementos.btnVerTodosPedidos.style.display = 'none';
-            }
-
-            // Esconder mensagem de sem pedidos
-            elementos.semPedidosMessage.style.display = 'none';
-            elementos.historicoUltimosPedidos.style.display = 'block';
-
+            elementos.statusUltimoPedido.innerHTML = htmlHistorico;
+            
         } catch (error) {
-            container.innerHTML = '<div style="text-align: center; color: #f44336; padding: 2rem;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar histórico.</div>';
+            elementos.statusUltimoPedido.innerHTML = 'Erro ao carregar histórico.';
             console.error('Erro ao carregar status do pedido:', error);
         }
     }
-
-    /**
-     * Cria card para pedido ativo
-     */
-    function criarCardPedidoAtivo(pedido) {
-        const dataPedido = new Date(pedido.created_at).toLocaleDateString('pt-BR');
-        const status = (pedido.status || 'novo').toLowerCase();
-        const itemPrincipal = extrairItemPrincipal(pedido.observacoes);
-        
-        // Calcular progresso baseado no status
-        const progresso = calcularProgresso(status);
-        
-        return `
-            <div class="card-pedido-moderno ativo" onclick="window.AppRastreamento.abrirModalDetalhesPedido(${pedido.id})">
-                <div class="pedido-header">
-                    <div class="pedido-info">
-                        <h4>Pedido <span class="pedido-numero">#${pedido.id}</span></h4>
-                        <div class="pedido-data">${dataPedido}</div>
-                    </div>
-                    <div class="pedido-status status-${status}">
-                        ${status.toUpperCase()}
-                    </div>
-                </div>
-                
-                <div class="pedido-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${progresso.percentual}%"></div>
-                    </div>
-                    <div class="progress-steps">
-                        <div class="progress-step ${progresso.etapa >= 1 ? 'active' : ''}">Recebido</div>
-                        <div class="progress-step ${progresso.etapa >= 2 ? 'active' : ''}">Preparando</div>
-                        <div class="progress-step ${progresso.etapa >= 3 ? 'active' : ''}">Pronto</div>
-                        <div class="progress-step ${progresso.etapa >= 4 ? 'active' : ''}">Entregue</div>
-                    </div>
-                </div>
-                
-                <div class="pedido-detalhes">
-                    <div class="pedido-itens">
-                        <div class="item-principal">${itemPrincipal}</div>
-                        <div class="item-detalhes">+ ${pedido.observacoes.split('\n').length - 1} itens</div>
-                    </div>
-                    <div class="pedido-total">${window.AppUI.formatarMoeda(pedido.total)}</div>
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Cria card resumido para histórico
-     */
-    function criarCardPedidoResumo(pedido) {
-        const dataPedido = new Date(pedido.created_at).toLocaleDateString('pt-BR');
-        const status = (pedido.status || 'entregue').toLowerCase();
-        const itemPrincipal = extrairItemPrincipal(pedido.observacoes);
-        
-        return `
-            <div class="card-pedido-resumo" onclick="window.AppRastreamento.abrirModalDetalhesPedido(${pedido.id})">
-                <div class="pedido-resumo-header">
-                    <div class="pedido-resumo-info">
-                        <h5>Pedido #${pedido.id}</h5>
-                        <div class="pedido-resumo-data">${dataPedido}</div>
-                    </div>
-                    <div class="pedido-resumo-status status-${status}">
-                        ${status.toUpperCase()}
-                    </div>
-                </div>
-                <div class="pedido-resumo-detalhes">
-                    <div class="pedido-resumo-item">${itemPrincipal}</div>
-                    <div class="pedido-resumo-total">${window.AppUI.formatarMoeda(pedido.total)}</div>
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Calcula o progresso do pedido baseado no status
-     */
-    function calcularProgresso(status) {
-        const etapas = {
-            'novo': { etapa: 1, percentual: 25 },
-            'preparando': { etapa: 2, percentual: 50 },
-            'pronto': { etapa: 3, percentual: 75 },
-            'entregue': { etapa: 4, percentual: 100 },
-            'cancelado': { etapa: 0, percentual: 0 }
-        };
-        
-        return etapas[status.toLowerCase()] || { etapa: 1, percentual: 25 };
-    }
-
-    /**
-     * Extrai o item principal das observações do pedido
-     */
-    function extrairItemPrincipal(observacoes) {
-        const obsLines = observacoes.split('\n');
-        let isItemList = false;
-
-        for (const line of obsLines) {
-            if (line.includes('Itens:')) {
-                isItemList = true;
-                continue;
-            }
-            if (isItemList && line.trim().startsWith('*')) {
-                return line.replace('*', '').trim().split('(')[0].substring(0, 30) + 
-                       (line.length > 30 ? '...' : '');
-            }
-            if (line.includes('Subtotal:')) break;
-        }
-        
-        return 'Detalhes do pedido';
-    }
-
-    /**
-     * Abre o modal com todos os pedidos
-     */
-    function abrirModalTodosPedidos() {
-        const pedidos = window.app.todosPedidosCliente;
-
-        if (pedidos.length === 0) {
-            window.AppUI.mostrarMensagem('Nenhum pedido encontrado.', 'warning');
-            return;
-        }
-
-        const elementos = window.AppUI.elementos;
-        
-        elementos.detalhesModalTitulo.innerHTML = `
-            <div class="todos-pedidos-header">
-                <h3><i class="fas fa-list-ul"></i> Todos os Pedidos</h3>
-                <div class="todos-pedidos-count">${pedidos.length} pedidos realizados</div>
-            </div>
-        `;
-        
-        elementos.detalhesPedidoContent.innerHTML = `
-            <div class="todos-pedidos-list">
-                ${pedidos.map(pedido => criarCardPedidoCompleto(pedido)).join('')}
-            </div>
-        `;
-        
-        elementos.modalDetalhesPedido.style.display = 'flex';
-    }
-
-    /**
-     * Cria card completo para o modal de todos os pedidos
-     */
-    function criarCardPedidoCompleto(pedido) {
-        const dataPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
-        const status = (pedido.status || 'novo').toLowerCase();
-        const itemPrincipal = extrairItemPrincipal(pedido.observacoes);
-        
-        return `
-            <div class="card-pedido-moderno ${status === 'entregue' ? 'entregue' : 'ativo'}" 
-                 onclick="window.AppRastreamento.abrirModalDetalhesPedido(${pedido.id})">
-                <div class="pedido-header">
-                    <div class="pedido-info">
-                        <h4>Pedido <span class="pedido-numero">#${pedido.id}</span></h4>
-                        <div class="pedido-data">${dataPedido}</div>
-                    </div>
-                    <div class="pedido-status status-${status}">
-                        ${status.toUpperCase()}
-                    </div>
-                </div>
-                
-                <div class="pedido-detalhes">
-                    <div class="pedido-itens">
-                        <div class="item-principal">${itemPrincipal}</div>
-                        <div class="item-detalhes">Total: ${window.AppUI.formatarMoeda(pedido.total)}</div>
-                    </div>
-                    <div class="pedido-total">
-                        <i class="fas fa-chevron-right"></i>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
+    
     /**
      * Abre o modal com os detalhes de um pedido do histórico.
      */
     function abrirModalDetalhesPedido(pedidoId) {
-        // Agora busca em window.app.todosPedidosCliente para garantir que funcione para todos
-        const pedido = window.app.todosPedidosCliente.find(p => p.id.toString() === pedidoId.toString()); 
+        const pedido = window.app.historicoPedidos.find(p => p.id.toString() === pedidoId);
         if (!pedido) {
             window.AppUI.mostrarMensagem('Detalhes do pedido não encontrados.', 'error');
             return;
@@ -432,9 +278,7 @@
         elementos.detalhesPedidoId.textContent = `#${pedido.id}`;
         
         // Lógica de cancelamento (só permite cancelar se status for NOVO ou PREPARANDO)
-        const statusParaCancelamento = ['NOVO', 'PREPARANDO', 'EM ABERTO', 'NOVO (ADMIN)']; // Inclui variações de 'novo' e 'em aberto'
-        const podeCancelar = statusParaCancelamento.includes(status);
-        
+        const podeCancelar = status === 'NOVO' || status === 'PREPARANDO';
         const cancelBtnHtml = podeCancelar
             ? `<button id="btn-cancelar-pedido-cliente" data-id="${pedido.id}" class="btn-login-app" style="background: var(--error-color, #f44336); margin-top: 15px;">
                  <i class="fas fa-trash-alt"></i> Cancelar Pedido
@@ -447,15 +291,15 @@
         const dataPrevisao = new Date(criadoEm.getTime() + tempoEntregaMinutos * 60000);
         const horaPrevisao = dataPrevisao.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-        const statusAtivo = ['NOVO', 'PREPARANDO', 'PRONTO'];
-        const previsaoText = statusAtivo.includes(status)
-            ? `<p style="font-size: 0.9rem; margin: 5px 0;"><strong>Previsão de Entrega:</strong> <span style="color: var(--warning-color); font-weight: bold;">${horaPrevisao}</span></p>`
-            : '';
+        const previsaoText = (status === 'ENTREGUE' || status === 'CANCELADO') 
+            ? '' 
+            : `<p style="font-size: 0.9rem; margin: 5px 0;"><strong>Previsão de Entrega:</strong> <span style="color: var(--warning-color); font-weight: bold;">${horaPrevisao}</span></p>`;
+
 
         elementos.detalhesPedidoContent.innerHTML = `
             <div style="text-align: center; margin-bottom: 15px;">
                 <h4 style="margin: 0; font-size: 1.5rem;">${window.AppUI.formatarMoeda(pedido.total)}</h4>
-                <span class="status-badge-history status-${status}">
+                <span class="status-badge-history status-${status}" style="margin-top: 5px;">
                     <i class="fas fa-info-circle"></i> STATUS: ${status}
                 </span>
             </div>
@@ -483,12 +327,9 @@
         elementos.modalDetalhesPedido.style.display = 'flex';
         
         if (podeCancelar) {
-             const novoBtn = document.getElementById('btn-cancelar-pedido-cliente');
-             if (novoBtn) {
-                 novoBtn.addEventListener('click', () => {
-                     cancelarPedidoCliente(pedido.id);
-                 });
-             }
+             document.getElementById('btn-cancelar-pedido-cliente').addEventListener('click', () => {
+                 cancelarPedidoCliente(pedido.id);
+             });
         }
     }
     
@@ -525,13 +366,6 @@
         }
     }
 
-    // Adiciona event listener para o botão "Ver Todos"
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnVerTodos = document.getElementById('btn-ver-todos-pedidos');
-        if (btnVerTodos) {
-            btnVerTodos.addEventListener('click', abrirModalTodosPedidos);
-        }
-    });
 
     // Expõe as funções para o objeto global AppRastreamento
     window.AppRastreamento = {
@@ -540,7 +374,6 @@
         atualizarTrackerUI,
         carregarStatusUltimoPedido,
         abrirModalDetalhesPedido,
-        abrirModalTodosPedidos,
         cancelarPedidoCliente
     };
 

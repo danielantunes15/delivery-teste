@@ -1,383 +1,305 @@
-// js/api.js - Módulo de Comunicação com o Supabase (Corrigido)
+// js/api.js - Módulo de API (Supabase e Serviços Externos) (Corrigido)
 
 (function() {
-
-    // Funções de Comunicação com o Supabase
-    // Estas funções são chamadas pelos outros módulos (auth, cardapio, checkout, etc.)
+    
+    const supabase = window.supabase;
+    // const ui = window.AppUI; // <-- REMOVIDO
 
     /**
-     * Busca as configurações da loja (taxa, tempo de entrega, horários).
+     * Busca as configurações da loja (taxa de entrega, horários).
      */
     async function carregarConfiguracoesLoja() {
         try {
-            const { data, error } = await window.supabase
+            const { data, error } = await supabase
                 .from('config_loja')
-                .select('*')
+                .select('taxa_entrega, tempo_entrega, seg_abertura, seg_fechamento, seg_fechado, ter_abertura, ter_fechamento, ter_fechado, qua_abertura, qua_fechamento, qua_fechado, qui_abertura, qui_fechamento, qui_fechado, sex_abertura, sex_fechamento, sex_fechado, sab_abertura, sab_fechamento, sab_fechado, dom_abertura, dom_fechamento, dom_fechado')
                 .eq('id', 1)
                 .single();
             
             if (error) throw error;
-            
-            console.log("Configurações da loja carregadas:", data);
-            window.app.configLoja = data; // Armazena no estado global
-            return data;
-
+            console.log("Configurações da loja carregadas.");
+            window.app.configLoja = data; // Salva no estado global
         } catch (error) {
             console.error("Erro ao carregar configurações da loja:", error);
-            window.AppUI.mostrarMensagem('Erro ao carregar status da loja.', 'error');
-            // Retorna o padrão em caso de falha
-            return window.app.configLoja; 
-        }
-    }
-
-    /**
-     * Busca categorias ativas no banco.
-     */
-    async function carregarCategorias() {
-        try {
-            const { data, error } = await window.supabase
-                .from('categorias')
-                .select('*')
-                .eq('ativo', true)
-                .order('nome');
-                
-            if (error) throw error;
-            return data || [];
-        } catch (error) {
-            console.error('Erro ao carregar categorias:', error);
-            throw new Error('Falha ao buscar categorias.');
-        }
-    }
-
-    /**
-     * Busca produtos ativos no banco.
-     */
-    async function carregarProdutos() {
-        try {
-            const { data, error } = await window.supabase
-                .from('produtos')
-                .select('*')
-                .eq('ativo', true)
-                .order('nome');
-            
-            if (error) throw error;
-            return data || [];
-        } catch (error) {
-            console.error('Erro ao carregar produtos:', error);
-            throw new Error('Falha ao buscar produtos.');
-        }
-    }
-
-    /**
-     * Busca os 5 produtos mais pedidos (simulado pelo estoque).
-     */
-    async function carregarMaisPedidos() {
-        try {
-            const { data, error } = await window.supabase
-                .from('produtos')
-                .select('*')
-                .eq('ativo', true)
-                .order('estoque_atual', { ascending: false }) // Simulação de "mais pedidos"
-                .limit(5);
-            
-            if (error) throw error;
-            return data || [];
-        } catch (error) {
-            console.error('Erro ao carregar mais pedidos:', error);
-            throw new Error('Falha ao buscar destaques.');
+            // CORREÇÃO: Acessa window.AppUI diretamente
+            if (window.AppUI) {
+                window.AppUI.mostrarMensagem('Erro ao carregar status da loja.', 'error');
+            }
+            // O app continuará com os valores padrão
         }
     }
 
     /**
      * Busca um cliente pelo número de telefone.
+     * @param {string} telefone - O telefone formatado (ex: 5533...).
+     * @returns {Promise<object|null>} Os dados do cliente ou null.
      */
     async function buscarClientePorTelefone(telefone) {
         try {
-            const { data, error } = await window.supabase
-                .from('clientes_delivery')
+            const { data, error } = await supabase.from('clientes_delivery')
                 .select('*')
                 .eq('telefone', telefone)
                 .limit(1) 
                 .maybeSingle(); 
             
             if (error && error.code !== 'PGRST116') throw error;
-            
             return data || null;
         } catch (error) {
             console.error('Erro ao buscar cliente:', error);
-            throw new Error('Erro ao consultar banco de dados.');
+            // CORREÇÃO: Acessa window.AppUI diretamente
+            if (window.AppUI) {
+                window.AppUI.mostrarMensagem('Erro ao consultar banco de dados.', 'error');
+            }
+            return null;
         }
     }
-
+    
     /**
-     * Salva um novo cliente no banco (cadastro).
+     * Salva um novo cliente no banco de dados.
+     * @param {object} dadosCliente - Dados do formulário de cadastro.
+     * @returns {Promise<object>} Os dados do novo cliente.
      */
     async function finalizarCadastroNoSupabase(dadosCliente) {
-        try {
-            const { data: novoCliente, error } = await window.supabase
-                .from('clientes_delivery')
-                .insert(dadosCliente)
-                .select()
-                .single();
+        const { data: novoCliente, error } = await supabase.from('clientes_delivery')
+            .insert(dadosCliente)
+            .select()
+            .single();
 
-            if (error) {
-                if (error.code === '23505') { // Violação de chave única
-                    throw new Error("Este número já está cadastrado. Use a tela inicial para Entrar.");
-                }
-                throw error;
+        if (error) {
+            if (error.code === '23505') {
+                throw new Error("Este número já está cadastrado. Use a tela inicial para Entrar.");
             }
-            return novoCliente;
-        } catch (error) {
-            console.error('Erro no cadastro (API):', error);
-            throw error; // Repassa o erro para o AppAuth
+            throw error;
         }
+        return novoCliente;
     }
 
     /**
      * Atualiza o endereço de um cliente existente.
+     * @param {string} telefone - Telefone do cliente.
+     * @param {string} enderecoCompleto - Novo endereço.
      */
     async function salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto) {
-        try {
-            const { error } = await window.supabase
-                .from('clientes_delivery')
-                .update({ endereco: enderecoCompleto })
-                .eq('telefone', telefone);
-                
-            if (error) throw error;
-            
-        } catch (error) {
-            console.error('Erro ao salvar endereço (API):', error);
-            throw new Error('Falha ao atualizar endereço.');
-        }
+        // CORREÇÃO: Remove a desestruturação do retorno
+        const { error } = await supabase.from('clientes_delivery')
+            .update({ endereco: enderecoCompleto })
+            .eq('telefone', telefone);
+        
+        if (error) throw error;
     }
 
     /**
-     * Busca opções de um produto (ex: tamanhos, massas).
-     */
-    async function buscarOpcoesProduto(produtoId) {
-        try {
-            const { data, error } = await window.supabase
-                .from('produto_opcoes_grupos') // Tabela de grupos (ex: "Tamanho")
-                .select(`*, opcoes:produto_opcoes(*)`) // Tabela de opções (ex: "Pequeno", "Médio")
-                .eq('produto_id', produtoId)
-                .order('nome');
-
-            if (error) {
-                 // Não é um erro fatal se as tabelas não existirem
-                console.warn(`Aviso (API): ${error.message}`);
-                return [];
-            }
-            return data || [];
-        } catch (error) {
-            console.error('Erro ao buscar opções:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Busca complementos de um produto (ex: adicionais).
-     */
-    async function buscarComplementosProduto(produtoId) {
-        try {
-            const { data, error } = await window.supabase
-                .from('produto_complementos')
-                .select(`*`)
-                .eq('produto_id', produtoId)
-                .order('nome');
-                
-            if (error) {
-                console.warn(`Aviso (API): ${error.message}`);
-                return [];
-            }
-            return data || [];
-        } catch (error) {
-            console.error('Erro ao buscar complementos:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Salva o pedido finalizado na tabela 'pedidos_online'.
-     */
-    async function finalizarPedidoNoSupabase(dadosPedido) {
-        try {
-            const { data: novoPedido, error } = await window.supabase
-                .from('pedidos_online')
-                .insert(dadosPedido)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return novoPedido;
-        } catch (error) {
-            console.error("Erro ao salvar pedido no Supabase (API):", error);
-            throw new Error('Falha ao registrar o pedido no banco.');
-        }
-    }
-    
-    /**
-     * Atualiza o estoque de um produto.
-     */
-    async function atualizarEstoqueNoSupabase(produtoId, novoEstoque) {
-         try {
-            if (window.vendasSupabase && window.vendasSupabase.actualizarEstoque) {
-                 // Usa a função do admin (se disponível)
-                 await window.vendasSupabase.actualizarEstoque(produtoId, novoEstoque);
-            } else {
-                 // Fallback
-                 const { error } = await window.supabase
-                    .from('produtos')
-                    .update({ estoque_atual: novoEstoque })
-                    .eq('id', produtoId);
-                if (error) throw error;
-            }
-        } catch (error) {
-            console.error("Erro ao atualizar estoque (API):", error);
-            throw new Error('Falha ao atualizar o estoque do produto.');
-        }
-    }
-    
-    /**
-     * Busca um pedido específico para iniciar o rastreamento.
-     */
-    async function buscarPedidoParaRastreamento(pedidoId) {
-        try {
-            const { data: pedido, error } = await window.supabase
-                .from('pedidos_online')
-                .select('id, status, created_at')
-                .eq('id', pedidoId)
-                .single();
-
-            if (error) throw error;
-            return pedido;
-        } catch (error) {
-            console.error("Erro ao buscar pedido para rastreamento (API):", error);
-            return null; // Retorna nulo para o rastreamento parar
-        }
-    }
-    
-    /**
-     * Busca o histórico de pedidos de um cliente.
-     */
-    async function buscarHistoricoPedidos(telefone, limite = 3) {
-        try {
-            const { data, error } = await window.supabase
-                .from('pedidos_online')
-                .select(`id, created_at, total, forma_pagamento, status, observacoes, telefone_cliente, endereco_entrega, nome_cliente`)
-                .eq('telefone_cliente', telefone) 
-                .order('created_at', { ascending: false })
-                .limit(limite); 
-                
-            if (error) throw error;
-            return data || [];
-        } catch (error) {
-            console.error('Erro ao carregar histórico (API):', error);
-            throw new Error('Falha ao buscar histórico de pedidos.');
-        }
-    }
-    
-    /**
-     * Tenta cancelar um pedido (só funciona se o status for 'novo' ou 'preparando').
-     */
-    async function cancelarPedidoNoSupabase(pedidoId) {
-        try {
-            // Tenta atualizar o status para 'cancelado'
-            // O update só funcionará se o status atual for 'novo' ou 'preparando'
-            const { data, error } = await window.supabase
-                .from('pedidos_online')
-                .update({ status: 'cancelado' })
-                .eq('id', pedidoId)
-                .in('status', ['novo', 'preparando'])
-                .select(); // Retorna o item atualizado
-
-            if (error) throw error;
-
-            // Se 'data' tiver algo, o cancelamento foi bem-sucedido
-            return (data && data.length > 0);
-            
-        } catch (error) {
-            console.error("Erro ao tentar cancelar pedido (API):", error);
-            throw new Error('Falha na comunicação para cancelar o pedido.');
-        }
-    }
-
-    /**
-     * Busca dados de CEP no ViaCEP (Função utilitária).
+     * Busca o endereço a partir de um CEP usando a API ViaCEP.
+     * @param {string} cep - O CEP para buscar.
      */
     async function buscarCep(cep) {
+        // CORREÇÃO: Garante que AppUI exista antes de usá-lo
+        if (!window.AppUI) {
+            console.error("Módulo UI não está pronto para buscar CEP.");
+            return;
+        }
+        const uiElementos = window.AppUI.elementos;
+
         const cepLimpo = cep.replace(/\D/g, ''); 
         if (cepLimpo.length !== 8) return;
-        
-        const isCadastro = window.AppUI.elementos.cadastroForm.style.display === 'block';
-        const isModal = window.AppUI.elementos.modalEditarEndereco.style.display === 'flex';
+        window.AppUI.mostrarMensagem('Buscando endereço...', 'info');
+
+        // Determina se estamos no modal de cadastro ou de edição
+        const isCadastro = uiElementos.cadastroForm?.style.display === 'block';
+        const isModal = uiElementos.modalEditarEndereco?.style.display === 'flex';
         
         let campos = {};
 
         if (isCadastro) {
             campos = {
-                rua: window.AppUI.elementos.cadastroRuaInput,
-                bairro: window.AppUI.elementos.cadastroBairroInput,
-                cidade: window.AppUI.elementos.cadastroCidadeInput,
-                estado: window.AppUI.elementos.cadastroEstadoInput,
-                numero: window.AppUI.elementos.cadastroNumeroInput
+                rua: uiElementos.cadastroRuaInput,
+                bairro: uiElementos.cadastroBairroInput,
+                cidade: uiElementos.cadastroCidadeInput,
+                estado: uiElementos.cadastroEstadoInput,
+                numero: uiElementos.cadastroNumeroInput
             };
         } else if (isModal) {
             campos = {
-                rua: window.AppUI.elementos.modalRuaInput,
-                bairro: window.AppUI.elementos.modalBairroInput,
-                cidade: window.AppUI.elementos.modalCidadeInput,
-                estado: window.AppUI.elementos.modalEstadoInput,
-                numero: window.AppUI.elementos.modalNumeroInput
+                rua: uiElementos.modalRuaInput,
+                bairro: uiElementos.modalBairroInput,
+                cidade: uiElementos.modalCidadeInput,
+                estado: uiElementos.modalEstadoInput,
+                numero: uiElementos.modalNumeroInput
             };
         } else {
-            return; // Nenhum formulário ativo
+            return;
         }
 
         try {
-            window.AppUI.mostrarMensagem('Buscando endereço...', 'info');
             const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-            if (!response.ok) throw new Error('Falha na rede ao buscar CEP.');
-            
             const data = await response.json();
             
             if (data.erro) {
                 window.AppUI.mostrarMensagem('CEP não encontrado. Digite o endereço manualmente.', 'warning');
-            } else {
-                campos.rua.value = data.logradouro || '';
-                campos.bairro.value = data.bairro || '';
-                campos.cidade.value = data.localidade || '';
-                campos.estado.value = data.uf || '';
-                window.AppUI.mostrarMensagem('Endereço preenchido.', 'success');
-                if (data.logradouro) {
-                    campos.numero.focus();
-                } else {
-                    campos.rua.focus();
-                }
+                if(campos.cidade) campos.cidade.value = '';
+                if(campos.estado) campos.estado.value = '';
+                campos.rua.focus();
+                return;
             }
+            
+            if (data.logradouro) campos.rua.value = data.logradouro;
+            if (data.bairro) campos.bairro.value = data.bairro;
+
+            campos.cidade.value = data.localidade || '';
+            campos.estado.value = data.uf || '';
+
+            if (data.logradouro || data.bairro) {
+                campos.numero.focus();
+                window.AppUI.mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
+            } else {
+                // Caso de CEP Único (só retorna cidade/estado)
+                campos.rua.focus();
+                window.AppUI.mostrarMensagem('CEP encontrado (cidade/estado). Digite a Rua e Bairro.', 'warning');
+            }
+
         } catch (error) {
-            console.error("Erro ao buscar CEP (API):", error);
             window.AppUI.mostrarMensagem('Erro ao buscar o CEP. Preencha manualmente.', 'error');
         }
+    }
+
+    /**
+     * Carrega as categorias de produtos.
+     * @returns {Promise<Array>} Lista de categorias.
+     */
+    async function carregarCategorias() {
+        return await window.vendasSupabase.buscarCategorias();
+    }
+
+    /**
+     * Carrega todos os produtos ativos.
+     * @returns {Promise<Array>} Lista de produtos.
+     */
+    async function carregarProdutos() {
+        const { data, error } = await supabase
+            .from('produtos')
+            .select('*')
+            .eq('ativo', true)
+            .order('nome');
+        if (error) throw error;
+        return data || [];
+    }
+    
+    /**
+     * Carrega os produtos "mais pedidos" (lógica de destaque).
+     * @returns {Promise<Array>} Lista de produtos em destaque.
+     */
+    async function carregarMaisPedidos() {
+        const { data, error } = await supabase
+            .from('produtos')
+            .select('*')
+            .eq('ativo', true)
+            .order('estoque_atual', { ascending: false }) // Lógica de destaque (mais estoque)
+            .limit(5);
+        if (error) throw error;
+        return data || [];
+    }
+    
+    /**
+     * Busca o histórico de pedidos de um cliente.
+     * @param {string} telefone - Telefone do cliente.
+     * @returns {Promise<Array>} Lista de pedidos.
+     */
+    async function buscarHistoricoPedidos(telefone) {
+        // CORREÇÃO: Busca até 5 pedidos (para performance)
+        const { data, error } = await supabase.from('pedidos_online')
+            .select(`id, created_at, total, forma_pagamento, status, observacoes, telefone_cliente, endereco_entrega, nome_cliente`)
+            .eq('telefone_cliente', telefone) 
+            .order('created_at', { ascending: false })
+            .limit(5); 
+        if (error) throw error;
+        return data || [];
+    }
+
+    /**
+     * Busca o status de um pedido específico (para rastreamento).
+     * @param {string} pedidoId - ID do pedido.
+     * @returns {Promise<object|null>} O pedido ou null.
+     */
+    async function buscarPedidoParaRastreamento(pedidoId) {
+        const { data: pedido, error } = await supabase.from('pedidos_online')
+            .select('id, status, created_at') // CORREÇÃO: Adiciona created_at para cálculo de previsão
+            .eq('id', pedidoId)
+            .single();
+        if (error || !pedido) return null;
+        return pedido;
+    }
+    
+    /**
+     * Salva o pedido finalizado no banco.
+     * @param {object} dadosPedido - Objeto com dados do pedido.
+     * @returns {Promise<object>} O novo pedido criado.
+     */
+    async function finalizarPedidoNoSupabase(dadosPedido) {
+        const { data: novoPedido, error } = await supabase.from('pedidos_online')
+            .insert(dadosPedido)
+            .select()
+            .single();
+        if (error) throw error;
+        return novoPedido;
+    }
+    
+    /**
+     * Atualiza o estoque de um produto.
+     * @param {string} produtoId - ID do produto.
+     * @param {number} novoEstoque - Nova quantidade em estoque.
+     */
+    async function atualizarEstoqueNoSupabase(produtoId, novoEstoque) {
+        await window.vendasSupabase.actualizarEstoque(produtoId, novoEstoque);
+    }
+    
+    /**
+     * Cliente solicita o cancelamento do pedido.
+     */
+    async function cancelarPedidoNoSupabase(pedidoId) {
+        // 1. Verifica o status atual
+        const { data: pedido, error: fetchError } = await supabase.from('pedidos_online')
+            .select('status')
+            .eq('id', pedidoId)
+            .single();
+
+        if (fetchError || !pedido) {
+            throw new Error('Pedido não encontrado ou erro de conexão.');
+        }
+
+        const statusPermitidos = ['novo', 'preparando'];
+        
+        if (!statusPermitidos.includes(pedido.status)) {
+            // Se o status já avançou, retorna falso para o JS mostrar a mensagem de aviso
+            return false; 
+        }
+
+        // 2. Tenta atualizar o status para cancelado
+        const { error: updateError } = await supabase
+            .from('pedidos_online')
+            .update({ status: 'cancelado' })
+            .eq('id', pedidoId);
+
+        if (updateError) throw updateError;
+        
+        return true; // Cancelamento bem-sucedido
     }
 
 
     // Expõe as funções para o objeto global AppAPI
     window.AppAPI = {
         carregarConfiguracoesLoja,
-        carregarCategorias,
-        carregarProdutos,
-        carregarMaisPedidos,
         buscarClientePorTelefone,
         finalizarCadastroNoSupabase,
         salvarEdicaoEnderecoNoSupabase,
-        buscarOpcoesProduto,
-        buscarComplementosProduto,
+        buscarCep,
+        carregarCategorias,
+        carregarProdutos,
+        carregarMaisPedidos,
+        buscarHistoricoPedidos,
+        buscarPedidoParaRastreamento,
         finalizarPedidoNoSupabase,
         atualizarEstoqueNoSupabase,
-        buscarPedidoParaRastreamento,
-        buscarHistoricoPedidos,
-        cancelarPedidoNoSupabase,
-        buscarCep
+        cancelarPedidoNoSupabase // Adicionada a função de cancelamento
     };
 
 })();
