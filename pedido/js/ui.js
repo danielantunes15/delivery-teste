@@ -90,6 +90,8 @@
         
         // Resumo de Valores
         subtotalCarrinho: document.getElementById('subtotal-carrinho'),
+        subtotalAjustadoCarrinho: document.getElementById('subtotal-ajustado-carrinho'), // << NOVO
+        resumoSubtotalLiquidoLinha: document.getElementById('resumo-subtotal-liquido-linha'), // << NOVO
         taxaEntregaCarrinho: document.getElementById('taxa-entrega-carrinho'),
         totalCarrinho: document.getElementById('total-carrinho'),
         

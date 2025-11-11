@@ -256,12 +256,29 @@
             // if (elementos.btnContinuar) elementos.btnContinuar.disabled = !isReady; // Removido na tela única
         }
         
+        // ================== BLOCO ALTERADO ==================
         // 4. Renderiza Resumo de Valores
         if (elementos.subtotalCarrinho) elementos.subtotalCarrinho.textContent = formatarMoeda(calculo.subTotal);
+        
+        // --- NOVO: Renderiza Subtotal Ajustado (após desconto) ---
+        const temDesconto = calculo.valorDesconto > 0;
+        
+        if (elementos.resumoSubtotalLiquidoLinha) {
+            // Exibe a linha do subtotal ajustado apenas se houver desconto
+            elementos.resumoSubtotalLiquidoLinha.style.display = temDesconto ? 'flex' : 'none';
+        }
+        
+        if (elementos.subtotalAjustadoCarrinho) {
+            elementos.subtotalAjustadoCarrinho.textContent = formatarMoeda(calculo.totalAjustado);
+        }
+        // --- FIM NOVO ---
+        
         if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(window.app.configLoja.taxa_entrega || 0);
         if (elementos.totalCarrinho) elementos.totalCarrinho.textContent = calculo.totalFinal.toFixed(2).replace('.', ',');
         
         // 5. Renderiza Desconto 
+        // ================== FIM BLOCO ALTERADO ==================
+        
         if (calculo.valorDesconto > 0) {
             if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'flex';
             if (elementos.descontoValorDisplay) elementos.descontoValorDisplay.textContent = `- ${formatarMoeda(calculo.valorDesconto)}`;
