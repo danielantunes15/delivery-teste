@@ -279,12 +279,16 @@
 
                         <div class="resumo-valores-cart">
                             <div class="total-linha">
-                                <span>Subtotal</span>
+                                <span>Subtotal Bruto</span>
                                 <span id="subtotal-carrinho">R$ 0,00</span>
                             </div>
                             <div class="total-linha" id="resumo-desconto-linha" style="display: none;">
                                 <span>Desconto (<span id="desconto-tipo-display"></span>)</span>
                                 <span id="desconto-valor-display">- R$ 0,00</span>
+                            </div>
+                            <div class="total-linha" id="resumo-subtotal-liquido-linha" style="display: none; font-weight: bold;">
+                                <span>Subtotal Ajustado</span>
+                                <span id="subtotal-ajustado-carrinho">R$ 0,00</span>
                             </div>
                             <div class="total-linha">
                                 <span>Taxa de Entrega</span>
@@ -295,7 +299,6 @@
                                 <strong>R$ <span id="total-carrinho">0,00</span></strong>
                             </div>
                         </div>
-
                         <h3 style="margin-top: 2rem;"><i class="fas fa-map-marker-alt"></i> Entrega</h3>
 
                         <h4 style="font-size: 1.1rem; color: #db7093;">Seu Endereço</h4>
