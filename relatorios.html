@@ -59,55 +59,70 @@
                                     <div class="kpi-card-detailed kpi-faturamento">
                                         <div class="kpi-icon-wrapper"><i class="fas fa-money-bill-wave"></i></div>
                                         <div class="kpi-data">
-                                            <span class="kpi-label">Faturamento Bruto</span>
+                                            <span class="kpi-label">Faturamento Bruto (Loja)</span>
                                             <p class="kpi-value" id="kpi-faturamento">R$ 0,00</p>
                                         </div>
                                     </div>
                                      <div class="kpi-card-detailed kpi-liquido">
                                         <div class="kpi-icon-wrapper"><i class="fas fa-hand-holding-usd"></i></div>
                                         <div class="kpi-data">
-                                            <span class="kpi-label">Faturamento Líquido</span>
+                                            <span class="kpi-label">Faturamento Líquido (Loja)</span>
                                             <p class="kpi-value" id="kpi-faturamento-liquido">R$ 0,00</p>
                                         </div>
                                     </div>
                                     <div class="kpi-card-detailed kpi-taxas">
                                         <div class="kpi-icon-wrapper"><i class="fas fa-percent"></i></div>
                                         <div class="kpi-data">
-                                            <span class="kpi-label">Custo com Taxas</span>
+                                            <span class="kpi-label">Custo com Taxas (Loja)</span>
                                             <p class="kpi-value" id="kpi-total-taxas">R$ 0,00</p>
                                         </div>
                                     </div>
                                     <div class="kpi-card-detailed kpi-transacoes">
                                         <div class="kpi-icon-wrapper"><i class="fas fa-receipt"></i></div>
                                         <div class="kpi-data">
-                                            <span class="kpi-label">Transações</span>
+                                            <span class="kpi-label">Transações (Loja)</span>
                                             <p class="kpi-value" id="kpi-transacoes">0</p>
                                         </div>
                                     </div>
                                     <div class="kpi-card-detailed kpi-medio">
                                         <div class="kpi-icon-wrapper"><i class="fas fa-calculator"></i></div>
                                         <div class="kpi-data">
-                                            <span class="kpi-label">Ticket Médio</span>
+                                            <span class="kpi-label">Ticket Médio (Loja)</span>
                                             <p class="kpi-value" id="kpi-ticket-medio">R$ 0,00</p>
                                         </div>
                                     </div>
                                     <div class="kpi-card-detailed kpi-dia">
                                         <div class="kpi-icon-wrapper"><i class="fas fa-calendar-day"></i></div>
                                         <div class="kpi-data">
-                                            <span class="kpi-label">Média Diária</span>
+                                            <span class="kpi-label">Média Diária (Loja)</span>
                                             <p class="kpi-value" id="kpi-vendas-dia">0.0</p>
                                         </div>
                                     </div>
-                                </section>
+                                    
+                                    <div class="kpi-card-detailed kpi-faturamento" style="border-left-color: #007bff;">
+                                        <div class="kpi-icon-wrapper" style="background: #007bff;"><i class="fas fa-motorcycle"></i></div>
+                                        <div class="kpi-data">
+                                            <span class="kpi-label">Faturamento Delivery</span>
+                                            <p class="kpi-value" id="kpi-faturamento-delivery">R$ 0,00</p>
+                                        </div>
+                                    </div>
+                                    <div class="kpi-card-detailed kpi-transacoes" style="border-left-color: #17a2b8;">
+                                        <div class="kpi-icon-wrapper" style="background: #17a2b8;"><i class="fas fa-receipt"></i></div>
+                                        <div class="kpi-data">
+                                            <span class="kpi-label">Transações Delivery</span>
+                                            <p class="kpi-value" id="kpi-transacoes-delivery">0</p>
+                                        </div>
+                                    </div>
+                                    </section>
                                 
                                 <section class="dashboard-main-layout-v2">
                                     <div class="col-main">
                                         <div class="grafico-card-v2">
-                                            <h3><i class="fas fa-credit-card"></i> Vendas por Forma de Pagamento</h3>
+                                            <h3><i class="fas fa-credit-card"></i> Vendas por Forma de Pagamento (Loja)</h3>
                                             <div class="grafico-container-v2" style="height: 350px;"><canvas id="chart-pagamentos"></canvas></div>
                                         </div>
                                         <div class="grafico-card-v2 table-card">
-                                            <h3><i class="fas fa-clipboard-list"></i> Últimas Transações</h3>
+                                            <h3><i class="fas fa-clipboard-list"></i> Últimas Transações (Loja)</h3>
                                             <div class="table-container">
                                                 <table class="table-moderna">
                                                     <thead><tr><th>Data/Hora</th><th>Vendedor</th><th>Pagamento</th><th>Total Bruto</th></tr></thead>
@@ -120,11 +135,11 @@
                                     </div>
                                     <div class="col-side">
                                         <div class="grafico-card-v2">
-                                            <h3><i class="fas fa-trophy"></i> Top 5 Produtos Vendidos</h3>
+                                            <h3><i class="fas fa-trophy"></i> Top 5 Produtos Vendidos (Loja)</h3>
                                             <div class="grafico-container-v2" style="height: 280px;"><canvas id="chart-top-produtos"></canvas></div>
                                         </div>
                                         <div class="grafico-card-v2">
-                                            <h3><i class="fas fa-sitemap"></i> Distribuição por Categoria</h3>
+                                            <h3><i class="fas fa-sitemap"></i> Distribuição por Categoria (Loja)</h3>
                                             <div class="grafico-container-v2" style="height: 250px;"><canvas id="chart-categorias"></canvas></div>
                                         </div>
                                     </div>
@@ -157,26 +172,33 @@
                                 <div class="report-options-grid">
                                     <div class="report-option-card">
                                         <div class="report-icon"><i class="fas fa-receipt"></i></div>
-                                        <h3>Vendas Gerais</h3>
-                                        <p>Um resumo completo de todas as vendas no período, incluindo o cálculo de taxas.</p>
+                                        <h3>Vendas Gerais (Loja)</h3>
+                                        <p>Um resumo completo de todas as vendas da loja (frente de caixa) no período.</p>
                                         <button class="btn btn-primary" data-report-type="geral">Gerar Relatório</button>
+                                    </div>
+                                    
+                                    <div class="report-option-card">
+                                        <div class="report-icon" style="color: #007bff;"><i class="fas fa-motorcycle"></i></div>
+                                        <h3>Vendas Delivery</h3>
+                                        <p>Um resumo de todos os pedidos online (delivery) concluídos no período.</p>
+                                        <button class="btn btn-primary" data-report-type="delivery" style="background: #007bff; border-color: #007bff;">Gerar Relatório</button>
                                     </div>
                                     <div class="report-option-card">
                                         <div class="report-icon"><i class="fas fa-credit-card"></i></div>
-                                        <h3>Vendas por Pagamento</h3>
-                                        <p>Agrupa as vendas por forma de pagamento, mostrando totais brutos, taxas e líquidos.</p>
+                                        <h3>Vendas por Pagamento (Loja)</h3>
+                                        <p>Agrupa as vendas da loja por forma de pagamento, mostrando totais brutos, taxas e líquidos.</p>
                                         <button class="btn btn-primary" data-report-type="pagamento">Gerar Relatório</button>
                                     </div>
                                     <div class="report-option-card">
                                         <div class="report-icon"><i class="fas fa-user-tie"></i></div>
                                         <h3>Performance de Vendedores</h3>
-                                        <p>Detalhes do desempenho de vendas de cada usuário no sistema (vendedor).</p>
+                                        <p>Detalhes do desempenho de vendas de cada usuário no sistema (vendedor da loja).</p>
                                         <button class="btn btn-primary" data-report-type="vendedor">Gerar Relatório</button>
                                     </div>
                                     <div class="report-option-card">
                                         <div class="report-icon"><i class="fas fa-box-open"></i></div>
-                                        <h3>Produtos Vendidos</h3>
-                                        <p>Lista todos os produtos comercializados, ordenados pelo maior valor de venda no período.</p>
+                                        <h3>Produtos Vendidos (Loja)</h3>
+                                        <p>Lista todos os produtos comercializados na loja, ordenados pelo maior valor de venda.</p>
                                         <button class="btn btn-primary" data-report-type="produto">Gerar Relatório</button>
                                     </div>
                                 </div>

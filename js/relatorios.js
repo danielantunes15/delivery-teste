@@ -1,4 +1,5 @@
 // js/relatorios.js - VERSÃO FINAL CORRIGIDA COM PDFS MODERNOS E FUNCIONAIS E FILTROS DE DATA
+// + MODIFICAÇÕES PARA INCLUIR DADOS DE DELIVERY (COM CORREÇÃO DE SINTAXE)
 
 document.addEventListener('DOMContentLoaded', async function () {
 
@@ -11,17 +12,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     let charts = {};
 
     let vendasDoDashboard = [];
+    let pedidosOnlineDoDashboard = []; // Nova variável para dados de delivery
+
     let dataInicioDashboard, dataFimDashboard;
     let taxaDebitoAtual = 0;
     let taxaCreditoAtual = 0;
 
-    // ==================================================================
-    // === INÍCIO DA CORREÇÃO (Cache de Categorias) ===
-    // ==================================================================
     let categoriasCache = []; // Cache para armazenar nomes das categorias
-    // ==================================================================
-    // === FIM DA CORREÇÃO ===
-    // ==================================================================
 
     const toggleDisplay = (element, show) => { if (element) element.style.display = show ? 'block' : 'none'; };
     const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
@@ -71,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (error) throw error;
 
             mostrarMensagem('Taxas salvas com sucesso em todos os dispositivos!', 'success');
-            atualizarDashboardCompleto(vendasDoDashboard);
+            atualizarDashboardCompleto(vendasDoDashboard, pedidosOnlineDoDashboard);
         } catch (error) {
             console.error('❌ Erro ao salvar taxas:', error);
             mostrarMensagem('Erro ao salvar as taxas no banco de dados.', 'error');
@@ -98,13 +95,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             mostrarMensagem('Não foi possível carregar as taxas salvas.', 'error');
         }
     }
-
-    // ==================================================================
-    // === INÍCIO DA CORREÇÃO (Nova Função de Cache) ===
-    // ==================================================================
+    
     /**
      * Carrega todas as categorias do banco para um cache local.
-     * Isso evita a necessidade de um join que está falhando no banco.
      */
     async function carregarCategoriasCache() {
         try {
@@ -117,9 +110,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             mostrarMensagem('Falha ao carregar categorias, o gráfico pode ficar incompleto.', 'error');
         }
     }
-    // ==================================================================
-    // === FIM DA CORREÇÃO ===
-    // ==================================================================
 
 
     // --- INICIALIZAÇÃO ---
@@ -128,13 +118,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         await new Promise(resolve => setTimeout(resolve, 100));
         await buscarTaxasDoBanco();
         
-        // ==================================================================
-        // === INÍCIO DA CORREÇÃO (Chamar Cache) ===
-        // ==================================================================
         await carregarCategoriasCache(); // Carrega as categorias antes de tudo
-        // ==================================================================
-        // === FIM DA CORREÇÃO ===
-        // ==================================================================
         
         configurarFiltrosEEventos();
         await carregarDadosEAtualizarDashboard();
@@ -174,20 +158,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- FUNÇÕES DE DATA CORRIGIDAS DEFINITIVAMENTE (FUSO HORÁRIO) ---
     
     const createLocalISO = (dateStr, endOfDay = false) => {
+        if (!dateStr) dateStr = new Date().toISOString().split('T')[0]; // Fallback para hoje
         const [year, month, day] = dateStr.split('-').map(Number);
         const localDate = new Date(year, month - 1, day);
         if (endOfDay) localDate.setHours(23, 59, 59, 999);
         else localDate.setHours(0, 0, 0, 0);
 
-        // ✅ CORREÇÃO: Usa formato local 'sv-SE' (ISO sem sufixo Z de UTC) para
-        // evitar o desvio de fuso horário na consulta ao Supabase.
         return localDate.toLocaleString('sv-SE').replace(' ', 'T');
     };
     
     const formatarParaInput = (date) => date.toISOString().split('T')[0];
 
     function atualizarDatasPorPeriodo(periodo) {
-        // 1. Cria uma data de referência para 'hoje' e zera o tempo.
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0); 
         
@@ -196,31 +178,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         switch (periodo) {
             case 'ontem':
-                // Ontem: início e fim são o dia de ontem
                 inicio.setDate(hoje.getDate() - 1);
                 fim.setDate(hoje.getDate() - 1); 
                 break;
             case 'semana':
-                // Esta Semana: início é o Domingo (0)
                 inicio.setDate(hoje.getDate() - hoje.getDay()); 
-                // data-fim = Hoje
                 break;
             case 'mes':
-                // Este Mês: início é o dia 1 do mês atual
                 inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                // data-fim = Hoje
                 break;
             case 'hoje':
             default:
-                // Hoje: início e fim são o dia de hoje.
                 break;
         }
 
-        // Atualiza os inputs de data do Dashboard
         document.getElementById('data-inicio').value = formatarParaInput(inicio);
         document.getElementById('data-fim').value = formatarParaInput(fim);
-        
-        // Sincroniza o filtro de PDF com o filtro do Dashboard
         document.getElementById('pdf-data-inicio').value = formatarParaInput(inicio);
         document.getElementById('pdf-data-fim').value = formatarParaInput(fim);
     }
@@ -235,9 +208,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Correção anterior: Usar data simples para a coluna 'data_venda'
         const dataInicioQuery = dataInicioInput;
         const dataFimQuery = dataFimInput;
+        
+        const dataInicioISO = createLocalISO(dataInicioInput, false);
+        const dataFimISO = createLocalISO(dataFimInput, true);
+
 
         dataInicioDashboard = dataInicioInput;
         dataFimDashboard = dataFimInput;
@@ -253,12 +229,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         try {
-            // ==================================================================
-            // === INÍCIO DA CORREÇÃO (Query Select) ===
-            // ==================================================================
-            // Removemos o join quebrado 'categoria:categorias(nome)'
-            // e garantimos que 'categoria_id' seja buscado em 'produtos'.
-            const { data, error } = await supabase.from('vendas')
+            
+            // Promise 1: Vendas (Frente de Caixa)
+            const promessaVendas = supabase.from('vendas')
                 .select(`
                     *, 
                     usuario:sistema_usuarios(nome), 
@@ -274,16 +247,29 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .gte('data_venda', dataInicioQuery)
                 .lte('data_venda', dataFimQuery)
                 .order('created_at', { ascending: false });
-            // ==================================================================
-            // === FIM DA CORREÇÃO ===
-            // ==================================================================
 
-            if (error) throw error;
-            vendasDoDashboard = data || [];
-            atualizarDashboardCompleto(vendasDoDashboard);
+            // Promise 2: Delivery (Pedidos Online)
+            const promessaDelivery = supabase.from('pedidos_online')
+                .select(`id, created_at, nome_cliente, total, forma_pagamento, status, observacoes`)
+                .gte('created_at', dataInicioISO) // Filtro de timestamp
+                .lte('created_at', dataFimISO)   // Filtro de timestamp
+                .in('status', ['entregue', 'pronto']) // Apenas pedidos concluídos que geram faturamento
+                .order('created_at', { ascending: false });
+
+            // Executa as duas buscas em paralelo
+            const [vendasResult, deliveryResult] = await Promise.all([promessaVendas, promessaDelivery]);
+
+            if (vendasResult.error) throw vendasResult.error;
+            if (deliveryResult.error) throw deliveryResult.error;
+
+            vendasDoDashboard = vendasResult.data || [];
+            pedidosOnlineDoDashboard = deliveryResult.data || []; // Salva os dados de delivery
+
+            atualizarDashboardCompleto(vendasDoDashboard, pedidosOnlineDoDashboard); // Passa ambos
+            
         } catch (error) {
-            console.error('❌ Erro ao carregar dados:', error);
-            mostrarMensagem('Não foi possível carregar os dados de vendas.', 'error');
+            console.error('❌ Erro ao carregar dados (vendas ou delivery):', error);
+            mostrarMensagem('Não foi possível carregar os dados de vendas ou delivery.', 'error');
         } finally {
             try {
                 const activeTab = document.querySelector('.tab-pane.active');
@@ -304,12 +290,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         return 0;
     }
 
-    function atualizarDashboardCompleto(dados) {
-        const faturamentoTotal = dados.reduce((sum, v) => sum + v.total, 0);
-        const totalTaxas = dados.reduce((sum, v) => sum + calcularTaxaVenda(v), 0);
-        const faturamentoLiquido = faturamentoTotal - totalTaxas;
-        const totalTransacoes = dados.length;
-        const ticketMedio = totalTransacoes > 0 ? faturamentoLiquido / totalTransacoes : 0;
+    function atualizarDashboardCompleto(dadosVendas, dadosDelivery) {
+        
+        // --- KPIs VENDAS (LOJA) ---
+        const faturamentoTotalVendas = dadosVendas.reduce((sum, v) => sum + v.total, 0);
+        const totalTaxasVendas = dadosVendas.reduce((sum, v) => sum + calcularTaxaVenda(v), 0);
+        const faturamentoLiquidoVendas = faturamentoTotalVendas - totalTaxasVendas;
+        const totalTransacoesVendas = dadosVendas.length;
+        const ticketMedioVendas = totalTransacoesVendas > 0 ? faturamentoLiquidoVendas / totalTransacoesVendas : 0;
 
         const dataInicioObj = new Date(dataInicioDashboard);
         const dataFimObj = new Date(dataFimDashboard);
@@ -317,26 +305,35 @@ document.addEventListener('DOMContentLoaded', async function () {
         dataInicioObj.setHours(0, 0, 0, 0);
         dataFimObj.setHours(0, 0, 0, 0); 
         
-        // Correção para calcular o número de dias (incluindo o dia de hoje)
         const diffTime = Math.abs(dataFimObj.getTime() - dataInicioObj.getTime());
         const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1); 
         
-        const vendasPorDia = totalTransacoes / diffDays;
+        const vendasPorDia = totalTransacoesVendas / diffDays;
 
-        document.getElementById('kpi-faturamento').textContent = formatarMoeda(faturamentoTotal);
-        document.getElementById('kpi-faturamento-liquido').textContent = formatarMoeda(faturamentoLiquido);
-        document.getElementById('kpi-total-taxas').textContent = formatarMoeda(totalTaxas);
-        document.getElementById('kpi-transacoes').textContent = totalTransacoes;
-        document.getElementById('kpi-ticket-medio').textContent = formatarMoeda(ticketMedio);
+        document.getElementById('kpi-faturamento').textContent = formatarMoeda(faturamentoTotalVendas);
+        document.getElementById('kpi-faturamento-liquido').textContent = formatarMoeda(faturamentoLiquidoVendas);
+        document.getElementById('kpi-total-taxas').textContent = formatarMoeda(totalTaxasVendas);
+        document.getElementById('kpi-transacoes').textContent = totalTransacoesVendas;
+        document.getElementById('kpi-ticket-medio').textContent = formatarMoeda(ticketMedioVendas);
         document.getElementById('kpi-vendas-dia').textContent = vendasPorDia.toFixed(1);
+
+        // --- NOVOS KPIs (DELIVERY) ---
+        const faturamentoTotalDelivery = dadosDelivery.reduce((sum, v) => sum + v.total, 0);
+        const totalTransacoesDelivery = dadosDelivery.length;
+
+        document.getElementById('kpi-faturamento-delivery').textContent = formatarMoeda(faturamentoTotalDelivery);
+        document.getElementById('kpi-transacoes-delivery').textContent = totalTransacoesDelivery;
+        // --- FIM NOVOS KPIs ---
+
 
         Object.values(charts).forEach(chart => { if (chart) chart.destroy(); });
         charts = {};
 
-        criarGraficoPagamentos(dados);
-        criarGraficoCategorias(dados);
-        criarGraficoTopProdutos(dados);
-        atualizarTabelaVendasRecentes(dados);
+        // Gráficos continuam baseados apenas nas vendas da LOJA (vendas)
+        criarGraficoPagamentos(dadosVendas);
+        criarGraficoCategorias(dadosVendas);
+        criarGraficoTopProdutos(dadosVendas);
+        atualizarTabelaVendasRecentes(dadosVendas);
     }
     
     // ----------------------------------------------------------------------
@@ -403,21 +400,29 @@ document.addEventListener('DOMContentLoaded', async function () {
     const getRelatorioBase = (dataInicioPDF, dataFimPDF) => {
         // Usa os dados que já estão no dashboard, filtrando pelo período do PDF se diferente
         return vendasDoDashboard.filter(v => {
-            // Este filtro é menos preciso (apenas data), mas é um backup.
             const dataVenda = new Date(v.data_venda).toISOString().split('T')[0];
             return dataVenda >= dataInicioPDF && dataVenda <= dataFimPDF;
         });
     }
+    
+    /**
+     * Pega os dados de delivery já carregados e filtra pela data do PDF.
+     */
+    const getRelatorioDeliveryBase = (dataInicioPDF, dataFimPDF) => {
+        return pedidosOnlineDoDashboard.filter(p => {
+            const dataPedido = new Date(p.created_at).toISOString().split('T')[0];
+            return dataPedido >= dataInicioPDF && dataPedido <= dataFimPDF;
+        });
+    }
+
 
     // --- GERAÇÃO DE PDF CORRIGIDA ---
     async function gerarRelatorioPDF(tipoRelatorio) {
-        // Verificação robusta das dependências
         if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
             mostrarMensagem('ERRO: Biblioteca jsPDF não carregada. Verifique a conexão com a internet.', 'error');
             return;
         }
 
-        // Pega as datas do filtro de PDF (que está sincronizado com o dashboard)
         let dataInicioPDF = document.getElementById('pdf-data-inicio').value || dataInicioDashboard;
         let dataFimPDF = document.getElementById('pdf-data-fim').value || dataFimDashboard;
         
@@ -426,7 +431,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        const dadosBase = getRelatorioBase(dataInicioPDF, dataFimPDF);
+        const dadosBase = (tipoRelatorio === 'delivery') 
+            ? getRelatorioDeliveryBase(dataInicioPDF, dataFimPDF) 
+            : getRelatorioBase(dataInicioPDF, dataFimPDF);
 
         if (dadosBase.length === 0) {
             mostrarMensagem('Nenhuma venda encontrada para gerar o relatório no período especificado.', 'error');
@@ -441,8 +448,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             let startY = setupDoc(doc, `Relatório de ${getTituloRelatorio(tipoRelatorio)}`, dataInicioPDF, dataFimPDF);
             
-            // Adicionar resumo executivo
-            startY = adicionarResumoExecutivo(doc, dadosBase, startY);
+            // Adicionar resumo executivo (passa flag se é delivery)
+            startY = adicionarResumoExecutivo(doc, dadosBase, startY, tipoRelatorio === 'delivery');
             
             switch (tipoRelatorio) {
                 case 'geral':
@@ -457,13 +464,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                 case 'produto':
                     startY = gerarRelatorioProduto(doc, dadosBase, startY);
                     break;
+                case 'delivery':
+                    startY = gerarRelatorioDelivery(doc, dadosBase, startY);
+                    break;
                 default:
                     throw new Error(`Tipo de relatório desconhecido: ${tipoRelatorio}`);
             }
 
             addFooter(doc, startY);
             
-            // Salvar o PDF
             doc.save(`Relatorio_${getTituloRelatorio(tipoRelatorio)}_${dataInicioPDF}_a_${dataFimPDF}.pdf`);
             mostrarMensagem(`Relatório de ${getTituloRelatorio(tipoRelatorio)} gerado com sucesso!`, 'success');
             
@@ -475,20 +484,19 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function getTituloRelatorio(tipo) {
         const titulos = {
-            'geral': 'Vendas Gerais',
-            'pagamento': 'Vendas por Pagamento', 
-            'vendedor': 'Performance de Vendedores',
-            'produto': 'Produtos Vendidos'
+            'geral': 'Vendas Gerais (Loja)',
+            'pagamento': 'Vendas por Pagamento (Loja)', 
+            'vendedor': 'Performance de Vendedores (Loja)',
+            'produto': 'Produtos Vendidos (Loja)',
+            'delivery': 'Vendas Delivery' // NOVO TÍTULO
         };
         return titulos[tipo] || tipo;
     }
 
-    function adicionarResumoExecutivo(doc, dados, startY) {
+    function adicionarResumoExecutivo(doc, dados, startY, isDelivery = false) {
         const totalBruto = dados.reduce((sum, v) => sum + v.total, 0);
-        const totalTaxas = dados.reduce((sum, v) => sum + calcularTaxaVenda(v), 0);
-        const totalLiquido = totalBruto - totalTaxas;
         const totalTransacoes = dados.length;
-        const ticketMedio = totalTransacoes > 0 ? totalLiquido / totalTransacoes : 0;
+        let resumoLines = [];
 
         doc.setFontSize(12);
         doc.setTextColor(50, 50, 50);
@@ -496,14 +504,28 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         doc.setFontSize(9);
         doc.setTextColor(100, 100, 100);
-        
-        const resumoLines = [
-            `Total de Vendas: ${totalTransacoes} transações`,
-            `Faturamento Bruto: ${formatarMoeda(totalBruto)}`,
-            `Custos com Taxas: ${formatarMoeda(totalTaxas)}`,
-            `Faturamento Líquido: ${formatarMoeda(totalLiquido)}`,
-            `Ticket Médio: ${formatarMoeda(ticketMedio)}`
-        ];
+
+        if (isDelivery) {
+            // Resumo para Delivery (sem taxas)
+            const ticketMedio = totalTransacoes > 0 ? totalBruto / totalTransacoes : 0;
+            resumoLines = [
+                `Total de Pedidos: ${totalTransacoes} transações`,
+                `Faturamento Delivery: ${formatarMoeda(totalBruto)}`,
+                `Ticket Médio: ${formatarMoeda(ticketMedio)}`
+            ];
+        } else {
+            // Resumo para Vendas (com taxas)
+            const totalTaxas = dados.reduce((sum, v) => sum + calcularTaxaVenda(v), 0);
+            const totalLiquido = totalBruto - totalTaxas;
+            const ticketMedio = totalTransacoes > 0 ? totalLiquido / totalTransacoes : 0;
+            resumoLines = [
+                `Total de Vendas: ${totalTransacoes} transações`,
+                `Faturamento Bruto: ${formatarMoeda(totalBruto)}`,
+                `Custos com Taxas: ${formatarMoeda(totalTaxas)}`,
+                `Faturamento Líquido: ${formatarMoeda(totalLiquido)}`,
+                `Ticket Médio: ${formatarMoeda(ticketMedio)}`
+            ];
+        }
         
         resumoLines.forEach((line, index) => {
             doc.text(line, 20, startY + 10 + (index * 5));
@@ -513,6 +535,33 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // --- IMPLEMENTAÇÃO DOS RELATÓRIOS ---
+    
+    /**
+     * Extrai a lista de itens da string de observações do delivery.
+     */
+    const parseItensDelivery = (observacoes) => {
+        if (!observacoes) return 'N/A';
+        const linhas = observacoes.split('\n');
+        let itens = [];
+        let capturandoItens = false;
+        for (const linha of linhas) {
+            if (linha.startsWith('Itens:')) {
+                capturandoItens = true;
+                continue;
+            }
+            if (linha.startsWith('Total:') || linha.startsWith('OBSERVAÇÕES ADICIONAIS:')) {
+                capturandoItens = false;
+                break;
+            }
+            if (capturandoItens && linha.trim() !== '') {
+                itens.push(linha.replace('*', '').trim()); 
+            }
+        }
+        if (itens.length === 0) return 'Detalhes não encontrados';
+        // Retorna como string única separada por ; para o PDF
+        return itens.join('; ');
+    };
+    
 
     function gerarRelatorioGeral(doc, dadosBase, startY) {
         const head = [["Data/Hora", "Vendedor", "Pagamento", "Bruto", "Taxa", "Líquido"]];
@@ -565,6 +614,59 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return doc.lastAutoTable.finalY + 10;
     }
+    
+    function gerarRelatorioDelivery(doc, dadosBase, startY) {
+        const head = [["Data/Hora", "Cliente", "Itens (Resumo)", "Pagamento", "Status", "Total"]];
+        const body = dadosBase.map(p => {
+            const itensResumo = parseItensDelivery(p.observacoes);
+            
+            // ISOLANDO A DATA PARA GARANTIR A SINTAXE LIMPA NO ARRAY LITERAL
+            const dataHoraFormatada = new Date(p.created_at).toLocaleString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            return [
+                dataHoraFormatada, // Variável de data formatada
+                p.nome_cliente || 'N/A',
+                itensResumo.substring(0, 45) + (itensResumo.length > 45 ? '...' : ''), // Limita o tamanho
+                formatarFormaPagamento(p.forma_pagamento),
+                p.status,
+                formatarMoeda(p.total)
+            ];
+        });
+
+        const totalBruto = dadosBase.reduce((sum, v) => sum + v.total, 0);
+
+        doc.autoTable({
+            startY: startY,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: configPdf.headerStyle,
+            bodyStyles: configPdf.bodyStyle,
+            alternateRowStyles: configPdf.alternateRowStyle,
+            foot: [
+                ["TOTAL GERAL", "", "", "", "", formatarMoeda(totalBruto)]
+            ],
+            footStyles: configPdf.footerStyle,
+            margin: { top: startY },
+            styles: { fontSize: 8, cellPadding: 3 },
+            columnStyles: {
+                0: { cellWidth: 25 },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 50 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 15 },
+                5: { cellWidth: 20 }
+            }
+        });
+
+        return doc.lastAutoTable.finalY + 10;
+    }
+
 
     function gerarRelatorioPagamento(doc, dadosBase, startY) {
         const agrupado = dadosBase.reduce((acc, v) => {
@@ -586,6 +688,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             formatarMoeda(totais.taxas),
             formatarMoeda(totais.liquido)
         ]).sort((a, b) => parseFloat(b[4].replace(/[R$\s.]/g, '').replace(',', '.')) - parseFloat(a[4].replace(/[R$\s.]/g, '').replace(',', '.')));
+        //                                                                                                                                                                                                                                                    ^ CORRIGIDO: O parêntese de fechamento do .sort() estava faltando aqui.
 
         const totalBruto = dadosBase.reduce((sum, v) => sum + v.total, 0);
         const totalTaxas = dadosBase.reduce((sum, v) => sum + calcularTaxaVenda(v), 0);
@@ -636,6 +739,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             formatarMoeda(totais.taxas),
             formatarMoeda(totais.liquido)
         ]).sort((a, b) => b[4].replace(/[R$\s.]/g, '').replace(',', '.') - a[4].replace(/[R$\s.]/g, '').replace(',', '.'));
+        //                                                                                                                                                                                                      ^ CORRIGIDO: O parêntese de fechamento do .sort() estava faltando aqui.
 
         const totalBruto = dadosBase.reduce((sum, v) => sum + v.total, 0);
         const totalTaxas = dadosBase.reduce((sum, v) => sum + calcularTaxaVenda(v), 0);
@@ -673,16 +777,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             (venda.itens || []).forEach(item => {
                 const nome = item.produto?.nome || 'Produto Removido';
                 
-                // ==================================================================
-                // === INÍCIO DA CORREÇÃO (PDF Produtos) ===
-                // ==================================================================
                 // Usa o cache de categorias em vez do join quebrado
                 const catId = item.produto?.categoria_id;
                 const categoriaEncontrada = categoriasCache.find(c => c.id === catId);
                 const categoria = categoriaEncontrada ? categoriaEncontrada.nome : (catId ? 'Sem Categoria' : 'Produto Removido');
-                // ==================================================================
-                // === FIM DA CORREÇÃO ===
-                // ==================================================================
                 
                 const valorVendido = item.preco_unitario * item.quantidade;
 
@@ -741,7 +839,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             'dinheiro': 'Dinheiro',
             'cartao_debito': 'Cartão Débito',
             'cartao_credito': 'Cartão Crédito',
-            'pix': 'PIX'
+            'pix': 'PIX',
+            'crediario': 'Crediário',
+            'cartao_(maquininha)': 'Cartão (Máquina)'
         };
         return formas[forma] || forma;
     }
@@ -769,16 +869,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         const categorias = {};
         dados.forEach(v => (v.itens || []).forEach(item => {
             
-            // ==================================================================
-            // === INÍCIO DA CORREÇÃO (Gráfico Categorias) ===
-            // ==================================================================
             // Usa o cache de categorias em vez do join quebrado
             const catId = item.produto?.categoria_id;
             const categoriaEncontrada = categoriasCache.find(c => c.id === catId);
             const cat = categoriaEncontrada ? categoriaEncontrada.nome : (catId ? 'Sem Categoria' : 'Produto Removido');
-            // ==================================================================
-            // === FIM DA CORREÇÃO ===
-            // ==================================================================
 
             categorias[cat] = (categorias[cat] || 0) + (item.preco_unitario * item.quantidade);
         }));
