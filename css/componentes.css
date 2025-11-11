@@ -1491,7 +1491,7 @@ table tr:hover {
 /* KPIs (Key Performance Indicators) */
 .kpi-financial-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, 1fr); /* CORRIGIDO: Força 4 colunas em telas grandes */
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -1700,13 +1700,17 @@ table tr:hover {
     .dashboard-main-layout-v2 {
         grid-template-columns: 1fr;
     }
+    /* CORRIGIDO: Em telas menores que 900px, volta para 3 ou 2 colunas para caber */
+    .kpi-financial-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
 }
 @media (max-width: 767px) {
     .tabs-nav {
         flex-direction: column;
     }
     .kpi-financial-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr; /* Volta para 2 colunas no mobile */
     }
     .filtros-container-novo {
         flex-direction: column;
