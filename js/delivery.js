@@ -34,17 +34,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     const histDataInicioInput = document.getElementById('hist-data-inicio');
     const histDataFimInput = document.getElementById('hist-data-fim');
     const aplicarFiltroHistoricoBtn = document.getElementById('aplicar-filtro-historico');
+    
+    // ELEMENTOS DA ABA CUPONS (NOVOS)
+    const btnNovoCupom = document.getElementById('btn-novo-cupom'); // NOVO BOTÃO ABRIR MODAL
+    const modalNovoCupom = document.getElementById('modal-novo-cupom'); // NOVO MODAL
+    const fecharModalCupom = document.getElementById('fechar-modal-cupom');
+    const formNovoCupom = document.getElementById('form-novo-cupom');
+    const cuponsTabelaBody = document.getElementById('cupons-tabela-body');
     // ==================================
 
     let todosPedidos = []; // Pedidos ATIVOS (Kanban)
     let todosPedidosHistorico = []; // Pedidos INATIVOS (Histórico)
+    let todosCupons = []; // Lista de Cupons
     let pedidoSelecionado = null;
     
     // Cache de configurações da loja
     let configLoja = { tempo_entrega: 60 }; // Padrão de 60 minutos
     let timerInterval = null;
     let supabaseChannel = null;
-    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/wAAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
+    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
     
     // ==================================
     // === NOVAS VARIÁVEIS (PAGINAÇÃO) ===
@@ -164,7 +172,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Carrega os pedidos ativos (Kanban) e o histórico (Tabela) em paralelo
         await Promise.all([
             carregarPedidosOnline(),
-            carregarHistoricoPedidos(paginaAtualHistorico)
+            carregarHistoricoPedidos(paginaAtualHistorico),
+            carregarCupons() // NOVO: Carrega a lista de cupons
         ]);
         
         // Inicia o ouvinte de novos pedidos (Realtime)
@@ -182,9 +191,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     function configurarEventListeners() {
         if (recarregarBtn) {
             recarregarBtn.addEventListener('click', () => {
-                // Recarrega AMBOS os painéis
+                // Recarrega AMBOS os painéis e os cupons
                 carregarPedidosOnline();
                 carregarHistoricoPedidos(paginaAtualHistorico);
+                carregarCupons();
             });
         }
         if (btnAvancarStatus) {
@@ -218,7 +228,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         // ==================================
-        // === NOVOS LISTENERS (ABAS) ===
+        // === NOVOS LISTENERS (ABAS E CUPONS) ===
         // ==================================
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -230,6 +240,31 @@ document.addEventListener('DOMContentLoaded', async function () {
         // NOVO LISTENER: Filtro de Histórico
         if (aplicarFiltroHistoricoBtn) {
             aplicarFiltroHistoricoBtn.addEventListener('click', () => carregarHistoricoPedidos(1));
+        }
+        
+        // NOVO LISTENER: Botão Novo Cupom (Abre o Modal)
+        if (btnNovoCupom) {
+             btnNovoCupom.addEventListener('click', () => {
+                 formNovoCupom.reset(); // Limpa o formulário ao abrir
+                 modalNovoCupom.style.display = 'flex';
+             });
+        }
+        
+        // NOVO LISTENER: Fechar Modal Cupom
+        if (fecharModalCupom) {
+             fecharModalCupom.addEventListener('click', () => {
+                 modalNovoCupom.style.display = 'none';
+             });
+             window.addEventListener('click', (e) => {
+                 if (e.target === modalNovoCupom) {
+                     modalNovoCupom.style.display = 'none';
+                 }
+             });
+        }
+        
+        // NOVO LISTENER: Formulário de Cupom (Salvar)
+        if (formNovoCupom) {
+            formNovoCupom.addEventListener('submit', criarNovoCupom);
         }
         // ==================================
     }
@@ -265,6 +300,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 histDataInicioInput.value = seteDiasAtras.toISOString().split('T')[0];
             }
             carregarHistoricoPedidos(1);
+        } else if (tabId === 'tab-promocoes') {
+             carregarCupons();
         }
     }
     // ==================================
@@ -1049,6 +1086,152 @@ document.addEventListener('DOMContentLoaded', async function () {
                 carregarHistoricoPedidos(paginaAtualHistorico + 1);
             }
         });
+    }
+
+    // ----------------------------------------------------------------------
+    // --- LÓGICA DE CUPONS E PROMOÇÕES (NOVAS FUNÇÕES) ---
+    // ----------------------------------------------------------------------
+
+    /**
+     * Carrega a lista de cupons existentes.
+     */
+    async function carregarCupons() {
+        if (!cuponsTabelaBody) return;
+        cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Carregando cupons...</td></tr>`;
+
+        try {
+            const { data, error } = await supabase.from('cupons')
+                .select('*')
+                .order('codigo', { ascending: true });
+
+            if (error) throw error;
+            
+            todosCupons = data || [];
+            exibirCupons(todosCupons);
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar cupons:', error);
+            mostrarMensagem('Erro ao carregar cupons. Verifique se a tabela `cupons` existe.', 'error');
+            cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--error-color);">Falha ao carregar cupons.</td></tr>`;
+        }
+    }
+
+    /**
+     * Exibe a lista de cupons na tabela.
+     */
+    function exibirCupons(cupons) {
+        if (!cuponsTabelaBody) return;
+        cuponsTabelaBody.innerHTML = '';
+        
+        if (cupons.length === 0) {
+            cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Nenhum cupom cadastrado.</td></tr>`;
+            return;
+        }
+
+        const hoje = new Date().toISOString().split('T')[0];
+
+        cupons.forEach(cupom => {
+            const isExpirado = cupom.data_validade && cupom.data_validade < hoje;
+            const isEsgotado = cupom.usos_maximos > 0 && cupom.usos_usados >= cupom.usos_maximos;
+            const isAtivo = cupom.ativo && !isExpirado && !isEsgotado;
+
+            const statusClass = isAtivo ? 'success' : isExpirado ? 'danger' : isEsgotado ? 'warning' : 'info';
+            const statusText = isAtivo ? 'Ativo' : isExpirado ? 'Expirado' : isEsgotado ? 'Esgotado' : 'Inativo';
+            const valorDisplay = cupom.tipo === 'percentual' ? `${cupom.valor}%` : formatarMoeda(cupom.valor);
+            const validadeDisplay = cupom.data_validade ? new Date(cupom.data_validade + 'T00:00:00').toLocaleDateString('pt-BR') : 'Ilimitado';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${cupom.codigo}</strong></td>
+                <td>${valorDisplay}</td>
+                <td>${validadeDisplay}</td>
+                <td>${cupom.usos_usados} (${cupom.usos_maximos === 0 ? '∞' : cupom.usos_maximos})</td>
+                <td>
+                    <span class="status-badge status-${statusClass}">${statusText}</span>
+                </td>
+                <td>
+                    <button class="btn-edit btn-sm" onclick="editarCupom('${cupom.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-danger btn-sm" onclick="excluirCupom('${cupom.id}', '${cupom.codigo}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            cuponsTabelaBody.appendChild(tr);
+        });
+    }
+
+    /**
+     * Adiciona um novo cupom ao banco de dados.
+     */
+    async function criarNovoCupom(e) {
+        e.preventDefault();
+        
+        const codigo = document.getElementById('cupom-codigo').value.trim().toUpperCase();
+        const tipo = document.getElementById('cupom-tipo').value;
+        const valor = parseFloat(document.getElementById('cupom-valor').value);
+        const validade = document.getElementById('cupom-validade').value || null;
+        const usosMaximos = parseInt(document.getElementById('cupom-usos-maximos').value) || 0;
+        const ativo = document.getElementById('cupom-ativo').checked;
+
+        if (!codigo || isNaN(valor) || valor <= 0) {
+            mostrarMensagem('Preencha o Código e o Valor corretamente.', 'error');
+            return;
+        }
+
+        try {
+            const { error } = await supabase.from('cupons')
+                .insert({
+                    codigo: codigo,
+                    tipo: tipo,
+                    valor: valor,
+                    data_validade: validade,
+                    usos_maximos: usosMaximos,
+                    ativo: ativo,
+                    usos_usados: 0 // Inicia com 0
+                });
+
+            if (error) throw error;
+
+            mostrarMensagem(`Cupom ${codigo} cadastrado com sucesso!`, 'success');
+            formNovoCupom.reset();
+            modalNovoCupom.style.display = 'none'; // Fecha o modal
+            await carregarCupons();
+
+        } catch (error) {
+            console.error('❌ Erro ao criar cupom:', error);
+            let msg = 'Erro ao cadastrar cupom.';
+            if (error.code === '23505') {
+                msg = `Erro: O código **${codigo}** já existe.`;
+            } else if (error.message) {
+                msg += ' Detalhe: ' + error.message;
+            }
+            mostrarMensagem(msg, 'error');
+        }
+    }
+
+    /**
+     * Funções placeholder para a tabela de cupons (precisam de um modal de edição)
+     */
+    window.editarCupom = function(cupomId) {
+        mostrarMensagem(`Funcionalidade de Edição do cupom #${cupomId} em desenvolvimento.`, 'info');
+        // Implementar modal de edição aqui
+    }
+
+    window.excluirCupom = async function(cupomId, codigo) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR o cupom "${codigo}"?\nEsta ação é irreversível!`)) return;
+
+        try {
+            const { error } = await supabase.from('cupons')
+                .delete()
+                .eq('id', cupomId);
+            
+            if (error) throw error;
+            
+            mostrarMensagem(`Cupom ${codigo} excluído com sucesso!`, 'success');
+            await carregarCupons();
+
+        } catch (error) {
+            console.error('❌ Erro ao excluir cupom:', error);
+            mostrarMensagem('Erro ao excluir cupom: ' + error.message, 'error');
+        }
     }
 
     // ==================================

@@ -94,32 +94,30 @@
                     </div>
 
                     <div class="tab-content" id="tab-promocoes" style="display: none;">
-                        <div class="card" style="margin-top: 1.5rem;">
-                            <h3><i class="fas fa-gift"></i> Gerenciar Promoções e Cupons</h3>
-                            
-                            <p>Em construção. Aqui você poderá listar, criar e editar cupons de desconto (percentual ou valor fixo) e promoções.</p>
-                            
-                            <div class="table-container" style="margin-top: 1rem;">
+                        
+                        <div class="card">
+                             <h3><i class="fas fa-list-alt"></i> Cupons Cadastrados</h3>
+                             <button id="btn-novo-cupom" class="btn btn-primary btn-sm" style="margin-bottom: 1rem;">
+                                <i class="fas fa-plus-circle"></i> Novo Cupom
+                            </button>
+
+                             <div class="table-container" style="margin-top: 1rem;">
                                 <table class="table-moderna">
                                     <thead>
                                         <tr>
                                             <th>Código</th>
-                                            <th>Tipo</th>
-                                            <th>Valor</th>
-                                            <th>Usos</th>
+                                            <th>Desconto</th>
                                             <th>Validade</th>
+                                            <th>Usos (Max)</th>
+                                            <th>Status</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr><td colspan="6" style="text-align: center; color: #666;">Nenhum cupom cadastrado.</td></tr>
+                                    <tbody id="cupons-tabela-body">
+                                        <tr><td colspan="6" style="text-align: center; color: #666;">Carregando cupons...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <button class="btn btn-primary btn-sm" style="margin-top: 1rem;">
-                                <i class="fas fa-plus"></i> Novo Cupom
-                            </button>
                         </div>
                     </div>
 
@@ -257,6 +255,55 @@
                         </div>
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Configurações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="modal-novo-cupom" class="modal">
+                <div class="modal-content" style="max-width: 550px;">
+                    <div class="modal-header">
+                        <h3 id="modal-cupom-titulo"><i class="fas fa-ticket-alt"></i> Cadastrar Novo Cupom</h3>
+                        <span class="close" id="fechar-modal-cupom">&times;</span>
+                    </div>
+                    <form id="form-novo-cupom" class="form">
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cupom-codigo">Código do Cupom *</label>
+                                    <input type="text" id="cupom-codigo" required maxlength="15" style="text-transform: uppercase;" placeholder="EX: VERAO20">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cupom-tipo">Tipo de Desconto *</label>
+                                    <select id="cupom-tipo" required>
+                                        <option value="percentual">Percentual (%)</option>
+                                        <option value="valor">Valor Fixo (R$)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cupom-valor">Valor / Percentual *</label>
+                                    <input type="number" id="cupom-valor" step="0.01" min="0" required placeholder="Ex: 20 ou 10.00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cupom-validade">Data de Validade (Opcional)</label>
+                                    <input type="date" id="cupom-validade">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="cupom-usos-maximos">Usos Máximos (0 = Ilimitado)</label>
+                                <input type="number" id="cupom-usos-maximos" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" id="cupom-ativo" checked />
+                                <label for="cupom-ativo" style="display: inline;">Cupom Ativo</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Cupom</button>
                         </div>
                     </form>
                 </div>
