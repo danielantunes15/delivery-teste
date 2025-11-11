@@ -3,7 +3,6 @@
 (function() {
     
     const supabase = window.supabase;
-    // const ui = window.AppUI; // <-- REMOVIDO
 
     /**
      * Busca as configurações da loja (taxa de entrega, horários).
@@ -21,11 +20,9 @@
             window.app.configLoja = data; // Salva no estado global
         } catch (error) {
             console.error("Erro ao carregar configurações da loja:", error);
-            // CORREÇÃO: Acessa window.AppUI diretamente
             if (window.AppUI) {
                 window.AppUI.mostrarMensagem('Erro ao carregar status da loja.', 'error');
             }
-            // O app continuará com os valores padrão
         }
     }
 
@@ -46,7 +43,6 @@
             return data || null;
         } catch (error) {
             console.error('Erro ao buscar cliente:', error);
-            // CORREÇÃO: Acessa window.AppUI diretamente
             if (window.AppUI) {
                 window.AppUI.mostrarMensagem('Erro ao consultar banco de dados.', 'error');
             }
@@ -80,7 +76,6 @@
      * @param {string} enderecoCompleto - Novo endereço.
      */
     async function salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto) {
-        // CORREÇÃO: Remove a desestruturação do retorno
         const { error } = await supabase.from('clientes_delivery')
             .update({ endereco: enderecoCompleto })
             .eq('telefone', telefone);
@@ -93,7 +88,6 @@
      * @param {string} cep - O CEP para buscar.
      */
     async function buscarCep(cep) {
-        // CORREÇÃO: Garante que AppUI exista antes de usá-lo
         if (!window.AppUI) {
             console.error("Módulo UI não está pronto para buscar CEP.");
             return;
@@ -104,7 +98,6 @@
         if (cepLimpo.length !== 8) return;
         window.AppUI.mostrarMensagem('Buscando endereço...', 'info');
 
-        // Determina se estamos no modal de cadastro ou de edição
         const isCadastro = uiElementos.cadastroForm?.style.display === 'block';
         const isModal = uiElementos.modalEditarEndereco?.style.display === 'flex';
         
@@ -152,7 +145,6 @@
                 campos.numero.focus();
                 window.AppUI.mostrarMensagem('Endereço preenchido. Confira os dados.', 'success');
             } else {
-                // Caso de CEP Único (só retorna cidade/estado)
                 campos.rua.focus();
                 window.AppUI.mostrarMensagem('CEP encontrado (cidade/estado). Digite a Rua e Bairro.', 'warning');
             }
@@ -185,6 +177,130 @@
     }
     
     /**
+     * Busca produtos ativos pelo termo de busca no servidor.
+     * @param {string} termo - O termo a ser buscado.
+     * @returns {Promise<Array>} Lista de produtos filtrados.
+     */
+    async function buscarProdutosPorTermo(termo) {
+         // Se o termo for vazio, retorna a lista completa (chamando carregarProdutos)
+         if (!termo || termo.trim() === '') return carregarProdutos();
+        
+        try {
+            const { data, error } = await supabase
+                .from('produtos')
+                .select('*')
+                .eq('ativo', true)
+                // NOVO: Usa a função ilike para busca parcial (case-insensitive)
+                .ilike('nome', `%${termo}%`) 
+                .order('nome');
+                
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Erro ao buscar produtos no servidor:', error);
+            window.AppUI.mostrarMensagem('Erro na busca. Tente novamente.', 'error');
+            return [];
+        }
+    }
+    
+    /**
+     * Valida um cupom de desconto no servidor.
+     * @param {string} codigo - O código do cupom.
+     * @returns {Promise<object|null>} Os dados do cupom (se válido) ou um objeto de erro.
+     */
+    async function validarCupom(codigo) {
+        try {
+            const { data, error } = await supabase.from('cupons')
+                .select('*')
+                .eq('codigo', codigo.toUpperCase())
+                .eq('ativo', true) 
+                .single(); 
+            
+            if (error && error.code !== 'PGRST116') throw error; // Ignora 'not found'
+            
+            if (data) {
+                // Lógica de validação de data
+                const hoje = new Date().toISOString().split('T')[0];
+                if (data.data_validade && data.data_validade < hoje) {
+                     return { error: 'Cupom expirado.', codigo: codigo };
+                }
+                
+                // Lógica de validação de uso
+                if (data.usos_maximos > 0 && data.usos_usados >= data.usos_maximos) {
+                     return { error: 'Limite máximo de usos atingido.', codigo: codigo };
+                }
+                
+                return data; // Cupom válido
+            }
+            
+            return null; // Cupom não encontrado/inválido
+            
+        } catch (error) {
+            console.error('Erro ao validar cupom:', error);
+            return { error: 'Erro de conexão ao validar cupom.' };
+        }
+    }
+    
+    /**
+     * Incrementa o contador de uso de um cupom.
+     */
+    async function incrementarUsoCupom(codigo) {
+         if (!codigo) return;
+         try {
+            // Use rpc (Remote Procedure Call) para incrementar com segurança
+            // Isso chama a função SQL 'incrementar_uso_cupom' que criamos
+            const { error } = await supabase.rpc('incrementar_uso_cupom', {
+                codigo_cupom: codigo.toUpperCase()
+            });
+            if (error) throw error;
+            console.log(`Cupom ${codigo} incrementado com sucesso.`);
+         } catch(error) {
+             console.error("Erro ao incrementar uso do cupom:", error.message);
+             // Não bloqueia o usuário, apenas loga o erro
+         }
+    }
+
+    /**
+     * Busca as opções de um produto (ex: Tamanhos, Sabores).
+     * (Esta é uma função de placeholder, requer tabelas no Supabase)
+     */
+    async function buscarOpcoesProduto(produtoId) {
+        // try {
+        //     const { data: gruposOpcoes, error: errorGrupos } = await supabase
+        //         .from('produto_opcoes_grupos') 
+        //         .select(`*, opcoes:produto_opcoes(*)`)
+        //         .eq('produto_id', produtoId)
+        //         .order('nome');
+        //     if (errorGrupos) throw errorGrupos;
+        //     return gruposOpcoes;
+        // } catch (error) {
+        //     console.warn(`(API) Erro ao buscar opções: ${error.message}`);
+        //     return [];
+        // }
+        return []; // Retorna vazio por enquanto
+    }
+    
+    /**
+     * Busca os complementos de um produto (ex: Adicionais).
+     * (Esta é uma função de placeholder, requer tabelas no Supabase)
+     */
+    async function buscarComplementosProduto(produtoId) {
+        // try {
+        //     const { data: complementos, error: errorComps } = await supabase
+        //         .from('produto_complementos')
+        //         .select(`*`)
+        //         .eq('produto_id', produtoId)
+        //         .order('nome');
+        //     if (errorComps) throw errorComps;
+        //     return complementos;
+        // } catch (error) {
+        //     console.warn(`(API) Erro ao buscar complementos: ${error.message}`);
+        //     return [];
+        // }
+        return []; // Retorna vazio por enquanto
+    }
+    
+    /**
      * Carrega os produtos "mais pedidos" (lógica de destaque).
      * @returns {Promise<Array>} Lista de produtos em destaque.
      */
@@ -205,7 +321,6 @@
      * @returns {Promise<Array>} Lista de pedidos.
      */
     async function buscarHistoricoPedidos(telefone) {
-        // CORREÇÃO: Busca até 5 pedidos (para performance)
         const { data, error } = await supabase.from('pedidos_online')
             .select(`id, created_at, total, forma_pagamento, status, observacoes, telefone_cliente, endereco_entrega, nome_cliente`)
             .eq('telefone_cliente', telefone) 
@@ -269,7 +384,6 @@
         const statusPermitidos = ['novo', 'preparando'];
         
         if (!statusPermitidos.includes(pedido.status)) {
-            // Se o status já avançou, retorna falso para o JS mostrar a mensagem de aviso
             return false; 
         }
 
@@ -294,12 +408,17 @@
         buscarCep,
         carregarCategorias,
         carregarProdutos,
+        buscarProdutosPorTermo, // <-- ADICIONADO
+        validarCupom, // <-- ADICIONADO
+        incrementarUsoCupom, // <-- ADICIONADO
+        buscarOpcoesProduto,
+        buscarComplementosProduto,
         carregarMaisPedidos,
         buscarHistoricoPedidos,
         buscarPedidoParaRastreamento,
         finalizarPedidoNoSupabase,
         atualizarEstoqueNoSupabase,
-        cancelarPedidoNoSupabase // Adicionada a função de cancelamento
+        cancelarPedidoNoSupabase
     };
 
 })();

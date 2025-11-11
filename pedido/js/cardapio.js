@@ -1,4 +1,4 @@
-// js/cardapio.js - Módulo de Cardápio e Opções de Produto (Corrigido)
+// js/cardapio.js - Módulo de Cardápio e Opções de Produto (Com Busca no Servidor)
 
 (function() {
 
@@ -186,6 +186,48 @@
     }
 
     /**
+     * Realiza a busca de produtos no servidor e atualiza a exibição.
+     */
+    async function setupSearch() {
+        const elementos = window.AppUI.elementos;
+        const searchTerm = elementos.headerSearchInput.value.trim(); 
+
+        // Espera pelo menos 2 caracteres para pesquisar, senão retorna a lista completa
+        if (searchTerm.length < 2 && searchTerm.length > 0) {
+            // Se o usuário digitou 1 caractere, limpa a exibição anterior ou espera
+            if (elementos.productsSection) elementos.productsSection.innerHTML = '<p style="padding: 20px; text-align: center;">Digite mais para pesquisar...</p>';
+            return;
+        }
+
+        try {
+            // 1. Busca os produtos no SERVIDOR (usa a nova função)
+            const produtosFiltrados = await window.AppAPI.buscarProdutosPorTermo(searchTerm);
+            
+            // 2. Atualiza o cache global de produtos para que o modal funcione corretamente
+            if (!searchTerm) {
+                 const todosOsProdutos = await window.AppAPI.carregarProdutos();
+                 window.app.produtos = todosOsProdutos;
+            } else {
+                 window.app.produtos = produtosFiltrados; 
+            }
+            
+            // 3. Exibe os resultados (seja a lista completa ou a filtrada)
+            exibirProdutos(produtosFiltrados);
+            
+            // 4. Atualiza a UI das categorias (ativa "Todos" e mostra todas as seções)
+            document.querySelectorAll('.category-item').forEach(cat => cat.classList.remove('active'));
+            document.querySelector('.category-item[data-id="todos"]')?.classList.add('active');
+            document.querySelectorAll('.category-products').forEach(section => {
+                section.style.display = 'block';
+            });
+            
+        } catch (error) {
+            console.error("Erro na busca de produtos:", error);
+            window.AppUI.mostrarMensagem("Erro ao buscar produtos.", "error");
+        }
+    }
+
+    /**
      * Renderiza a lista principal de produtos, agrupados por categoria.
      */
     function exibirProdutos(listaParaExibir) {
@@ -252,6 +294,7 @@
             container.appendChild(categorySectionDiv);
         });
         
+        // --- ATUALIZAÇÃO DO EVENT LISTENER: (Adicionar ao Carrinho ou Modal) ---
         container.querySelectorAll('.product-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 const produtoId = e.currentTarget.getAttribute('data-id');
@@ -267,54 +310,10 @@
             });
         });
 
-        // Configura o scroll spy após os produtos serem renderizados
         setupCategoryScrollSpy();
     }
-
-    // --- Funções de Busca e Compartilhamento ---
-
-    function setupShare() {
-        if (navigator.share) {
-            navigator.share({
-                title: 'Confeitaria Doce Criativo',
-                text: 'Confira os deliciosos doces da Confeitaria Doce Criativo!',
-                url: window.location.href
-            }).catch(error => console.log('Erro ao compartilhar:', error));
-        } else {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                window.AppUI.mostrarMensagem('Link copiado para a área de transferência!', 'success');
-            });
-        }
-    }
-
-    /* --- INÍCIO DA ALTERAÇÃO: Lógica de Busca --- */
-    function setupSearch() {
-        // Lê o valor diretamente do input (que está em ui.elementos.searchIcon)
-        const searchTerm = window.AppUI.elementos.headerSearchInput.value.trim().toLowerCase(); // <-- CORREÇÃO AQUI
-
-        if (searchTerm) {
-            // Se houver um termo de busca, filtra os produtos
-            const produtosFiltrados = window.app.produtos.filter(p => p.nome.toLowerCase().includes(searchTerm));
-            exibirProdutos(produtosFiltrados);
-            
-            // Desativa a categoria "Todos" e mostra todas as seções
-            document.querySelectorAll('.category-item').forEach(cat => cat.classList.remove('active'));
-            document.querySelectorAll('.category-products').forEach(section => {
-                section.style.display = 'block';
-            });
-        } else {
-            // Se o campo de busca está vazio, reseta para a visão original
-            exibirProdutos(window.app.produtos);
-            
-            // Ativa a categoria "Todos"
-            document.querySelectorAll('.category-item').forEach(cat => {
-                cat.classList.toggle('active', cat.getAttribute('data-id') === 'todos');
-            });
-        }
-    }
-    /* --- FIM DA ALTERAÇÃO --- */
-
-    // --- Lógica do Modal de Opções ---
+    
+    // --- Funções de Modal ---
 
     async function abrirModalOpcoes(produto) {
         if (produto.estoque_atual <= 0) return;
@@ -350,13 +349,46 @@
             ]);
 
             if (gruposOpcoes && gruposOpcoes.length > 0) {
-                // (lógica de renderização de opções)
+                gruposOpcoes.forEach(grupo => {
+                    const grupoDiv = document.createElement('div');
+                    grupoDiv.className = 'opcoes-grupo';
+                    let opcoesHtml = `<h4>${grupo.nome} ${grupo.obrigatorio ? '*' : ''}</h4>`;
+                    
+                    grupo.opcoes.forEach(opcao => {
+                        const precoTexto = opcao.preco_adicional > 0 ? ` (+${window.AppUI.formatarMoeda(opcao.preco_adicional)})` : '';
+                        opcoesHtml += `
+                            <label class="opcao-item">
+                                <div>
+                                    <input type="radio" name="grupo-${grupo.id}" value="${opcao.id}" data-preco="${opcao.preco_adicional}" data-nome="${opcao.nome}" data-grupo="${grupo.nome}" ${grupo.obrigatorio ? 'required' : ''}>
+                                    ${opcao.nome}
+                                </div>
+                                <span>${precoTexto}</span>
+                            </label>
+                        `;
+                    });
+                    grupoDiv.innerHTML = opcoesHtml;
+                    elementos.opcoesContainer.appendChild(grupoDiv);
+                });
             } else {
                 elementos.opcoesContainer.innerHTML = '<p style="font-size:0.9rem; color:#888;">Este item não possui opções de escolha.</p>';
             }
 
             if (complementos && complementos.length > 0) {
-                // (lógica de renderização de complementos)
+                let complementosHtml = `<div class="opcoes-grupo"><h4>Adicionais (Opcional)</h4>`;
+                complementos.forEach(comp => {
+                    const precoTexto = comp.preco > 0 ? ` (+${window.AppUI.formatarMoeda(comp.preco)})` : '';
+                    complementosHtml += `
+                        <label class="opcao-item">
+                            <div>
+                                <input type="checkbox" name="complemento" value="${comp.id}" data-preco="${comp.preco}" data-nome="${comp.nome}">
+                                ${comp.nome}
+                            </div>
+                            <span>${precoTexto}</span>
+                        </label>
+                    `;
+                });
+                complementosHtml += `</div>`;
+                elementos.complementosContainer.innerHTML = complementosHtml;
             }
 
             elementos.modalOpcoesProduto.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
@@ -494,13 +526,12 @@
     window.AppCardapio = {
         carregarDadosCardapio,
         updateStoreStatus,
+        setupSearch, // <-- ATUALIZADO
         exibirCategorias,
         exibirProdutos,
         exibirMaisPedidos,
         setupCategoryNavigationJS,
-        setupCategoryScrollSpy, // <-- LINHA ADICIONADA
-        setupShare,
-        setupSearch,
+        setupCategoryScrollSpy, 
         abrirModalOpcoes,
         calcularPrecoModal,
         adicionarItemComOpcoes,

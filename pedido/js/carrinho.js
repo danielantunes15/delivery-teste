@@ -1,15 +1,50 @@
-// js/carrinho.js - Módulo de Gerenciamento do Carrinho (Corrigido)
+// js/carrinho.js - Módulo de Gerenciamento do Carrinho (Com Persistência)
 
 (function() {
 
-    // const ui = window.AppUI; // <-- REMOVIDO
+    /**
+     * Salva o estado atual do carrinho e do cupom no localStorage.
+     */
+    function salvarCarrinhoLocalmente() {
+        localStorage.setItem('doceCriativoCarrinho', JSON.stringify(window.app.carrinho));
+        if (window.app.cupomAplicado) {
+             localStorage.setItem('doceCriativoCupom', JSON.stringify(window.app.cupomAplicado));
+        } else {
+             localStorage.removeItem('doceCriativoCupom');
+        }
+    }
+    
+    /**
+     * Carrega o carrinho e o cupom do localStorage.
+     */
+    function carregarCarrinhoLocalmente() {
+        const carrinhoSalvo = localStorage.getItem('doceCriativoCarrinho');
+        if (carrinhoSalvo) {
+            try {
+                window.app.carrinho = JSON.parse(carrinhoSalvo);
+            } catch (e) {
+                console.error("Erro ao carregar carrinho do local storage:", e);
+                window.app.carrinho = [];
+            }
+        }
+        const cupomSalvo = localStorage.getItem('doceCriativoCupom');
+        if (cupomSalvo) {
+            try {
+                window.app.cupomAplicado = JSON.parse(cupomSalvo);
+            } catch (e) {
+                console.error("Erro ao carregar cupom do local storage:", e);
+                window.app.cupomAplicado = null;
+                localStorage.removeItem('doceCriativoCupom');
+            }
+        }
+    }
+
 
     /**
      * Adiciona um item ao carrinho.
      */
     function adicionarAoCarrinho(produto, detalhes = null) {
         if (produto.estoque_atual <= 0) {
-            // CORREÇÃO: Acessa window.AppUI diretamente
             window.AppUI.mostrarMensagem(`Desculpe, ${produto.nome} está esgotado.`, 'error');
             return;
         }
@@ -51,6 +86,7 @@
         }
         
         atualizarCarrinho();
+        salvarCarrinhoLocalmente(); // <-- ADIÇÃO DA PERSISTÊNCIA
         window.AppUI.mostrarMensagem(`${produto.nome} adicionado à sacola!`, 'success');
     }
 
@@ -64,6 +100,7 @@
         if (item.quantidade < produtoEstoque) {
             item.quantidade += 1;
             atualizarCarrinho();
+            salvarCarrinhoLocalmente(); // <-- ADIÇÃO DA PERSISTÊNCIA
         } else {
             window.AppUI.mostrarMensagem(`Estoque máximo atingido para ${item.produto.nome} (${produtoEstoque} un.)`, 'warning');
         }
@@ -80,6 +117,7 @@
             window.app.carrinho.splice(index, 1);
         }
         atualizarCarrinho();
+        salvarCarrinhoLocalmente(); // <-- ADIÇÃO DA PERSISTÊNCIA
         window.AppUI.mostrarMensagem(`${produtoNome} removido da sacola.`, 'info');
     }
     
@@ -91,6 +129,10 @@
         window.app.carrinho = [];
         window.app.cupomAplicado = null;
         if (window.AppUI.elementos.cupomInput) window.AppUI.elementos.cupomInput.value = '';
+        
+        localStorage.removeItem('doceCriativoCarrinho'); // <-- ADIÇÃO DA PERSISTÊNCIA
+        localStorage.removeItem('doceCriativoCupom'); // <-- ADIÇÃO DA PERSISTÊNCIA
+
         atualizarCarrinho();
         window.AppUI.mostrarMensagem("Carrinho limpo!", "info");
     }
@@ -156,7 +198,7 @@
             `;
             // Desabilita botões de passo
             if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = true;
-            if (elementos.btnContinuar) elementos.btnContinuar.disabled = true;
+            // if (elementos.btnContinuar) elementos.btnContinuar.disabled = true; // Removido na tela única
         } else {
             elementos.carrinhoItens.innerHTML = '';
             carrinho.forEach((item, index) => {
@@ -210,9 +252,8 @@
             const isLojaAberta = elementos.storeStatusText?.textContent === 'Aberto';
             const isReady = window.app.clienteLogado && isLojaAberta; 
 
-            // FIX: Adiciona proteção contra null antes de acessar 'disabled'
             if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = !isReady;
-            if (elementos.btnContinuar) elementos.btnContinuar.disabled = !isReady;
+            // if (elementos.btnContinuar) elementos.btnContinuar.disabled = !isReady; // Removido na tela única
         }
         
         // 4. Renderiza Resumo de Valores
@@ -220,22 +261,25 @@
         if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(window.app.configLoja.taxa_entrega || 0);
         if (elementos.totalCarrinho) elementos.totalCarrinho.textContent = calculo.totalFinal.toFixed(2).replace('.', ',');
         
-        // 5. Renderiza Desconto (NOVO)
+        // 5. Renderiza Desconto 
         if (calculo.valorDesconto > 0) {
             if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'flex';
             if (elementos.descontoValorDisplay) elementos.descontoValorDisplay.textContent = `- ${formatarMoeda(calculo.valorDesconto)}`;
             if (elementos.descontoTipoDisplay) elementos.descontoTipoDisplay.textContent = window.app.cupomAplicado.tipo === 'percentual' 
                 ? `${window.app.cupomAplicado.valor}%`
-                : formatarMoeda(window.app.cupomAplicado.valor);
+                : window.AppUI.formatarMoeda(window.app.cupomAplicado.valor);
             if (elementos.cupomMessage) {
-                elementos.cupomMessage.textContent = `✅ Cupom ${window.app.cupomAplicado.codigo} aplicado com sucesso.`;
+                elementos.cupomMessage.textContent = `✅ Cupom ${window.app.cupomAplicado.codigo} aplicado. Desconto: ${window.AppUI.formatarMoeda(calculo.valorDesconto)}.`;
                 elementos.cupomMessage.style.color = '#2e7d32';
             }
         } else {
             if (elementos.resumoDescontoLinha) elementos.resumoDescontoLinha.style.display = 'none';
-            if (!window.app.cupomAplicado && elementos.cupomMessage) {
-                elementos.cupomMessage.textContent = 'Nenhum cupom aplicado.';
-                elementos.cupomMessage.style.color = '#999';
+            if (elementos.cupomMessage) {
+                 // Verifica se a mensagem de erro de cupom inválido já está sendo mostrada
+                if (!elementos.cupomMessage.textContent.startsWith('❌')) {
+                    elementos.cupomMessage.textContent = 'Nenhum cupom aplicado.';
+                    elementos.cupomMessage.style.color = '#999';
+                }
             }
         }
 
@@ -253,7 +297,7 @@
             elementos.headerCartItems.textContent = totalItens === 1 ? '1 item' : `${totalItens} itens`;
         }
         if (elementos.headerCartTotal) { 
-            elementos.headerCartTotal.textContent = formatarMoeda(calculo.totalFinal);
+            elementos.headerCartTotal.textContent = window.AppUI.formatarMoeda(calculo.totalFinal);
         }
     }
     
@@ -265,12 +309,8 @@
         
         // Renderiza dados de entrega no Step 2
         const elementos = window.AppUI.elementos;
-        const perfil = window.app.clientePerfil;
         if (elementos.tempoEntregaDisplay) elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
         if (elementos.taxaEntregaStep) elementos.taxaEntregaStep.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
-
-        // Não é mais um stepper, então o layout já está no Passo 1 (Sacola)
-        // window.app.Checkout.alternarPasso(1);
 
         atualizarCarrinho();
     }
@@ -281,7 +321,11 @@
     function limparFormularioECarrinho() { 
         window.app.carrinho = [];
         window.app.cupomAplicado = null;
+        localStorage.removeItem('doceCriativoCarrinho'); 
+        localStorage.removeItem('doceCriativoCupom'); 
+        
         if (window.AppUI.elementos.cupomInput) window.AppUI.elementos.cupomInput.value = '';
+        
         atualizarCarrinho();
         
         const elementos = window.AppUI.elementos;
@@ -292,7 +336,7 @@
         const defaultPayment = document.querySelector('.opcoes-pagamento input[value="Dinheiro"]');
         if(defaultPayment) defaultPayment.checked = true;
         
-        elementos.opcoesPagamento.forEach(op => op.classList.remove('selected'));
+        document.querySelectorAll('.opcoes-pagamento .pagamento-opcao').forEach(op => op.classList.remove('selected'));
         const defaultPaymentLabel = document.querySelector('.opcoes-pagamento .pagamento-opcao');
         if (defaultPaymentLabel) {
             defaultPaymentLabel.classList.add('selected');
@@ -310,8 +354,9 @@
         atualizarCarrinho,
         atualizarCarrinhoDisplay,
         limparFormularioECarrinho,
-        calcularTotalComAjustes, // Exposto para o checkout
-        limparCarrinho // Exposto para o botão de limpeza
+        calcularTotalComAjustes, 
+        limparCarrinho, 
+        carregarCarrinhoLocalmente // <-- EXPOSTO
     };
 
 })();

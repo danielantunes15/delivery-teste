@@ -1,4 +1,4 @@
-// js/app.js - Módulo Principal de Inicialização (Corrigido e Robusto)
+// js/app.js - Módulo Principal de Inicialização (Com Persistência)
 
 // O 'app' é um objeto global que os outros módulos usarão.
 // Ele é definido IMEDIATAMENTE, antes do DOM carregar.
@@ -11,8 +11,8 @@ window.app = {
     supabaseChannel: null,
     
     // **NOVAS PROPRIEDADES DE ESTADO GLOBAL ADICIONADAS AQUI**
-    passoAtual: 1, // FIX: Define o estado inicial aqui.
-    cupomAplicado: null, // FIX: Define o estado inicial aqui.
+    passoAtual: 1, 
+    cupomAplicado: null, // Estado do cupom
     
     // Estado dos Módulos (serão preenchidos por eles)
     carrinho: [],
@@ -176,10 +176,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             await app.Auth.verificarSessaoLocal();
             
             // 3. Prepara a interface inicial
-            
-            // CORREÇÃO: Remove a classe 'active' da tela de login (já feito no HTML) e navega diretamente.
             app.UI.elementos.mobileNav.style.display = 'flex';
             
+            // 4. Carrega os dados do cardápio (produtos e categorias)
+            await app.Cardapio.carregarDadosCardapio(); // <-- Carrega produtos ANTES do carrinho
+            
+            // 5. Carrega o carrinho persistido
+            app.Carrinho.carregarCarrinhoLocalmente(); // <-- POSICIONAMENTO CRÍTICO
+
             if (app.clienteLogado) {
                  console.log(`Cliente ${app.clientePerfil.nome} carregado.`);
                  // Se logado, vai direto para o cardápio, loga e carrega status.
@@ -192,17 +196,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                  // O 'auth-screen' fica acessível apenas pelo menu inferior ou tentativa de checkout.
             }
             
-            // 4. Carrega os dados do cardápio
-            await app.Cardapio.carregarDadosCardapio();
-            
-            // 5. Configura o status da loja e busca
+            // 6. Configura o status da loja e busca
             app.Cardapio.updateStoreStatus();
             setInterval(app.Cardapio.updateStoreStatus, 60000);
 
-            // 6. Configura todos os botões e cliques
+            // 7. Configura todos os botões e cliques
             configurarEventListenersGlobais();
             
-            // 7. Atualiza o carrinho
+            // 8. Atualiza o carrinho
             app.Carrinho.atualizarCarrinho();
 
         } catch (error) {

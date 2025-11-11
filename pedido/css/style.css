@@ -6,7 +6,7 @@
     top: 0;
     width: 100%;
     z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     height: 80px; /* Nova altura do header */
     border-bottom: 1px solid rgba(0,0,0,0.1); /* Borda sutil escura */
     transition: background-color 0.3s ease;
@@ -341,9 +341,36 @@ body {
 
 .product-item.out-of-stock {
     opacity: 0.6;
+    filter: grayscale(80%); /* Deixa o item mais cinza */
     cursor: not-allowed;
     background: #f0f0f0;
 }
+
+.product-item.out-of-stock:hover {
+    transform: none; /* Remove o efeito hover */
+    background: #f0f0f0;
+}
+
+/* --- ADICIONADO: Estilo visual para Esgotado --- */
+.product-item.out-of-stock .product-image::after {
+    /* Overlay com o texto ESGOTADO */
+    content: 'ESGOTADO';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(180, 0, 0, 0.7); /* Vermelho translúcido */
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    z-index: 5;
+}
+/* --- FIM ADICIONADO: Estilo visual para Esgotado --- */
 
 .product-item:hover {
     background: #f0f0f0;
@@ -653,6 +680,10 @@ body {
 .alert-info { background-color: #e3f2fd; color: #1565c0; }
 .alert-warning { background-color: #fff3cd; color: #856404; }
 .alert-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit; }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 @keyframes fadeInSlide {
     from { opacity: 0; transform: translateX(20px); }
     to { opacity: 1; transform: translateX(0); }
@@ -682,18 +713,13 @@ body {
 .app-body { padding-bottom: 70px; background-color: #f5f5f5; overflow-x: hidden; }
 #app-container { width: 100%; height: 100%; position: relative; }
 .app-view {
-    /* position: absolute; */ /* REMOVIDO */
     top: 0; left: 0; width: 100%;
-    /* min-height: 100vh; */ /* REMOVIDO */
     padding-top: 0;
     padding-bottom: 65px; box-sizing: border-box;
-    /* overflow-y: hidden; */ /* REMOVIDO */
     display: none;
 }
 .app-view.active { display: block; }
 .app-content-scroll {
-    /* height: 100%; */ /* REMOVIDO */
-    /* overflow-y: auto; */ /* REMOVIDO */
     padding: 0;
     box-sizing: border-box; 
     -webkit-overflow-scrolling: touch; 
@@ -815,18 +841,10 @@ body {
     backdrop-filter: blur(2px);
     animation: fadeIn 0.3s;
 }
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
 .modal-content {
     background-color: white; margin: 5% auto; padding: 0;
     border-radius: 12px; width: 90%; max-width: 500px;
     animation: slideUp 0.3s;
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 .modal-header {
     display: flex; justify-content: space-between; align-items: center;

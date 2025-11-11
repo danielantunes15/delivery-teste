@@ -1,4 +1,4 @@
-// js/checkout.js - Módulo de Finalização de Pedido (Corrigido para TELA ÚNICA)
+// js/checkout.js - Módulo de Finalização de Pedido (Com Validação de Cupom)
 
 (function() {
     
@@ -100,6 +100,7 @@
     function montarObservacoes(dadosCliente, totalPedido, subTotalProdutos, valorDesconto) {
         const formatarMoeda = window.AppUI.formatarMoeda;
         const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        
         let listaItens = "Itens:\n";
         window.app.carrinho.forEach(item => {
             listaItens += `* ${item.quantidade}x ${item.produto.nome} (${formatarMoeda(item.precoFinalItem)})\n`;
@@ -107,7 +108,7 @@
                 item.opcoes.forEach(op => { listaItens += `  - ${op.grupo}: ${op.nome}\n`; });
             }
             if(item.complementos && item.complementos.length > 0) {
-                listaItemOs += `  - Adicionais: ${item.complementos.map(c => c.nome).join(', ')}\n`;
+                listaItens += `  - Adicionais: ${item.complementos.map(c => c.nome).join(', ')}\n`;
             }
             if(item.observacao) {
                 listaItens += `  - Obs: ${item.observacao}\n`;
@@ -121,14 +122,71 @@
              obsCompleta += `\nTROCO NECESSÁRIO: Não`;
         }
         
+        // NOVO: Adiciona a informação do cupom nas observações
+        const cupom = window.app.cupomAplicado;
+        let cupomInfo = '';
+        if (cupom) {
+             const valorDisplay = cupom.tipo === 'percentual' ? `${cupom.valor}%` : window.AppUI.formatarMoeda(cupom.valor);
+             cupomInfo = `\nCUPOM APLICADO: ${cupom.codigo} (${valorDisplay})`;
+        }
+        
         let resumoValores = `
 Subtotal: ${formatarMoeda(subTotalProdutos)}
-${valorDesconto > 0 ? `Desconto: -${formatarMoeda(valorDesconto)} (${window.app.cupomAplicado.codigo})` : ''}
+${valorDesconto > 0 ? `Desconto: -${formatarMoeda(valorDesconto)}` : ''}
 Taxa Entrega: ${formatarMoeda(taxaEntrega)}
 Total: ${formatarMoeda(totalPedido)}
 `;
 
-        return `${listaItens}${resumoValores}\nOBSERVAÇÕES ADICIONAIS:\n${obsCompleta}`;
+        return `${listaItens}${cupomInfo}${resumoValores}\nOBSERVAÇÕES ADICIONAIS:\n${obsCompleta}`; // <-- INCLUI CUPOM INFO
+    }
+
+    /**
+     * Valida e aplica um cupom de desconto usando a API.
+     */
+    async function aplicarCupom() {
+        const uiElementos = window.AppUI.elementos;
+        const codigo = uiElementos.cupomInput.value.trim().toUpperCase();
+        
+        // 1. Remove cupom anterior e limpa se o campo estiver vazio
+        if (!codigo) {
+            window.app.cupomAplicado = null;
+            window.app.Carrinho.atualizarCarrinho();
+            return;
+        }
+        
+        uiElementos.aplicarCupomBtn.disabled = true;
+        
+        try {
+            // 2. Valida o cupom no servidor
+            const cupomValidado = await window.AppAPI.validarCupom(codigo);
+            
+            if (cupomValidado && !cupomValidado.error) {
+                // Cupom Válido
+                window.app.cupomAplicado = {
+                    codigo: cupomValidado.codigo,
+                    tipo: cupomValidado.tipo,
+                    valor: cupomValidado.valor
+                };
+                window.app.Carrinho.atualizarCarrinho();
+                window.AppUI.mostrarMensagem(`✅ Cupom ${codigo} aplicado!`, 'success');
+            } else {
+                // Cupom Inválido
+                window.app.cupomAplicado = null;
+                window.app.Carrinho.atualizarCarrinho();
+                
+                const mensagem = cupomValidado?.error || 'Cupom inválido ou não encontrado.';
+                window.AppUI.elementos.cupomMessage.textContent = `❌ ${mensagem}`;
+                window.AppUI.elementos.cupomMessage.style.color = 'var(--error-color)';
+                window.AppUI.mostrarMensagem(mensagem, 'error');
+            }
+        } catch (error) {
+            // Erro de rede/conexão
+            window.app.cupomAplicado = null;
+            window.app.Carrinho.atualizarCarrinho();
+            window.AppUI.mostrarMensagem('Erro de conexão ao tentar aplicar cupom.', 'error');
+        } finally {
+            uiElementos.aplicarCupomBtn.disabled = false;
+        }
     }
 
     /**
@@ -179,10 +237,15 @@ Total: ${formatarMoeda(totalPedido)}
             localStorage.setItem('pedidoAtivoId', novoPedido.id);
             window.app.Rastreamento.iniciarRastreamento(novoPedido.id);
             
+            // 5. Se o cupom foi usado, incrementa o uso
+            if (window.app.cupomAplicado) {
+                 await window.AppAPI.incrementarUsoCupom(window.app.cupomAplicado.codigo);
+            }
+
             window.app.Carrinho.limparFormularioECarrinho(); 
             await window.app.Cardapio.carregarDadosCardapio(); 
             
-            // 5. ATUALIZAÇÃO CRÍTICA: Esconde o checkout e mostra a confirmação
+            // 6. ATUALIZAÇÃO CRÍTICA: Esconde o checkout e mostra a confirmação
             
             document.getElementById('checkout-main-view').style.display = 'none';
             document.getElementById('checkout-footer').style.display = 'none';
@@ -239,11 +302,11 @@ Total: ${formatarMoeda(totalPedido)}
         }
 
         // Lógica de Cupom (mantida a lógica de simulação)
-        if (elementos.aplicarCupomBtn) elementos.aplicarCupomBtn.addEventListener('click', aplicarCupom);
+        if (elementos.aplicarCupomBtn) elementos.aplicarCupomBtn.addEventListener('click', aplicarCupom); // <-- ATUALIZADO
         if (elementos.cupomInput) elementos.cupomInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                aplicarCupom();
+                aplicarCupom(); // <-- ATUALIZADO
             }
         });
     }
@@ -254,7 +317,6 @@ Total: ${formatarMoeda(totalPedido)}
         obterDadosCliente,
         validarDados,
         finalizarPedidoEEnviarWhatsApp,
-        // Renomeada para melhor contexto
         configurarListenersSingleScreen 
     };
 
