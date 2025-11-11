@@ -1372,7 +1372,7 @@ table tr:hover {
 }
 
 /* ============================================== */
-/* === INÍCIO: CSS NOVO PARA RELATORIOS.HTML === */
+/* --- INÍCIO: CSS NOVO PARA RELATORIOS.HTML === */
 /* ============================================== */
 
 /* Abas (Estilo da Imagem) */
@@ -1520,6 +1520,10 @@ table tr:hover {
     justify-content: center;
     color: white;
     flex-shrink: 0;
+}
+.kpi-data {
+    text-align: left; /* CORRIGIDO: Alinha o conteúdo à esquerda para eliminar o efeito "flutuante" */
+    flex-grow: 1;
 }
 .kpi-data .kpi-label {
     font-size: 0.8rem;
