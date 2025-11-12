@@ -957,6 +957,25 @@ body {
 #rastreamento-pedido-ativo h2 {
     color: #db7093;
 }
+
+/* /// INÍCIO DA NOVA REGRA CSS /// */
+#rastreamento-pedido-ativo .btn-link {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1rem; /* Um pouco maior */
+    font-weight: 600;
+    color: #db7093; /* Cor rosa */
+    text-decoration: none;
+    background-color: #fff0f5; /* Fundo rosa bem claro */
+    padding: 8px;
+    border-radius: 8px;
+}
+#rastreamento-pedido-ativo .btn-link:hover {
+    background-color: #ffe6ef;
+}
+/* /// FIM DA NOVA REGRA CSS /// */
+
 .rastreamento-status-bar {
     display: flex;
     justify-content: space-between;

@@ -31,6 +31,19 @@
         // CORREÇÃO: Passa o objeto completo, incluindo a data de criação
         atualizarTrackerUI(pedido); 
 
+        // --- INÍCIO DA NOVA LÓGICA ---
+        // Adiciona o listener ao botão "Ver Detalhes" do card ativo
+        const btnVerDetalhesAtivo = document.getElementById('ver-detalhes-pedido-ativo');
+        if (btnVerDetalhesAtivo) {
+            // Remove listener antigo (se houver) para evitar duplicatas
+            btnVerDetalhesAtivo.onclick = null; 
+            // Adiciona o novo listener
+            btnVerDetalhesAtivo.addEventListener('click', () => {
+                abrirModalDetalhesPedido(pedidoId);
+            });
+        }
+        // --- FIM DA NOVA LÓGICA ---
+
         window.app.supabaseChannel = window.supabase.channel(`pedido-${pedidoId}`)
             .on(
                 'postgres_changes',
@@ -216,7 +229,7 @@
                      
                      htmlHistorico += `
                          <div class="card-pedido-historico" 
-                              onclick="abrirModalDetalhesPedido(${p.id})">
+                              onclick="window.AppRastreamento.abrirModalDetalhesPedido('${p.id}')">
                              <p style="font-weight: bold; margin: 0;">Pedido #${p.id} - ${dataPedido} ${previsaoHtml}</p>
                              <p style="font-size: 0.9rem; margin: 0; color: #555;">${listaItens}</p>
                              <p style="font-size: 0.9rem; margin: 0;">Status: 
@@ -242,14 +255,28 @@
     
     /**
      * Abre o modal com os detalhes de um pedido do histórico.
+     * --- FUNÇÃO TOTALMENTE REESCRITA ---
      */
-    function abrirModalDetalhesPedido(pedidoId) {
-        const pedido = window.app.historicoPedidos.find(p => p.id.toString() === pedidoId);
+    async function abrirModalDetalhesPedido(pedidoId) {
+        if (!pedidoId) return;
+
+        // 1. Mostrar loading no modal
+        const elementos = window.AppUI.elementos;
+        elementos.detalhesPedidoId.textContent = `#${pedidoId}`;
+        elementos.detalhesPedidoContent.innerHTML = '<p style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Carregando detalhes...</p>';
+        elementos.modalDetalhesPedido.style.display = 'flex';
+
+        // 2. Buscar os detalhes completos do pedido pela API
+        // Usamos a nova função da api.js
+        const pedido = await window.AppAPI.buscarDetalhesPedidoPorId(pedidoId);
+
         if (!pedido) {
+            elementos.detalhesPedidoContent.innerHTML = '<p style="text-align: center; color: red;">Erro ao carregar detalhes do pedido.</p>';
             window.AppUI.mostrarMensagem('Detalhes do pedido não encontrados.', 'error');
             return;
         }
-
+        
+        // 3. (Lógica copiada da função antiga, mas usando o 'pedido' da API)
         const dataPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
         const status = (pedido.status || 'novo').toUpperCase();
         
@@ -273,9 +300,6 @@
             }
         }
         const cleanedObsAdicionais = obsAdicionais.replace('OBSERVAÇÕES ADICIONAIS:', '').trim();
-        
-        const elementos = window.AppUI.elementos;
-        elementos.detalhesPedidoId.textContent = `#${pedido.id}`;
         
         // Lógica de cancelamento (só permite cancelar se status for NOVO ou PREPARANDO)
         const podeCancelar = status === 'NOVO' || status === 'PREPARANDO';
@@ -324,7 +348,6 @@
             
             ${cancelBtnHtml}
         `;
-        elementos.modalDetalhesPedido.style.display = 'flex';
         
         if (podeCancelar) {
              document.getElementById('btn-cancelar-pedido-cliente').addEventListener('click', () => {
@@ -357,7 +380,9 @@
             // Força a atualização do histórico e rastreador
             carregarStatusUltimoPedido(); 
             if (window.app.pedidoAtivoId == pedidoId) {
-                 window.app.Rastreamento.iniciarRastreamento(pedidoId);
+                // A atualização do realtime (que vem do supabase) vai lidar com a mudança de status
+                // Mas podemos forçar uma verificação
+                iniciarRastreamento(pedidoId);
             }
 
         } catch (error) {

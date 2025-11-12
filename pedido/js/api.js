@@ -352,6 +352,27 @@
         return pedido;
     }
     
+    // --- INÍCIO DA NOVA FUNÇÃO ---
+    /**
+     * Busca os detalhes completos de um único pedido pelo ID.
+     * @param {string} pedidoId - ID do pedido.
+     * @returns {Promise<object|null>} O pedido ou null.
+     */
+    async function buscarDetalhesPedidoPorId(pedidoId) {
+        try {
+            const { data, error } = await supabase.from('pedidos_online')
+                .select('*') // Pega todos os detalhes
+                .eq('id', pedidoId)
+                .single();
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Erro ao buscar detalhes do pedido:', error);
+            return null;
+        }
+    }
+    // --- FIM DA NOVA FUNÇÃO ---
+    
     /**
      * Salva o pedido finalizado no banco.
      * @param {object} dadosPedido - Objeto com dados do pedido.
@@ -424,6 +445,7 @@
         carregarMaisPedidos,
         buscarHistoricoPedidos,
         buscarPedidoParaRastreamento,
+        buscarDetalhesPedidoPorId, // <-- ADICIONADO
         finalizarPedidoNoSupabase,
         atualizarEstoqueNoSupabase,
         cancelarPedidoNoSupabase
