@@ -150,24 +150,28 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const cidadeId = ui.cadastroCidadeSelect.value;
                 if (cidadeId) {
                     const bairros = await app.API.carregarBairrosPorCidade(cidadeId);
-                    app.UI.popularBairrosDropdown(bairros, ui.elementos.cadastroBairroSelect); // Passa o elemento
+                    app.UI.popularBairrosDropdown(bairros, ui.cadastroBairroSelect); // Passa o elemento
                 } else {
-                    app.UI.popularBairrosDropdown([], ui.elementos.cadastroBairroSelect); // Limpa os bairros
+                    app.UI.popularBairrosDropdown([], ui.cadastroBairroSelect); // Limpa os bairros
                 }
             });
         }
         
         // NOVO LISTENER: Listener para o dropdown de CIDADES no MODAL
         if (ui.modalCidadeSelect) {
-            ui.modalCidadeSelect.addEventListener('change', async () => {
+            ui.modalCidadeSelect.addEventListener('change', async () => { 
                 const cidadeId = ui.modalCidadeSelect.value;
                 if (cidadeId) {
                     const bairros = await app.API.carregarBairrosPorCidade(cidadeId);
-                    // Passa o elemento do MODAL
-                    app.UI.popularBairrosDropdown(bairros, ui.elementos.modalBairroSelect); 
+                    // === INÍCIO DA CORREÇÃO ===
+                    // Passa o elemento do MODAL usando a variável 'ui'
+                    app.UI.popularBairrosDropdown(bairros, ui.modalBairroSelect); 
+                    // === FIM DA CORREÇÃO ===
                 } else {
-                    // Limpa os bairros do MODAL
-                    app.UI.popularBairrosDropdown([], ui.elementos.modalBairroSelect); 
+                    // === INÍCIO DA CORREÇÃO ===
+                    // Limpa os bairros do MODAL usando a variável 'ui'
+                    app.UI.popularBairrosDropdown([], ui.modalBairroSelect); 
+                    // === FIM DA CORREÇÃO ===
                 }
             });
         }
@@ -186,10 +190,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         // REMOVIDO: Listener de blur do CEP do cadastro
-        // if (ui.cadastroCepInput) ...
-        
-        // REMOVIDO: Listener de blur do CEP do modal (agora o campo não existe mais)
-        // if (ui.modalCepInput) ...
+        // REMOVIDO: Listener de blur do CEP do modal
         
         /* --- Listeners do Header v2 --- */
         if (ui.headerSearchInput) ui.headerSearchInput.addEventListener('input', app.Cardapio.setupSearch);
