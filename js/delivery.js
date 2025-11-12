@@ -1,4 +1,6 @@
 // js/delivery.js - Lógica do Painel de Pedidos Online
+// VERSÃO CORRIGIDA - SEM updated_at
+
 document.addEventListener('DOMContentLoaded', async function () {
 
     // --- VARIÁVEIS GLOBAIS ---
@@ -14,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const btnAvancarStatus = document.getElementById('btn-avancar-status');
     const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
     const btnImprimirCanhoto = document.getElementById('btn-imprimir-canhoto');
-    const btnConfirmarPagamento = document.getElementById('btn-confirmar-pagamento'); // NOVO BOTÃO
+    const btnConfirmarPagamento = document.getElementById('btn-confirmar-pagamento'); 
 
     // Elementos de Configurações
     const btnAbrirConfig = document.getElementById('btn-abrir-config');
@@ -22,26 +24,23 @@ document.addEventListener('DOMContentLoaded', async function () {
     const formConfig = document.getElementById('form-config-delivery');
     const btnFecharConfig = document.getElementById('fechar-modal-config');
 
-    // ==================================
-    // === NOVOS ELEMENTOS (HISTÓRICO E ABAS) ===
-    // ==================================
+    // Elementos da Aba Histórico
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const historicoTabelaBody = document.getElementById('historico-tabela-body');
     const historicoPaginacao = document.getElementById('historico-paginacao');
     
-    // Filtros de Data (NOVOS)
+    // Filtros de Data
     const histDataInicioInput = document.getElementById('hist-data-inicio');
     const histDataFimInput = document.getElementById('hist-data-fim');
     const aplicarFiltroHistoricoBtn = document.getElementById('aplicar-filtro-historico');
     
-    // ELEMENTOS DA ABA CUPONS (NOVOS)
-    const btnNovoCupom = document.getElementById('btn-novo-cupom'); // NOVO BOTÃO ABRIR MODAL
-    const modalNovoCupom = document.getElementById('modal-novo-cupom'); // NOVO MODAL
+    // ELEMENTOS DA ABA CUPONS
+    const btnNovoCupom = document.getElementById('btn-novo-cupom'); 
+    const modalNovoCupom = document.getElementById('modal-novo-cupom'); 
     const fecharModalCupom = document.getElementById('fechar-modal-cupom');
     const formNovoCupom = document.getElementById('form-novo-cupom');
     const cuponsTabelaBody = document.getElementById('cupons-tabela-body');
-    // ==================================
 
     let todosPedidos = []; // Pedidos ATIVOS (Kanban)
     let todosPedidosHistorico = []; // Pedidos INATIVOS (Histórico)
@@ -49,18 +48,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     let pedidoSelecionado = null;
     
     // Cache de configurações da loja
-    let configLoja = { tempo_entrega: 60 }; // Padrão de 60 minutos
+    let configLoja = { tempo_entrega: 60 };
     let timerInterval = null;
-    let supabaseChannel = null;
-    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AAv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
     
-    // ==================================
-    // === NOVAS VARIÁVEIS (PAGINAÇÃO) ===
-    // ==================================
+    const audioNotificacao = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAB9AAAAAoAAABPAYBAYbQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4bQhf4LIQkACgAAAABAAAD/8AADCgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMDgAAAABYQU1BAUBAQBAAAAP/AAD/8AAMEAAAAABYQU1BAUBAQBAAAAP/AAD/8AAMFAAAAABYQU1BAUBAQBAAAAP/AAD/8AAKicgAADEBCAcHAQEBAYGBgYGCAgJCAkJCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv/8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AAv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCv8AADCgECAwMFBQQGBgcHCAgJCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCvEt");
+    
+    let ultimoTotalDePedidos = 0; 
+    
     let paginaAtualHistorico = 1;
-    const ITENS_POR_PAGINA = 15; // Quantos pedidos mostrar por página no histórico
+    const ITENS_POR_PAGINA = 15; 
     let totalPedidosHistorico = 0;
-    // ==================================
     
     const STATUS_MAP = {
         'novo': { title: 'Novo', icon: 'fas fa-box-open', next: 'preparando', nextText: 'Iniciar Preparo', color: 'var(--primary-color)' },
@@ -110,80 +107,48 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
     const usuario = window.sistemaAuth.usuarioLogado;
-    // Esta variável agora só é usada para mostrar/esconder o botão de Configurações, por exemplo.
     const isAdminOrManager = ['administrador', 'admin', 'gerente', 'supervisor'].includes(usuario.tipo?.toLowerCase());
     
-    // ================================================================
-    // === NOVO: FUNÇÃO EXPORTADA PARA O HEADER (HEADER-DATA.JS) ===
-    // ================================================================
-    /**
-     * Função global chamada pelo header-data.js para buscar o total de pedidos 'novo'.
-     */
     window.atualizarStatusHeaderDelivery = async function() {
         try {
-            // Busca a contagem exata de pedidos 'novo' para hoje
             const { count, error } = await supabase.from('pedidos_online')
                 .select('*', { count: 'exact', head: true })
                 .eq('status', 'novo')
                 .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z');
 
             if (error) throw error;
-
-            // Atualiza a variável global (definida em header-data.js)
             if (window.totalPedidosNovos !== undefined) {
                 window.totalPedidosNovos = count || 0;
             }
 
         } catch (error) {
             console.error("Erro ao buscar contagem de pedidos novos:", error);
-            // Em caso de erro, define como -1 para mostrar um ícone de plug/erro no header
             if (window.totalPedidosNovos !== undefined) {
                  window.totalPedidosNovos = -1;
             }
             throw error;
         }
     };
-    // ================================================================
-    // === FIM NOVO: FUNÇÃO EXPORTADA PARA O HEADER ===
-    // ================================================================
 
     async function inicializar() {
         toggleDisplay(loadingElement, true);
 
-        // ================================================================
-        // === INÍCIO DA ALTERAÇÃO ===
-        // ================================================================
-        /* // Bloco de verificação de admin removido para permitir acesso a todos os usuários logados.
-        if (!isAdminOrManager) {
-            toggleDisplay(loadingElement, false);
-            toggleDisplay(acessoNegadoElement, true);
-            return;
-        }
-        */
-        // ================================================================
-        // === FIM DA ALTERAÇÃO ===
-        // ================================================================
-
         configurarEventListeners();
         
-        // Carrega as configurações primeiro
         await carregarConfiguracoesDaLoja(); 
         
-        // Carrega os pedidos ativos (Kanban) e o histórico (Tabela) em paralelo
         await Promise.all([
-            carregarPedidosOnline(),
+            carregarPedidosOnline(), // Carga inicial
             carregarHistoricoPedidos(paginaAtualHistorico),
-            carregarCupons() // NOVO: Carrega a lista de cupons
+            carregarCupons() 
         ]);
         
-        // Inicia o ouvinte de novos pedidos (Realtime)
-        iniciarOuvinteDePedidos();
+        setInterval(verificarNovosPedidos, 20000); // 20000ms = 20 segundos
+        console.log('🔄 Polling de pedidos iniciado. Verificando a cada 20 segundos.');
         
-        // Inicia o relógio que atualiza os timers de atraso
         iniciarAtualizadorDeTimers();
 
         toggleDisplay(loadingElement, false);
-        // Mostra o conteúdo da primeira aba (Kanban)
         toggleDisplay(document.getElementById('tab-kanban'), true);
         toggleDisplay(contentElement, true);
     }
@@ -191,8 +156,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function configurarEventListeners() {
         if (recarregarBtn) {
             recarregarBtn.addEventListener('click', () => {
-                // Recarrega AMBOS os painéis e os cupons
-                carregarPedidosOnline();
+                verificarNovosPedidos(); 
                 carregarHistoricoPedidos(paginaAtualHistorico);
                 carregarCupons();
             });
@@ -206,14 +170,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (btnImprimirCanhoto) {
             btnImprimirCanhoto.addEventListener('click', imprimirCanhotoDelivery);
         }
-        // NOVO LISTENER: Botão de Confirmar Pagamento
         if (btnConfirmarPagamento) {
             btnConfirmarPagamento.addEventListener('click', confirmarPagamentoManual);
         }
 
-        // Listeners do Modal de Configurações
         if (btnAbrirConfig) {
-            // Esconde o botão de Configurações se não for admin
             if (!isAdminOrManager) {
                 btnAbrirConfig.style.display = 'none';
             } else {
@@ -227,9 +188,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             formConfig.addEventListener('submit', salvarConfiguracoes);
         }
 
-        // ==================================
-        // === NOVOS LISTENERS (ABAS E CUPONS) ===
-        // ==================================
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const tabId = button.getAttribute('data-tab');
@@ -237,20 +195,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         });
         
-        // NOVO LISTENER: Filtro de Histórico
         if (aplicarFiltroHistoricoBtn) {
             aplicarFiltroHistoricoBtn.addEventListener('click', () => carregarHistoricoPedidos(1));
         }
         
-        // NOVO LISTENER: Botão Novo Cupom (Abre o Modal)
         if (btnNovoCupom) {
              btnNovoCupom.addEventListener('click', () => {
-                 formNovoCupom.reset(); // Limpa o formulário ao abrir
+                 formNovoCupom.reset(); 
                  modalNovoCupom.style.display = 'flex';
              });
         }
         
-        // NOVO LISTENER: Fechar Modal Cupom
         if (fecharModalCupom) {
              fecharModalCupom.addEventListener('click', () => {
                  modalNovoCupom.style.display = 'none';
@@ -262,21 +217,13 @@ document.addEventListener('DOMContentLoaded', async function () {
              });
         }
         
-        // NOVO LISTENER: Formulário de Cupom (Salvar)
         if (formNovoCupom) {
             formNovoCupom.addEventListener('submit', criarNovoCupom);
         }
-        // ==================================
     }
 
-    // ==================================
-    // === NOVA FUNÇÃO (TROCAR ABAS) ===
-    // ==================================
     function switchTab(tabId) {
         tabContents.forEach(content => {
-            content.classList.remove('active');
-            // Nota: Usamos display: none / display: block para tab-content
-            // e display: flex para o delivery-board dentro dele
             if (content.id === 'tab-kanban') {
                 toggleDisplay(content, content.id === tabId);
                 toggleDisplay(contentElement, content.id === tabId);
@@ -288,9 +235,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             button.classList.toggle('active', button.getAttribute('data-tab') === tabId);
         });
 
-        // Se estiver trocando para o histórico
         if (tabId === 'tab-historico') {
-            // Tenta inicializar os filtros de data
             if (!histDataInicioInput.value) {
                 const hoje = new Date().toISOString().split('T')[0];
                 const seteDiasAtras = new Date();
@@ -304,11 +249,8 @@ document.addEventListener('DOMContentLoaded', async function () {
              carregarCupons();
         }
     }
-    // ==================================
     
-    // ----------------------------------------------------------------------
     // --- LÓGICA DE PEDIDOS ONLINE (CRUD) ---
-    // ----------------------------------------------------------------------
 
     async function carregarPedidosOnline() {
         if (!contentElement) return;
@@ -317,17 +259,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         board.querySelectorAll('.card-list').forEach(list => list.innerHTML = '');
         
         try {
-            // Pega pedidos de hoje que NÃO ESTÃO entregues ou cancelados
             const { data, error } = await supabase.from('pedidos_online')
                 .select('*')
                 .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z')
-                .neq('status', 'entregue') // Não carrega entregues
-                .neq('status', 'cancelado') // Não carrega cancelados
+                .neq('status', 'entregue') 
+                .neq('status', 'cancelado') 
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
             
             todosPedidos = data || [];
+            ultimoTotalDePedidos = todosPedidos.length;
             exibirPedidosNoBoard(todosPedidos);
             
         } catch (error) {
@@ -337,10 +279,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function exibirPedidosNoBoard(pedidos) {
-        // Inicializa colunas
         const colunas = { novo: [], preparando: [], pronto: [], entregue: [], cancelado: [] };
         
-        // Filtra apenas pedidos não finalizados para o board principal
         const pedidosAtivos = pedidos.filter(p => p.status !== 'entregue' && p.status !== 'cancelado');
         
         pedidosAtivos.forEach(p => {
@@ -350,7 +290,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
         
-        // Atualiza apenas as colunas ativas (Novo, Preparando, Pronto)
         ['novo', 'preparando', 'pronto'].forEach(status => {
             const colElement = document.getElementById(`col-${status}`);
             if (!colElement) return;
@@ -369,68 +308,43 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        // Atualiza os timers imediatamente após exibir
         atualizarTimers();
     }
     
-    /**
-     * Extrai a informação de troco da string de observações.
-     * @param {string} observacoes - A string completa de observações.
-     * @returns {string} - A informação de troco formatada.
-     */
     function parseTroco(observacoes) {
         if (!observacoes) return 'Não precisa';
-
         const trocoMatch = observacoes.match(/TROCO NECESSÁRIO: Sim, para (R\$ \d+[,.]\d{2})/);
         if (trocoMatch && trocoMatch[1]) {
             return `Troco p/ ${trocoMatch[1]}`;
         }
-        
         if (observacoes.includes('TROCO NECESSÁRIO: Não')) {
             return 'Não precisa';
         }
-        
-        // Se a informação de troco não estiver formatada (pedidos antigos)
         return 'Verificar';
     }
 
-    /**
-     * Extrai a lista de itens da string de observações.
-     * @param {string} observacoes - A string completa de observações.
-     * @returns {string} - A lista de itens formatada.
-     */
     function parseItens(observacoes, formatAsHtml = false) {
         if (!observacoes) return 'Nenhum item listado.';
-
         const linhas = observacoes.split('\n');
         let itens = [];
         let capturandoItens = false;
-
         for (const linha of linhas) {
             if (linha.startsWith('Itens:')) {
                 capturandoItens = true;
-                continue; // Pula a linha "Itens:"
+                continue; 
             }
             if (linha.startsWith('Total:') || linha.startsWith('OBSERVAÇÕES ADICIONAIS:')) {
                 capturandoItens = false;
-                break; // Para de capturar ao encontrar o total ou obs
+                break; 
             }
             if (capturandoItens && linha.trim() !== '') {
-                // Remove o "*" e espaços extras
                 itens.push(linha.replace('*', '').trim()); 
             }
         }
         if (itens.length === 0) return 'Detalhes no modal.';
-        
-        // Retorna com quebra de linha HTML ou de texto
         return formatAsHtml ? itens.join('<br>') : itens.join('\n');
     }
 
-    /**
-     * Extrai as observações adicionais do cliente.
-     * @param {string} observacoes - A string completa de observações.
-     * @returns {string} - Apenas as observações adicionais.
-     */
     function parseObsAdicionais(observacoes) {
         if (!observacoes) return '';
         const obsSeparada = observacoes.split('OBSERVAÇÕES ADICIONAIS:');
@@ -443,18 +357,15 @@ document.addEventListener('DOMContentLoaded', async function () {
     function criarCardPedido(pedido) {
         const card = document.createElement('div');
         const status = pedido.status || 'novo';
-        // Usa a classe .pedido-card existente, que já tem o fundo branco
         card.className = `pedido-card status-${status}`;
         card.setAttribute('data-id', pedido.id);
         
         const hora = new Date(pedido.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         
-        // Extrai as informações necessárias
         const trocoInfo = parseTroco(pedido.observacoes);
         const pagamentoInfo = formatarFormaPagamento(pedido.forma_pagamento);
         const totalInfo = formatarMoeda(pedido.total);
         
-        // **NOVO: Verificação de Pagamento Confirmado**
         const isPago = pedido.observacoes.includes('Pagamento CONFIRMADO');
         const pagamentoOkHtml = isPago 
             ? `<span class="badge-pagamento-ok" style="background: var(--success-color); color: white; font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 5px; display: inline-block;">
@@ -462,7 +373,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                </span>`
             : '';
 
-        // O card inteiro é clicável para abrir o modal
         card.innerHTML = `
             <div class="card-novo-header">
                 <strong>Pedido #${pedido.id}</strong>
@@ -510,12 +420,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     
     window.abrirModalDetalhes = function(pedidoId) {
-        // ==================================
-        // === ATUALIZAÇÃO (ABRIR MODAL) ===
-        // ==================================
-        // Procura o pedido tanto na lista ativa quanto no histórico
         pedidoSelecionado = todosPedidos.find(p => p.id === pedidoId) || todosPedidosHistorico.find(p => p.id === pedidoId);
-        // ==================================
 
         if (!pedidoSelecionado) return;
         
@@ -523,29 +428,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         const statusInfo = STATUS_MAP[pedidoSelecionado.status];
         
-        // **NOVA LÓGICA DE EXIBIÇÃO DE BOTÕES**
         const isFinal = pedidoSelecionado.status === 'cancelado' || pedidoSelecionado.status === 'entregue';
         const isConfirmed = pedidoSelecionado.observacoes.includes('Pagamento CONFIRMADO');
 
-        // Botão Avançar: Só aparece se o status não for final
         btnAvancarStatus.style.display = (isFinal || !statusInfo.next) ? 'none' : 'inline-flex';
         btnAvancarStatus.textContent = statusInfo.nextText || '';
         btnAvancarStatus.setAttribute('data-next-status', statusInfo.next);
 
-        // Botão Cancelar: Só aparece se o status não for final
         btnCancelarPedido.style.display = isFinal ? 'none' : 'inline-flex';
         
-        // Botão Pagamento OK: Só aparece se o status não for final E o pagamento ainda NÃO foi confirmado
         btnConfirmarPagamento.style.display = (isFinal || isConfirmed) ? 'none' : 'inline-flex';
         
-        // Se for o último status, forçar o botão a ser azul
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
         
-        // Separa Observações Adicionais dos Itens
-        const todosItens = parseItens(pedidoSelecionado.observacoes, true); // true = formatar como HTML
+        const todosItens = parseItens(pedidoSelecionado.observacoes, true); 
         const obsAdicionais = parseObsAdicionais(pedidoSelecionado.observacoes);
 
-        // **NOVO: Badge de Confirmação no Modal**
         const confirmacaoHtml = isConfirmed 
             ? `<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 1rem; text-align: center;">
                  <i class="fas fa-check-double"></i> Pagamento Confirmado Manualmente
@@ -578,23 +476,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         await atualizarStatusPedido(nextStatus, `Confirma a mudança de status para "${STATUS_MAP[nextStatus].title}"?`);
     }
 
-    // FUNÇÃO DE CONFIRMAÇÃO MANUAL DE PAGAMENTO (Atualizada)
     async function confirmarPagamentoManual() {
         if (!pedidoSelecionado) return;
-
         if (!confirm(`Confirma que o pagamento do pedido #${pedidoSelecionado.id} foi recebido?\n(Isso vale para Dinheiro, PIX ou Cartão)`)) return;
 
         try {
-            // **MUDANÇA: String genérica "Pagamento CONFIRMADO"**
             const observacoesAtualizadas = `\n--- REGISTRO MANUAL ---\nPagamento CONFIRMADO em: ${new Date().toLocaleString('pt-BR')}\n-----------------------\n` + pedidoSelecionado.observacoes;
             
-            // 1. Atualiza observações para marcar como pago
+            // 1. Atualiza o DB
             const { error: obsError } = await supabase.from('pedidos_online')
                 .update({ observacoes: observacoesAtualizadas })
                 .eq('id', pedidoSelecionado.id);
             
             if (obsError) throw obsError;
-
+            
+            mostrarMensagem(`✅ Pagamento do pedido #${pedidoSelecionado.id} confirmado e registrado!`, 'success');
+            
             // 2. Atualiza o objeto local (para re-renderizar o modal e o card)
             pedidoSelecionado.observacoes = observacoesAtualizadas;
             const pedidoNoKanban = todosPedidos.find(p => p.id === pedidoSelecionado.id);
@@ -602,16 +499,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 pedidoNoKanban.observacoes = observacoesAtualizadas;
             }
 
-            mostrarMensagem(`✅ Pagamento do pedido #${pedidoSelecionado.id} confirmado e registrado!`, 'success');
-            
-            // 3. Re-renderiza o modal e o kanban
-            abrirModalDetalhes(pedidoSelecionado.id); // Reabre o modal com o badge
-            exibirPedidosNoBoard(todosPedidos);      // Redesenha o kanban com o badge
-            
-            // 4. Se estiver em status 'novo', avança para 'preparando' automaticamente
+            // 3. Se o status for 'novo', chama a outra função (que já faz a atualização local)
             if (pedidoSelecionado.status === 'novo') {
-                 // A função atualizarStatusPedido vai fechar o modal
+                 // Esta função já redesenha o board e fecha o modal
                  await atualizarStatusPedido('preparando', `Pagamento Confirmado. Avançando para Preparando...`);
+            } else {
+            // 4. Se não for 'novo', apenas fecha o modal e redesenha o kanban local
+                 modalDetalhes.style.display = 'none';
+                 exibirPedidosNoBoard(todosPedidos); // Redesenha o kanban com o badge "Pago"
             }
 
         } catch (error) {
@@ -622,66 +517,75 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function atualizarStatusPedido(novoStatus, mensagemConfirmacao) {
         if (!pedidoSelecionado || !confirm(mensagemConfirmacao)) return;
         
+        console.log(`🔄 Tentando atualizar pedido #${pedidoSelecionado.id} para status: ${novoStatus}`);
+        
         try {
-            const { error } = await supabase.from('pedidos_online')
-                .update({ status: novoStatus })
-                .eq('id', pedidoSelecionado.id);
+            // 1. Atualiza apenas o status no banco (sem updated_at)
+            const { data, error } = await supabase.from('pedidos_online')
+                .update({ 
+                    status: novoStatus
+                })
+                .eq('id', pedidoSelecionado.id)
+                .select();
             
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro no Supabase:', error);
+                throw error;
+            }
 
+            console.log('✅ Banco atualizado com sucesso:', data);
             mostrarMensagem(`Status do pedido #${pedidoSelecionado.id} atualizado para "${STATUS_MAP[novoStatus].title}"!`, 'success');
             
+            // 2. Fecha o modal
             modalDetalhes.style.display = 'none';
             
-            // ==================================
-            // === ATUALIZAÇÃO REALTIME (MELHORIA) ===
-            // ==================================
-            // Atualiza o array local em vez de recarregar a página inteira
+            // 3. Atualiza o array local 'todosPedidos' (ATUALIZAÇÃO OTIMISTA)
             const pedidoAtualizado = todosPedidos.find(p => p.id === pedidoSelecionado.id);
-            if(pedidoAtualizado) {
+            if (pedidoAtualizado) {
                 pedidoAtualizado.status = novoStatus;
+                console.log(`📝 Estado local atualizado: ${pedidoAtualizado.id} -> ${pedidoAtualizado.status}`);
             }
             
-            // Se o status for final, remove o pedido da lista de ativos
+            // 4. Se o status for final, remove o pedido da lista de ativos
             if (novoStatus === 'entregue' || novoStatus === 'cancelado') {
                 todosPedidos = todosPedidos.filter(p => p.id !== pedidoSelecionado.id);
+                console.log(`🗑️ Pedido #${pedidoSelecionado.id} removido da lista ativa`);
                 // Recarrega o histórico para incluir este novo item
                 carregarHistoricoPedidos(1);
             }
             
-            // Re-desenha o board com os dados locais atualizados
+            // 5. Atualiza a contagem do polling para evitar notificação falsa
+            ultimoTotalDePedidos = todosPedidos.length;
+
+            // 6. Re-desenha o board com os dados locais atualizados
             exibirPedidosNoBoard(todosPedidos);
-            // ==================================
+            console.log(`🎨 Board redesenhado com status atualizado`);
 
         } catch (error) {
-            console.error('❌ Erro ao atualizar status:', error);
+            console.error('❌ Erro completo ao atualizar status:', error);
             mostrarMensagem('Erro ao atualizar status: ' + error.message, 'error');
         }
     }
 
-    // ==================================
-    // === NOVAS FUNÇÕES (CONFIGURAÇÕES) ===
-    // ==================================
+    // --- Configurações da Loja ---
     
     async function carregarConfiguracoesDaLoja() {
         try {
             const { data, error } = await supabase
                 .from('config_loja')
                 .select('*')
-                .eq('id', 1) // Pega a linha de configuração (ID 1)
+                .eq('id', 1) 
                 .single();
             
             if (error) {
-                 if (error.code === 'PGRST116') { // Nenhum registro encontrado
+                 if (error.code === 'PGRST116') { 
                     console.warn('Nenhuma configuração de loja encontrada. Usando padrões.');
-                    // configLoja já tem o padrão de 60 minutos
                  } else {
                     throw error;
                  }
             }
             
             if (data) {
-                // Salva a configuração globalmente
                 configLoja = data; 
                 console.log('Configurações da loja carregadas:', configLoja);
             }
@@ -700,11 +604,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function abrirModalConfiguracoes() {
         if (!modalConfig) return;
         
-        // Usa a configuração global já carregada (configLoja)
-        // Isso evita uma chamada desnecessária ao banco toda vez que abre o modal
         const data = configLoja;
         
-        // Preenche o formulário com os dados
         if (data) {
             document.getElementById('config-taxa-entrega').value = data.taxa_entrega || '';
             document.getElementById('config-tempo-entrega').value = data.tempo_entrega || '60';
@@ -727,7 +628,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         try {
             const dias = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
             const updateData = {
-                id: 1, // Chave primária
+                id: 1, 
                 taxa_entrega: parseFloat(document.getElementById('config-taxa-entrega').value) || 0,
                 tempo_entrega: parseInt(document.getElementById('config-tempo-entrega').value) || 60
             };
@@ -742,19 +643,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                 updateData[`${dia}_fechado`] = fechado;
             });
 
-            // Usar 'upsert' é a forma mais segura
             const { error } = await supabase
                 .from('config_loja')
                 .upsert(updateData, { onConflict: 'id' });
 
             if (error) throw error;
             
-            // Atualiza o cache global de configurações
             configLoja = updateData; 
             
             mostrarMensagem('Configurações salvas com sucesso!', 'success');
             fecharModalConfiguracoes();
-            atualizarTimers(); // Atualiza os timers com o novo tempo
+            atualizarTimers(); 
 
         } catch (error) {
             console.error('❌ Erro ao salvar configurações:', error);
@@ -762,116 +661,89 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
     
-    // ==================================
-    // === NOVAS FUNÇÕES (REALTIME E TIMER) ===
-    // ==================================
+    // --- Funções de Polling e Timer CORRIGIDAS ---
 
     function tocarNotificacao() {
         audioNotificacao.play().catch(e => console.warn("Não foi possível tocar o som de notificação:", e.message));
     }
 
-    /**
-     * Inicia o ouvinte de Realtime do Supabase.
-     */
-    function iniciarOuvinteDePedidos() {
-        // Se já houver um canal, remove a inscrição antiga
-        if (supabaseChannel) {
-            supabase.removeChannel(supabaseChannel);
-        }
+    async function verificarNovosPedidos() {
+        console.log(`Verificando pedidos... (Última contagem: ${ultimoTotalDePedidos})`);
+        
+        try {
+            const { data, error } = await supabase.from('pedidos_online')
+                .select('*')
+                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z')
+                .neq('status', 'entregue') 
+                .neq('status', 'cancelado') 
+                .order('created_at', { ascending: true });
 
-        // Cria um novo canal
-        supabaseChannel = supabase.channel('pedidos_online_insert')
-            .on(
-                'postgres_changes', 
-                { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'pedidos_online' 
-                }, 
-                (payload) => {
-                    console.log('Novo pedido recebido via Realtime!', payload.new);
-                    
-                    // Adiciona o novo pedido à lista global
-                    todosPedidos.push(payload.new);
-                    
-                    // Re-desenha o board com o novo pedido
-                    exibirPedidosNoBoard(todosPedidos);
-                    
-                    // Toca o som de notificação
-                    tocarNotificacao();
-                    
-                    // Mostra uma mensagem
-                    mostrarMensagem(`🔔 Novo Pedido #${payload.new.id} de ${payload.new.nome_cliente}!`, 'success');
-                }
-            )
-            .subscribe((status, err) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('✅ Ouvindo novos pedidos em tempo real!');
-                }
-                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                    console.error('❌ Erro no Realtime:', err);
-                    mostrarMensagem('Erro na conexão em tempo real. Recarregue a página.', 'error');
-                }
-            });
+            if (error) {
+                console.error("Erro ao verificar novos pedidos:", error.message);
+                return; 
+            }
+
+            const pedidosAtuais = data || [];
+            
+            // --- CORREÇÃO: Verificar apenas se há NOVOS pedidos, não substituir tudo ---
+            if (pedidosAtuais.length > ultimoTotalDePedidos) {
+                console.log('NOVOS PEDIDOS DETECTADOS!');
+                tocarNotificacao(); 
+                mostrarMensagem(`🔔 ${pedidosAtuais.length - ultimoTotalDePedidos} novo(s) pedido(s) chegaram!`, 'success');
+                
+                // Atualizar apenas os pedidos que realmente mudaram
+                todosPedidos = pedidosAtuais;
+                exibirPedidosNoBoard(todosPedidos);
+            }
+            
+            // --- FIM DA CORREÇÃO ---
+            
+            ultimoTotalDePedidos = pedidosAtuais.length;
+
+        } catch (err) {
+            console.error("Erro no polling:", err);
+        }
     }
 
-    /**
-     * Inicia o intervalo que atualiza os timers dos cards.
-     */
     function iniciarAtualizadorDeTimers() {
-        // Limpa qualquer timer antigo
         if (timerInterval) {
             clearInterval(timerInterval);
         }
-        
-        // Atualiza os timers a cada 15 segundos
         timerInterval = setInterval(atualizarTimers, 15000); 
-        
-        // Executa uma vez imediatamente
         atualizarTimers();
     }
 
-    /**
-     * Atualiza todos os timers visíveis no board.
-     */
     function atualizarTimers() {
         const agora = new Date();
-        const tempoEntregaPadrao = configLoja.tempo_entrega || 60; // Pega o tempo do cache
+        const tempoEntregaPadrao = configLoja.tempo_entrega || 60; 
 
-        // Itera por todos os pedidos na lista global
         todosPedidos.forEach(pedido => {
             const timerEl = document.getElementById(`timer-pedido-${pedido.id}`);
-            
-            // Se o card não estiver na tela, não faz nada
             if (!timerEl) return;
             
-            // Se o pedido já foi finalizado, limpa o timer
             if (pedido.status === 'entregue' || pedido.status === 'cancelado') {
                 timerEl.innerHTML = `<i class="fas fa-check"></i> Finalizado`;
-                timerEl.className = 'card-novo-timer'; // Reseta classe
+                timerEl.className = 'card-novo-timer'; 
                 return;
             }
 
             const criadoEm = new Date(pedido.created_at);
-            const minutosPassados = (agora - criadoEm) / 60000; // Milissegundos para minutos
+            const minutosPassados = (agora - criadoEm) / 60000; 
             
             const tempoRestante = tempoEntregaPadrao - minutosPassados;
 
             if (tempoRestante <= 0) {
-                // ATRASADO
                 timerEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${Math.abs(tempoRestante).toFixed(0)} min ATRASADO`;
                 timerEl.className = 'card-novo-timer atrasado';
             } else {
-                // NO PRAZO
                 timerEl.innerHTML = `${tempoRestante.toFixed(0)} min restantes`;
                 timerEl.className = 'card-novo-timer no-prazo';
             }
         });
     }
     
-    // ==================================
-    // === NOVA FUNÇÃO (IMPRIMIR CANHOTO) ===
-    // ==================================
+    // --- Impressão, Histórico, Paginação e Cupons ---
+    
     function imprimirCanhotoDelivery() {
         if (!pedidoSelecionado) {
             mostrarMensagem('Nenhum pedido selecionado', 'error');
@@ -880,12 +752,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const pedido = pedidoSelecionado;
         const horaPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
-        const itens = parseItens(pedido.observacoes, false); // false = formatar como texto (com \n)
+        const itens = parseItens(pedido.observacoes, false); 
         const obsAdicionais = parseObsAdicionais(pedido.observacoes);
         const troco = parseTroco(pedido.observacoes);
         const pagamento = formatarFormaPagamento(pedido.forma_pagamento);
 
-        // Estilo otimizado para impressoras térmicas (58mm)
         const thermalCss = `
             <style>
                 body {
@@ -910,7 +781,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
                 .detalhes {
                     font-size: 9px;
-                    white-space: pre-wrap; /* Mantém quebras de linha dos itens */
+                    white-space: pre-wrap; 
                     margin-bottom: 5px;
                 }
                 .total {
@@ -950,7 +821,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         printWindow.document.write('<html><head><title>Canhoto do Pedido</title>' + thermalCss + '</head><body>');
         printWindow.document.write(canhotoContent);
         
-        // Script de impressão e fechamento
         const fixScript = `
             <script>
                 window.onload = function() {
@@ -966,14 +836,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         printWindow.document.close();
     }
     
-    // ==================================
-    // === NOVAS FUNÇÕES (HISTÓRICO E PAGINAÇÃO) ===
-    // ==================================
-
-    /**
-     * Carrega os pedidos finalizados (entregues/cancelados) para a aba de histórico.
-     * @param {number} pagina - O número da página a ser carregada.
-     */
     async function carregarHistoricoPedidos(pagina) {
         if (!historicoTabelaBody) return;
 
@@ -988,18 +850,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         try {
             let query = supabase
                 .from('pedidos_online')
-                .select('*', { count: 'exact' }); // Busca com contagem
+                .select('*', { count: 'exact' }); 
             
-            // Aplica filtros de status
             query = query.in('status', ['entregue', 'cancelado']);
 
-            // Aplica filtros de data (NOVOS)
             if (dataInicio) query = query.gte('created_at', dataInicio + 'T00:00:00Z');
             if (dataFim) query = query.lte('created_at', dataFim + 'T23:59:59Z');
 
-            // 1. Busca os pedidos da página atual
             const { data: pedidos, error: pedidosError, count } = await query
-                .order('created_at', { ascending: false }) // Mais recentes primeiro
+                .order('created_at', { ascending: false }) 
                 .range(offset, offset + ITENS_POR_PAGINA - 1);
 
             if (pedidosError) throw pedidosError;
@@ -1016,10 +875,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    /**
-     * Desenha a tabela de histórico com os pedidos carregados.
-     * @param {Array} pedidos - A lista de pedidos da página atual.
-     */
     function renderizarTabelaHistorico(pedidos) {
         historicoTabelaBody.innerHTML = '';
         if (pedidos.length === 0) {
@@ -1051,9 +906,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    /**
-     * Desenha os controles de paginação (Anterior / Próxima).
-     */
     function renderizarPaginacao() {
         if (!historicoPaginacao) return;
 
@@ -1088,13 +940,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // ----------------------------------------------------------------------
-    // --- LÓGICA DE CUPONS E PROMOÇÕES (NOVAS FUNÇÕES) ---
-    // ----------------------------------------------------------------------
-
-    /**
-     * Carrega a lista de cupons existentes.
-     */
     async function carregarCupons() {
         if (!cuponsTabelaBody) return;
         cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Carregando cupons...</td></tr>`;
@@ -1116,9 +961,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    /**
-     * Exibe a lista de cupons na tabela.
-     */
     function exibirCupons(cupons) {
         if (!cuponsTabelaBody) return;
         cuponsTabelaBody.innerHTML = '';
@@ -1158,9 +1000,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    /**
-     * Adiciona um novo cupom ao banco de dados.
-     */
     async function criarNovoCupom(e) {
         e.preventDefault();
         
@@ -1185,14 +1024,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                     data_validade: validade,
                     usos_maximos: usosMaximos,
                     ativo: ativo,
-                    usos_usados: 0 // Inicia com 0
+                    usos_usados: 0 
                 });
 
             if (error) throw error;
 
             mostrarMensagem(`Cupom ${codigo} cadastrado com sucesso!`, 'success');
             formNovoCupom.reset();
-            modalNovoCupom.style.display = 'none'; // Fecha o modal
+            modalNovoCupom.style.display = 'none'; 
             await carregarCupons();
 
         } catch (error) {
@@ -1207,12 +1046,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    /**
-     * Funções placeholder para a tabela de cupons (precisam de um modal de edição)
-     */
     window.editarCupom = function(cupomId) {
         mostrarMensagem(`Funcionalidade de Edição do cupom #${cupomId} em desenvolvimento.`, 'info');
-        // Implementar modal de edição aqui
     }
 
     window.excluirCupom = async function(cupomId, codigo) {
@@ -1233,8 +1068,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             mostrarMensagem('Erro ao excluir cupom: ' + error.message, 'error');
         }
     }
-
-    // ==================================
 
     inicializar();
 });
