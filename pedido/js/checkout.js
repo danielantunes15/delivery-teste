@@ -48,9 +48,15 @@
     function validarDados() {
         const dadosCliente = obterDadosCliente();
         const formaPagamentoEl = document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked');
-        const calculo = window.app.Carrinho.calcularTotalComAjustes(0); 
         
-        const subTotalProdutos = calculo.subTotal;
+        // --- INÍCIO DA CORREÇÃO ---
+        // 1. Calcular o subtotal dos produtos PRIMEIRO
+        const subTotalProdutos = window.app.carrinho.reduce((sum, item) => sum + (item.precoFinalItem * item.quantidade), 0);
+        
+        // 2. Passar o subtotal real para a função de cálculo
+        const calculo = window.app.Carrinho.calcularTotalComAjustes(subTotalProdutos); 
+        // --- FIM DA CORREÇÃO ---
+        
         const totalPedido = calculo.totalFinal; 
         
         const carrinho = window.app.carrinho;
@@ -80,6 +86,7 @@
         }
         
         // Monta observações
+        // Passamos o subTotalProdutos real que calculamos
         let obsCompleta = montarObservacoes(dadosCliente, totalPedido, subTotalProdutos, calculo.valorDesconto);
 
 
