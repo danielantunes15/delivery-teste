@@ -105,6 +105,12 @@
         elementos.carrinhoEnderecoInput = document.getElementById('carrinho-endereco-input');
         elementos.opcoesPagamento = document.querySelectorAll('.opcoes-pagamento .pagamento-opcao');
 
+        // **** INÍCIO DA CORREÇÃO (Opções de Entrega) ****
+        elementos.deliveryOptionEntrega = document.getElementById('delivery-option-entrega');
+        elementos.deliveryOptionRetirada = document.getElementById('delivery-option-retirada');
+        elementos.retiradaAddressInfo = document.getElementById('retirada-address-info');
+        // **** FIM DA CORREÇÃO ****
+
         // Modais
         elementos.modais = document.querySelectorAll('.modal');
         elementos.modalEditarEndereco = document.getElementById('modal-editar-endereco');
