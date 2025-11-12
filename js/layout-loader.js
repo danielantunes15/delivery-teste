@@ -38,7 +38,6 @@ audioNotificacao.load(); // Pré-carrega o áudio
  * @param {string} currentPage - O nome do arquivo atual (ex: "index.html")
  */
 function getSidebarHTML(currentPage) {
-    // --- INÍCIO DA MODIFICAÇÃO (Adiciona o emblema de notificação) ---
     const linksHTML = navLinks.map(link => `
         <a href="${link.href}" class="nav-link ${link.href === currentPage ? 'active' : ''}">
             <i class="fas ${link.icon}"></i>
@@ -47,7 +46,6 @@ function getSidebarHTML(currentPage) {
             ${link.href === 'delivery.html' ? '<span class="nav-badge" id="delivery-nav-badge" style="display: none;">0</span>' : ''}
         </a>
     `).join('');
-    // --- FIM DA MODIFICAÇÃO ---
 
     return `
     <div id="mainSidebar" class="sidebar">
@@ -82,7 +80,7 @@ function getSidebarHTML(currentPage) {
  * Gera o HTML do Header (Cabeçalho Superior)
  */
 function getHeaderHTML() {
-    // ... (função getHeaderHTML original sem modificações)
+    // Pega o título da tag <title> do HTML
     const pageTitle = document.title.split('-')[0].trim() || 'Dashboard';
 
     return `
@@ -114,12 +112,13 @@ function getHeaderHTML() {
 /**
  * Lógica do Relógio e Status (era do header-data.js)
  */
-// let totalPedidosNovos = 0; // Removido, usaremos globalTotalPedidosNovos
+let totalPedidosNovos = 0; // Cache
 
 const formatarTituloHeader = () => {
-    // ... (função formatarTituloHeader original sem modificações)
+    // A tag H1 tem o nome da página
     const headerH1 = document.getElementById('page-title-header');
     if (headerH1) {
+        // Encontra o ícone do link ativo para usar no header
         const activeLink = navLinks.find(link => link.href === (window.location.pathname.split('/').pop() || 'index.html'));
         const iconClass = activeLink ? activeLink.icon : 'fa-chart-line';
         
@@ -127,11 +126,9 @@ const formatarTituloHeader = () => {
     }
 };
 
-// --- INÍCIO DA MODIFICAÇÃO (Função principal de verificação global) ---
 const atualizarRelogioEStatus = async () => {
     const relogioElement = document.getElementById('header-relogio');
     const statusDeliveryElement = document.getElementById('status-delivery-icon');
-    // 1. Busca o novo emblema da barra lateral
     const deliveryNavBadge = document.getElementById('delivery-nav-badge');
 
     if (relogioElement) {
@@ -140,9 +137,15 @@ const atualizarRelogioEStatus = async () => {
         relogioElement.textContent = horaFormatada;
     }
 
-    // 2. Verifica se o Supabase (window.supabase) e os elementos da UI existem
-    // Esta lógica agora roda em TODAS as páginas, não apenas em delivery.js
+    // ================================================================
+    // === INÍCIO DA CORREÇÃO ===
+    // ================================================================
+    // A condição agora verifica apenas os elementos que o PRÓPRIO layout-loader.js cria,
+    // e o window.supabase (que é global)
     if (statusDeliveryElement && deliveryNavBadge && window.supabase) {
+    // ================================================================
+    // === FIM DA CORREÇÃO ===
+    // ================================================================
         try {
             // 3. Faz a consulta de contagem de pedidos 'novos'
             const { count, error } = await window.supabase.from('pedidos_online')
@@ -199,14 +202,12 @@ const atualizarRelogioEStatus = async () => {
         }
     }
 };
-// --- FIM DA MODIFICAÇÃO ---
 
 
 /**
  * Lógica do Menu Hamburger (era inline no HTML)
  */
 function initSidebarToggle() {
-    // ... (função initSidebarToggle original sem modificações)
     const menuToggle = document.getElementById('menuToggle');
     const mainSidebar = document.getElementById('mainSidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -226,7 +227,6 @@ function initSidebarToggle() {
  * Lógica do Menu de Perfil (era do auth.js)
  */
 function initSidebarFooter() {
-    // ... (função initSidebarFooter original sem modificações)
     const userProfileToggle = document.getElementById('user-profile-toggle');
     const logoutMenu = document.getElementById('logout-menu');
     const globalLogoutLink = document.getElementById('global-logout-link');
@@ -272,7 +272,6 @@ function initSidebarFooter() {
 // 4. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
 // -----------------------------------------------------------------
 function initLayout() {
-    // ... (Início da initLayout original)
     const sidebarPlaceholder = document.getElementById('sidebar-placeholder');
     const headerPlaceholder = document.getElementById('header-placeholder');
     
@@ -281,22 +280,24 @@ function initLayout() {
         return;
     }
 
+    // Identifica a página atual
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
+    // Injeta o HTML
     sidebarPlaceholder.innerHTML = getSidebarHTML(currentPage);
     headerPlaceholder.innerHTML = getHeaderHTML();
 
+    // Ativa toda a lógica
     initSidebarToggle();
     initSidebarFooter();
     
+    // Lógica do header-data.js
     formatarTituloHeader();
     
-    // --- INÍCIO DA MODIFICAÇÃO (Garante que a primeira verificação ocorra logo) ---
     // Roda a primeira vez imediatamente
     setTimeout(atualizarRelogioEStatus, 500); 
     // Continua rodando a cada 10 segundos
-    setInterval(atualizarRelogioEStatus, 10000);
-    // --- FIM DA MODIFICAÇÃO ---
+    setInterval(atualizarRelogioEStatus, 10000); // Atualiza a cada 10 seg
 }
 
 // Dispara a inicialização do layout quando o DOM estiver pronto
