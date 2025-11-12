@@ -40,7 +40,6 @@ window.app = {
 document.addEventListener('DOMContentLoaded', async function() {
     
     // 1. Vincula os módulos ao 'app' global
-    // (Neste ponto, 'defer' garantiu que ui.js, api.js, etc., já rodaram e criaram seus objetos globais)
     app.UI = window.AppUI;
     app.API = window.AppAPI;
     app.Auth = window.AppAuth;
@@ -49,7 +48,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     app.Checkout = window.AppCheckout;
     app.Rastreamento = window.AppRastreamento;
 
-    // Verifica se os módulos essenciais carregaram
+    // *** ETAPA DE CORREÇÃO ***
+    // 2. Chama a função para carregar todos os elementos do DOM.
+    // Isso garante que app.UI.elementos esteja 100% preenchido
+    // ANTES de qualquer outra função tentar usá-los.
+    app.UI.carregarElementosDOM();
+    // *** FIM DA CORREÇÃO ***
+
+    // 3. Verifica se os módulos essenciais carregaram
     if (!app.UI || !app.API || !app.Auth || !app.Carrinho || !app.Cardapio || !app.Checkout || !app.Rastreamento) {
         console.error("❌ ERRO GRAVE: Um ou mais módulos falharam ao carregar.");
         alert("Erro crítico ao carregar o aplicativo. Verifique o console.");
@@ -58,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     /**
      * Configura todos os event listeners principais da aplicação.
-     * ADICIONADA VERIFICAÇÃO DE NULOS em todos os listeners.
+     * Agora é seguro chamar esta função, pois app.UI.elementos está preenchido.
      */
     function configurarEventListenersGlobais() {
         const ui = app.UI.elementos;
@@ -87,10 +93,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         // Listeners do Checkout (Single Screen)
-        // REMOVIDO: O listener do 'finalizarPedidoDireto' foi movido para configurarListenersSingleScreen
-        
-        // Botões Limpar, Adicionar mais, Trocar Endereço
-        // REMOVIDO: Listeners de checkout movidos para configurarListenersSingleScreen
+        // (O restante da função original...)
         
         // Lógica de Pagamento
         if (ui.opcoesPagamento) {
@@ -125,21 +128,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (ui.cadastroCepInput) ui.cadastroCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
         if (ui.modalCepInput) ui.modalCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
         
-        /* --- INÍCIO DA ALTERAÇÃO: Listeners do Header v2 --- */
-        
-        // Busca: Dispara a CADA TECLA digitada no input
+        /* --- Listeners do Header v2 --- */
         if (ui.headerSearchInput) ui.headerSearchInput.addEventListener('input', app.Cardapio.setupSearch);
-        
-        // Botão de Login/Conta (ícone de usuário)
         if (ui.loginBtn) ui.loginBtn.addEventListener('click', () => app.UI.alternarView('view-inicio'));
-        
-        // Botão de Carrinho (ícone de sacola)
         if (ui.headerCartBtn) ui.headerCartBtn.addEventListener('click', () => app.UI.alternarView('view-carrinho'));
-        
-        // Botão de Endereço
         if (ui.addressBtn) ui.addressBtn.addEventListener('click', () => app.UI.abrirModalEditarEndereco());
         
-        // NOVO: Lógica do botão de busca (Lupa) no mobile
         if (ui.headerV2SearchToggle) {
             ui.headerV2SearchToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -148,16 +142,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // NOVO: Lógica para fechar a busca no mobile ao perder o foco
         if (ui.headerSearchInput) {
             ui.headerSearchInput.addEventListener('blur', () => {
-                // Adiciona um pequeno delay para caso o usuário clique em um item
                 setTimeout(() => {
                     ui.headerV2.classList.remove('search-active');
                 }, 100);
             });
         }
-        /* --- FIM DA ALTERAÇÃO --- */
     }
 
     /**
@@ -174,24 +165,22 @@ document.addEventListener('DOMContentLoaded', async function() {
             await app.Auth.verificarSessaoLocal();
             
             // 3. Prepara a interface inicial
+            // (Agora é seguro acessar elementos)
             app.UI.elementos.mobileNav.style.display = 'flex';
             
-            // 4. Carrega os dados do cardápio (produtos e categorias)
-            await app.Cardapio.carregarDadosCardapio(); // <-- Carrega produtos ANTES do carrinho
+            // 4. Carrega os dados do cardápio
+            await app.Cardapio.carregarDadosCardapio();
             
             // 5. Carrega o carrinho persistido
-            app.Carrinho.carregarCarrinhoLocalmente(); // <-- POSICIONAMENTO CRÍTICO
+            app.Carrinho.carregarCarrinhoLocalmente();
 
             if (app.clienteLogado) {
                  console.log(`Cliente ${app.clientePerfil.nome} carregado.`);
-                 // Se logado, vai direto para o cardápio, loga e carrega status.
                  app.Auth.logarClienteManual(false); 
                  app.UI.alternarView('view-cardapio');
             } else {
                  console.log("Nenhum cliente logado, iniciando como convidado.");
-                 // Se não logado, vai para o cardápio e mantém a navegação bloqueada para Carrinho/Pedidos.
                  app.UI.alternarView('view-cardapio');
-                 // O 'auth-screen' fica acessível apenas pelo menu inferior ou tentativa de checkout.
             }
             
             // 6. Configura o status da loja e busca
@@ -201,15 +190,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 7. Configura todos os botões e cliques
             configurarEventListenersGlobais();
             
-            // --- INÍCIO DA CORREÇÃO ---
-            // 7b. Configura os listeners do checkout (incluindo o botão de cupom)
+            // 7b. Configura os listeners do checkout
             if (app.Checkout && app.Checkout.configurarListenersSingleScreen) {
                 app.Checkout.configurarListenersSingleScreen();
                 console.log("Listeners de Checkout (incluindo cupom) configurados.");
             } else {
                 console.error("Falha ao configurar listeners do Checkout.");
             }
-            // --- FIM DA CORREÇÃO ---
             
             // 8. Atualiza o carrinho
             app.Carrinho.atualizarCarrinho();
@@ -219,7 +206,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (app.UI) {
                 app.UI.mostrarMensagem('Erro ao carregar o app: ' + error.message, 'error');
             }
-            // Se houver um erro crítico, mostra a tela de login como fallback
             if (app.UI && app.UI.elementos.authScreen) {
                 app.UI.elementos.authScreen.classList.add('active');
             }

@@ -2,181 +2,178 @@
 
 (function() {
     
-    // ================================================================
-    // === INÍCIO DA CORREÇÃO (Adicionando funções utilitárias) ===
-    // ================================================================
-
-    /**
-     * Formata um número para o padrão de moeda BRL.
-     * @param {number} valor - O valor a ser formatado.
-     * @returns {string} - O valor formatado (ex: "R$ 10,50").
-     */
+    // Funções utilitárias
     const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
-
-    /**
-     * Formata um número de telefone para o padrão E.164 (WhatsApp).
-     * @param {string} telefone - O telefone (ex: "(33) 99999-9999").
-     * @returns {string} - O telefone formatado (ex: "5533999999999").
-     */
     const formatarTelefone = (telefone) => {
         const digitos = telefone.replace(/\D/g, '');
-        // Garante que o 55 (código do Brasil) esteja presente
         return digitos.length >= 12 ? digitos : '55' + digitos;
     };
-    // ================================================================
-    // === FIM DA CORREÇÃO ===
-    // ================================================================
 
+    // Objeto para armazenar todos os elementos do DOM (começa vazio)
+    // Ele será preenchido pela função carregarElementosDOM()
+    const elementos = {};
 
-    // Objeto para armazenar todos os elementos do DOM
-    const elementos = {
+    /**
+     * ESTA FUNÇÃO SERÁ CHAMADA PELO app.js DEPOIS QUE O DOM ESTIVER 100% CARREGADO.
+     * Ela preenche o objeto 'elementos' acima.
+     */
+    function carregarElementosDOM() {
         // Views
-        appContainer: document.getElementById('app-container'),
-        authScreen: document.getElementById('auth-screen'),
-        mobileNav: document.getElementById('mobile-bottom-nav'),
-        views: document.querySelectorAll('.app-view'),
-        navItems: document.querySelectorAll('.bottom-nav .nav-item'),
+        elementos.appContainer = document.getElementById('app-container');
+        elementos.authScreen = document.getElementById('auth-screen');
+        elementos.mobileNav = document.getElementById('mobile-bottom-nav');
+        elementos.views = document.querySelectorAll('.app-view');
+        elementos.navItems = document.querySelectorAll('.bottom-nav .nav-item');
         
         // Alertas
-        alertContainer: document.getElementById('alert-container'),
+        elementos.alertContainer = document.getElementById('alert-container');
         
         // Auth
-        authTelefoneInput: document.getElementById('auth-telefone'),
-        btnIniciarSessao: document.getElementById('btn-iniciar-sessao'),
-        cadastroForm: document.getElementById('cadastro-form'),
-        cadastroTelefoneHidden: document.getElementById('cadastro-telefone-hidden'),
-        cadastroNomeInput: document.getElementById('cadastro-nome'),
-        cadastroCepInput: document.getElementById('cadastro-cep'),
-        cadastroRuaInput: document.getElementById('cadastro-rua'),
-        cadastroNumeroInput: document.getElementById('cadastro-numero'),
-        cadastroBairroInput: document.getElementById('cadastro-bairro'),
-        cadastroCidadeInput: document.getElementById('cadastro-cidade'),
-        cadastroEstadoInput: document.getElementById('cadastro-estado'),
-        btnFinalizarCadastro: document.getElementById('btn-finalizar-cadastro'),
-        loginFormGroup: document.getElementById('login-form-group'),
+        elementos.authTelefoneInput = document.getElementById('auth-telefone');
+        elementos.btnIniciarSessao = document.getElementById('btn-iniciar-sessao');
+        elementos.cadastroForm = document.getElementById('cadastro-form');
+        elementos.cadastroTelefoneHidden = document.getElementById('cadastro-telefone-hidden');
+        elementos.cadastroNomeInput = document.getElementById('cadastro-nome');
+        elementos.cadastroCepInput = document.getElementById('cadastro-cep');
+        elementos.cadastroRuaInput = document.getElementById('cadastro-rua');
+        elementos.cadastroNumeroInput = document.getElementById('cadastro-numero');
+        elementos.cadastroBairroInput = document.getElementById('cadastro-bairro');
+        elementos.cadastroCidadeInput = document.getElementById('cadastro-cidade');
+        elementos.cadastroEstadoInput = document.getElementById('cadastro-estado');
+        elementos.btnFinalizarCadastro = document.getElementById('btn-finalizar-cadastro');
+        elementos.loginFormGroup = document.getElementById('login-form-group');
 
         // Perfil (view-inicio)
-        logoutBtnApp: document.getElementById('logout-btn-app'),
-        homeClienteNome: document.getElementById('home-cliente-nome'),
-        statusUltimoPedido: document.getElementById('status-ultimo-pedido'),
-        homeEndereco: document.getElementById('home-endereco'),
-        abrirModalEditarEndereco: document.getElementById('abrir-modal-editar-endereco'),
+        elementos.logoutBtnApp = document.getElementById('logout-btn-app');
+        elementos.homeClienteNome = document.getElementById('home-cliente-nome');
+        elementos.statusUltimoPedido = document.getElementById('status-ultimo-pedido');
+        elementos.homeEndereco = document.getElementById('home-endereco');
+        elementos.abrirModalEditarEndereco = document.getElementById('abrir-modal-editar-endereco');
 
         // Rastreamento (view-inicio)
-        rastreamentoContainer: document.getElementById('rastreamento-pedido-ativo'),
-        rastreamentoPedidoId: document.getElementById('rastreamento-pedido-id'),
-        rastreamentoStatusTexto: document.getElementById('rastreamento-status-texto'),
-        stepNovo: document.getElementById('step-novo'),
-        stepPreparando: document.getElementById('step-preparando'),
-        stepPronto: document.getElementById('step-pronto'),
-        stepEntregue: document.getElementById('step-entregue'),
+        elementos.rastreamentoContainer = document.getElementById('rastreamento-pedido-ativo');
+        elementos.rastreamentoPedidoId = document.getElementById('rastreamento-pedido-id');
+        elementos.rastreamentoStatusTexto = document.getElementById('rastreamento-status-texto');
+        elementos.stepNovo = document.getElementById('step-novo');
+        elementos.stepPreparando = document.getElementById('step-preparando');
+        elementos.stepPronto = document.getElementById('step-pronto');
+        elementos.stepEntregue = document.getElementById('step-entregue');
 
         // Cardápio (view-cardapio)
-        storeStatusIndicator: document.querySelector('.store-status .status-indicator'),
-        storeStatusText: document.querySelector('.store-status .status-text'),
-        storeHoursText: document.getElementById('store-hours-text'),
-        storeAttentionBar: document.querySelector('.store-status .attention-bar'),
-        storeClosedMessage: document.getElementById('store-closed-message'),
-        categoriesScroll: document.getElementById('categorias-container'),
-        popularScroll: document.getElementById('popular-scroll'),
-        productsSection: document.getElementById('products-section'),
+        elementos.storeStatusIndicator = document.querySelector('.store-status .status-indicator');
+        elementos.storeStatusText = document.querySelector('.store-status .status-text');
+        elementos.storeHoursText = document.getElementById('store-hours-text');
+        elementos.storeAttentionBar = document.querySelector('.store-status .attention-bar');
+        elementos.storeClosedMessage = document.getElementById('store-closed-message');
+        elementos.categoriesScroll = document.getElementById('categorias-container');
+        elementos.popularScroll = document.getElementById('popular-scroll');
+        elementos.productsSection = document.getElementById('products-section');
         
-        // Carrinho (view-carrinho) - ATUALIZADO PARA TELA ÚNICA
-        carrinhoBadge: document.getElementById('carrinho-badge'),
-        cartCountNav: document.querySelector('.bottom-nav .cart-count'),
-        pedidoObservacoes: document.getElementById('pedido-observacoes'),
-        trocoParaInput: document.getElementById('troco-para'),
-        carrinhoItens: document.getElementById('carrinho-itens'),
+        // Carrinho (view-carrinho)
+        elementos.carrinhoBadge = document.getElementById('carrinho-badge');
+        elementos.cartCountNav = document.querySelector('.bottom-nav .cart-count');
+        elementos.pedidoObservacoes = document.getElementById('pedido-observacoes');
+        elementos.trocoParaInput = document.getElementById('troco-para');
+        elementos.carrinhoItens = document.getElementById('carrinho-itens');
         
         // Resumo de Valores
-        subtotalCarrinho: document.getElementById('subtotal-carrinho'),
-        subtotalAjustadoCarrinho: document.getElementById('subtotal-ajustado-carrinho'), // << NOVO
-        resumoSubtotalLiquidoLinha: document.getElementById('resumo-subtotal-liquido-linha'), // << NOVO
-        taxaEntregaCarrinho: document.getElementById('taxa-entrega-carrinho'),
-        totalCarrinho: document.getElementById('total-carrinho'),
+        elementos.subtotalCarrinho = document.getElementById('subtotal-carrinho');
+        elementos.subtotalAjustadoCarrinho = document.getElementById('subtotal-ajustado-carrinho');
+        elementos.resumoSubtotalLiquidoLinha = document.getElementById('resumo-subtotal-liquido-linha');
+        elementos.taxaEntregaCarrinho = document.getElementById('taxa-entrega-carrinho');
+        elementos.totalCarrinho = document.getElementById('total-carrinho');
         
         // Botões e Campos da Tela Única
-        finalizarPedidoDireto: document.getElementById('finalizar-pedido-direto'), 
-        limparCarrinhoBtn: document.getElementById('limpar-carrinho-btn'),
-        addMoreItemsBtn: document.getElementById('add-more-items-btn'),
-        trocarEnderecoBtn: document.getElementById('trocar-endereco-btn'),
-        tempoEntregaDisplay: document.getElementById('tempo-entrega-display'),
-        taxaEntregaStep: document.getElementById('taxa-entrega-step'),
+        elementos.finalizarPedidoDireto = document.getElementById('finalizar-pedido-direto'); 
+        elementos.limparCarrinhoBtn = document.getElementById('limpar-carrinho-btn');
+        elementos.addMoreItemsBtn = document.getElementById('add-more-items-btn');
+        elementos.trocarEnderecoBtn = document.getElementById('trocar-endereco-btn');
+        elementos.tempoEntregaDisplay = document.getElementById('tempo-entrega-display');
+        elementos.taxaEntregaStep = document.getElementById('taxa-entrega-step');
         
         // Cupom
-        cupomInput: document.getElementById('cupom-input'),
-        aplicarCupomBtn: document.getElementById('aplicar-cupom-btn'),
-        cupomMessage: document.getElementById('cupom-message'),
-        descontoValorDisplay: document.getElementById('desconto-valor-display'),
-        descontoTipoDisplay: document.getElementById('desconto-tipo-display'),
-        resumoDescontoLinha: document.getElementById('resumo-desconto-linha'),
+        elementos.cupomInput = document.getElementById('cupom-input');
+        elementos.aplicarCupomBtn = document.getElementById('aplicar-cupom-btn');
+        elementos.cupomMessage = document.getElementById('cupom-message');
+        elementos.descontoValorDisplay = document.getElementById('desconto-valor-display');
+        elementos.descontoTipoDisplay = document.getElementById('desconto-tipo-display');
+        elementos.resumoDescontoLinha = document.getElementById('resumo-desconto-linha');
         
         // Dados de Cliente/Entrega
-        carrinhoEnderecoDisplay: document.getElementById('carrinho-endereco-display'),
-        carrinhoClienteNomeDisplay: document.getElementById('carrinho-cliente-nome'),
-        carrinhoEnderecoInput: document.getElementById('carrinho-endereco-input'), // Campo oculto que guarda o valor
-        opcoesPagamento: document.querySelectorAll('.opcoes-pagamento .pagamento-opcao'),
+        elementos.carrinhoEnderecoDisplay = document.getElementById('carrinho-endereco-display');
+        elementos.carrinhoClienteNomeDisplay = document.getElementById('carrinho-cliente-nome');
+        elementos.carrinhoEnderecoInput = document.getElementById('carrinho-endereco-input');
+        elementos.opcoesPagamento = document.querySelectorAll('.opcoes-pagamento .pagamento-opcao');
 
         // Modais
-        modais: document.querySelectorAll('.modal'),
-        modalEditarEndereco: document.getElementById('modal-editar-endereco'),
-        formEditarEndereco: document.getElementById('form-editar-endereco'),
-        modalCepInput: document.getElementById('modal-cep'),
-        modalRuaInput: document.getElementById('modal-rua'),
-        modalNumeroInput: document.getElementById('modal-numero'),
-        modalBairroInput: document.getElementById('modal-bairro'),
-        modalCidadeInput: document.getElementById('modal-cidade'),
-        modalEstadoInput: document.getElementById('modal-estado'),
+        elementos.modais = document.querySelectorAll('.modal');
+        elementos.modalEditarEndereco = document.getElementById('modal-editar-endereco');
+        elementos.formEditarEndereco = document.getElementById('form-editar-endereco');
+        elementos.modalCepInput = document.getElementById('modal-cep');
+        elementos.modalRuaInput = document.getElementById('modal-rua');
+        elementos.modalNumeroInput = document.getElementById('modal-numero');
+        elementos.modalBairroInput = document.getElementById('modal-bairro');
+        elementos.modalCidadeInput = document.getElementById('modal-cidade');
+        elementos.modalEstadoInput = document.getElementById('modal-estado');
         
-        modalDetalhesPedido: document.getElementById('modal-detalhes-pedido'),
-        detalhesPedidoId: document.getElementById('detalhes-pedido-id'),
-        detalhesPedidoContent: document.getElementById('detalhes-pedido-content'),
+        elementos.modalDetalhesPedido = document.getElementById('modal-detalhes-pedido');
+        elementos.detalhesPedidoId = document.getElementById('detalhes-pedido-id');
+        elementos.detalhesPedidoContent = document.getElementById('detalhes-pedido-content');
 
-        modalOpcoesProduto: document.getElementById('modal-opcoes-produto'),
-        opcoesTitulo: document.getElementById('opcoes-titulo'),
-        opcoesDescricao: document.getElementById('opcoes-descricao'),
-        opcoesContainer: document.getElementById('opcoes-container'),
-        complementosContainer: document.getElementById('complementos-container'),
-        opcoesObservacao: document.getElementById('opcoes-observacao'),
-        opcoesBtnRemover: document.getElementById('opcoes-btn-remover'),
-        opcoesQuantidadeValor: document.getElementById('opcoes-quantidade-valor'),
-        opcoesBtnAdicionar: document.getElementById('opcoes-btn-adicionar'),
-        opcoesPrecoModal: document.getElementById('opcoes-preco-modal'),
-        btnAdicionarOpcoes: document.getElementById('btn-adicionar-opcoes'),
+        elementos.modalOpcoesProduto = document.getElementById('modal-opcoes-produto');
+        elementos.opcoesTitulo = document.getElementById('opcoes-titulo');
+        elementos.opcoesDescricao = document.getElementById('opcoes-descricao');
+        elementos.opcoesContainer = document.getElementById('opcoes-container');
+        elementos.complementosContainer = document.getElementById('complementos-container');
+        elementos.opcoesObservacao = document.getElementById('opcoes-observacao');
+        elementos.opcoesBtnRemover = document.getElementById('opcoes-btn-remover');
+        elementos.opcoesQuantidadeValor = document.getElementById('opcoes-quantidade-valor');
+        elementos.opcoesBtnAdicionar = document.getElementById('opcoes-btn-adicionar');
+        elementos.opcoesPrecoModal = document.getElementById('opcoes-preco-modal');
+        elementos.btnAdicionarOpcoes = document.getElementById('btn-adicionar-opcoes');
         
         // Header v2
-        headerV2: document.getElementById('header-v2'),
-        headerV2Logo: document.getElementById('header-v2-logo'),
-        headerV2Actions: document.getElementById('header-v2-actions'),
-        headerV2SearchToggle: document.getElementById('header-v2-search-toggle'),
-        headerV2SearchContainer: document.getElementById('header-v2-search-container'),
-        headerSearchInput: document.getElementById('header-search-input'), 
-        loginBtn: document.getElementById('header-v2-login-btn'),
-        addressBtn: document.getElementById('header-v2-address-btn'),
-        addressText: document.getElementById('header-v2-address-text'),
+        elementos.headerV2 = document.getElementById('header-v2');
+        elementos.headerV2Logo = document.getElementById('header-v2-logo');
+        elementos.headerV2Actions = document.getElementById('header-v2-actions');
+        elementos.headerV2SearchToggle = document.getElementById('header-v2-search-toggle');
+        elementos.headerV2SearchContainer = document.getElementById('header-v2-search-container');
+        elementos.headerSearchInput = document.getElementById('header-search-input'); 
+        elementos.loginBtn = document.getElementById('header-v2-login-btn');
+        elementos.addressBtn = document.getElementById('header-v2-address-btn');
+        elementos.addressText = document.getElementById('header-v2-address-text');
         
         // Header Cart v2
-        headerCartBtn: document.getElementById('header-v2-cart-btn'),
-        headerCartItems: document.getElementById('header-v2-cart-items'),
-        headerCartTotal: document.getElementById('header-v2-cart-total'),
+        elementos.headerCartBtn = document.getElementById('header-v2-cart-btn');
+        elementos.headerCartItems = document.getElementById('header-v2-cart-items');
+        elementos.headerCartTotal = document.getElementById('header-v2-cart-total');
         
         // Elementos do Modal de Opções
-        opcoesImagemProduto: document.getElementById('opcoes-imagem-produto'),
-        opcoesImagemPlaceholder: document.getElementById('opcoes-imagem-placeholder')
-    };
+        elementos.opcoesImagemProduto = document.getElementById('opcoes-imagem-produto');
+        elementos.opcoesImagemPlaceholder = document.getElementById('opcoes-imagem-placeholder');
+    }
 
     /**
      * Exibe uma mensagem de alerta no topo da tela.
      */
     function mostrarMensagem(mensagem, tipo = 'info') {
-        console.log(`[Mensagem Oculta - ${tipo}]: ${mensagem}`);
+        // As funções agora acessam 'elementos'
+        if (elementos.alertContainer) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${tipo}`;
+            alertDiv.innerHTML = `<span>${mensagem}</span><button class="alert-close" onclick="this.parentElement.remove()">&times;</button>`;
+            elementos.alertContainer.appendChild(alertDiv);
+            setTimeout(() => { if (alertDiv.parentNode) alertDiv.remove(); }, 5000);
+        } else {
+            console.log(`[Mensagem ${tipo}]: ${mensagem}`);
+        }
     }
 
     /**
      * Alterna a visualização das "páginas" do app.
      */
     function alternarView(viewId) {
-        // Lógica de Bloqueio: Se tentar ir para Pedidos/Carrinho sem logar, vai para Login.
+        // Lógica de Bloqueio
         if ((viewId === 'view-inicio' || viewId === 'view-carrinho') && !window.app.clienteLogado) {
             viewId = 'auth-screen';
         }
@@ -196,7 +193,7 @@
              item.classList.toggle('active', item.getAttribute('data-view') === viewId);
         });
         
-        if (viewId === 'view-carrinho') {
+        if (viewId === 'view-carrinho' && window.app.Carrinho) {
             window.app.Carrinho.atualizarCarrinhoDisplay();
         }
     }
@@ -214,36 +211,30 @@
         const perfil = window.app.clientePerfil;
         const enderecoSalvo = perfil.endereco || '';
         
-        // Expressões Regulares para extrair componentes do endereço salvo
         const cepMatch = enderecoSalvo.match(/\(CEP:\s?(\d{5}-?\d{3})\)/);
         const cidadeEstadoMatch = enderecoSalvo.match(/\s-\s(.*?)\/([A-Z]{2})\s/);
         
-        // 1. Tenta extrair CEP, Cidade, Estado
         elementos.modalCepInput.value = cepMatch ? cepMatch[1] : '';
         elementos.modalCidadeInput.value = cidadeEstadoMatch ? cidadeEstadoMatch[1].trim() : '';
         elementos.modalEstadoInput.value = cidadeEstadoMatch ? cidadeEstadoMatch[2].trim() : '';
         
-        // 2. Tenta extrair Rua, Número e Bairro da primeira parte da string
         const parteInicial = enderecoSalvo.split(' - ')[0];
-        
-        // Padrão: Rua, Número, Bairro
         const partesEndereco = parteInicial.split(',').map(p => p.trim());
         
         if (partesEndereco.length >= 3) {
-            // Se conseguimos identificar as 3 partes principais
             elementos.modalRuaInput.value = partesEndereco[0] || '';
             elementos.modalNumeroInput.value = partesEndereco[1] || '';
             elementos.modalBairroInput.value = partesEndereco[2] || '';
         } else {
-             // Caso falhe, limpa os campos para o usuário digitar
             elementos.modalRuaInput.value = '';
             elementos.modalNumeroInput.value = '';
             elementos.modalBairroInput.value = '';
         }
         
         elementos.modalEditarEndereco.style.display = 'flex';
-        // Limpa mensagens de erro
-        document.getElementById('form-editar-endereco')?.reset();
+        if (elementos.formEditarEndereco) {
+            elementos.formEditarEndereco.reset(); // Limpa erros de validação anteriores
+        }
     }
     
     /**
@@ -257,7 +248,8 @@
 
     // Expõe os elementos e funções para o objeto global AppUI
     window.AppUI = {
-        elementos,
+        elementos, // Exporta o objeto (que estará vazio no início)
+        carregarElementosDOM, // <-- Exporta a nova função
         mostrarMensagem,
         alternarView,
         abrirModalEditarEndereco,
