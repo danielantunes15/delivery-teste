@@ -1,17 +1,13 @@
-// js/auth.js - Módulo de Autenticação do Cliente (Corrigido)
+// js/auth.js - Módulo de Autenticação do Cliente (Corrigido e à prova de nulos)
 
 (function() {
     
-    // const ui = window.AppUI; // <-- REMOVIDO
-    // const api = window.AppAPI; // <-- REMOVIDO
-
     /**
      * Verifica se há um cliente salvo no localStorage ao carregar a página.
      */
     async function verificarSessaoLocal() {
         const telefoneSalvo = localStorage.getItem('clienteTelefone');
         if (telefoneSalvo) {
-            // CORREÇÃO: Acessa window.AppAPI diretamente
             const cliente = await window.AppAPI.buscarClientePorTelefone(telefoneSalvo);
             if (cliente) {
                 window.app.clientePerfil = cliente;
@@ -28,7 +24,6 @@
      */
     async function iniciarSessao(e) {
         e.preventDefault();
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const uiElementos = window.AppUI.elementos;
         const telefoneRaw = uiElementos.authTelefoneInput.value.trim();
         const telefone = window.AppUI.formatarTelefone(telefoneRaw);
@@ -44,7 +39,7 @@
 
         if (cliente) {
             window.app.clientePerfil = cliente;
-            window.AppUI.mostrarMensagem(`Bem-vindo de volta, ${cliente.nome.split(' ')[0]}!`, 'success');
+            window.AppUI.mostrarMensagem(`Bem-vindo de volta, ${cliente.nome ? cliente.nome.split(' ')[0] : 'Cliente'}!`, 'success');
             logarClienteManual(true);
         } else {
             uiElementos.cadastroTelefoneHidden.value = telefone;
@@ -62,7 +57,6 @@
      */
     async function finalizarCadastro(e) {
         e.preventDefault();
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const uiElementos = window.AppUI.elementos;
         const nome = uiElementos.cadastroNomeInput.value.trim();
         const telefone = uiElementos.cadastroTelefoneHidden.value;
@@ -111,7 +105,6 @@
         localStorage.setItem('clienteTelefone', window.app.clientePerfil.telefone);
         window.app.clienteLogado = { id: window.app.clientePerfil.telefone, email: window.app.clientePerfil.telefone }; 
         
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const uiElementos = window.AppUI.elementos;
         
         uiElementos.authScreen.classList.remove('active');
@@ -146,7 +139,6 @@
         window.app.clienteLogado = null;
         window.app.clientePerfil = { nome: null, telefone: null, endereco: null };
         
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const uiElementos = window.AppUI.elementos;
         uiElementos.mobileNav.style.display = 'none';
         
@@ -158,28 +150,52 @@
         window.AppUI.alternarView('auth-screen');
     }
 
+    // ================================================================
+    // === INÍCIO DA CORREÇÃO (Função à prova de nulos) ===
+    // ================================================================
     /**
      * Atualiza os elementos da UI com dados do perfil do cliente.
+     * ESTA É A FUNÇÃO CORRIGIDA.
      */
     function atualizarPerfilUI() {
         const perfil = window.app.clientePerfil;
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const elementos = window.AppUI.elementos;
         
         if (window.app.clienteLogado) {
-            if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = perfil.nome.split(' ')[0];
-            if (elementos.carrinhoClienteNomeDisplay) elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
-            if (elementos.carrinhoEnderecoDisplay) elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
-            if (elementos.addressText) elementos.addressText.textContent = perfil.endereco.split(',')[0] || 'Seu Endereço'; // Nome da rua no header
-            
-            // Define o endereço atual no campo oculto para que o checkout use
-            if (elementos.carrinhoEnderecoInput) elementos.carrinhoEnderecoInput.value = perfil.endereco || ''; 
-            
-            if (elementos.homeEndereco) elementos.homeEndereco.innerHTML = `<strong>Endereço Atual:</strong><br>${perfil.endereco || 'Endereço não cadastrado.'}`;
+            // VERIFICAÇÃO DE NULO (NOME)
+            if (elementos.homeClienteNome) {
+                // Se 'perfil.nome' existir, divide; senão, usa 'Cliente'
+                elementos.homeClienteNome.textContent = perfil.nome ? perfil.nome.split(' ')[0] : 'Cliente';
+            }
+            if (elementos.carrinhoClienteNomeDisplay) {
+                elementos.carrinhoClienteNomeDisplay.textContent = perfil.nome || 'N/A';
+            }
+
+            // VERIFICAÇÃO DE NULO (ENDEREÇO)
+            if (elementos.carrinhoEnderecoDisplay) {
+                elementos.carrinhoEnderecoDisplay.textContent = perfil.endereco || 'N/A';
+            }
+            if (elementos.addressText) {
+                // Usa "optional chaining" (?.). Se 'perfil.endereco' for nulo, ele para e usa o '||'
+                elementos.addressText.textContent = perfil.endereco?.split(',')[0] || 'Seu Endereço';
+            }
+            if (elementos.carrinhoEnderecoInput) {
+                elementos.carrinhoEnderecoInput.value = perfil.endereco || ''; 
+            }
+            if (elementos.homeEndereco) {
+                elementos.homeEndereco.innerHTML = `<strong>Endereço Atual:</strong><br>${perfil.endereco || 'Endereço não cadastrado.'}`;
+            }
         } else {
+            // Se não estiver logado, define valores padrão
             if (elementos.homeClienteNome) elementos.homeClienteNome.textContent = 'Visitante';
+            if (elementos.carrinhoClienteNomeDisplay) elementos.carrinhoClienteNomeDisplay.textContent = 'N/A';
+            if (elementos.carrinhoEnderecoDisplay) elementos.carrinhoEnderecoDisplay.textContent = 'N/A';
+            if (elementos.addressText) elementos.addressText.textContent = 'Seu Endereço';
         }
     }
+    // ================================================================
+    // === FIM DA CORREÇÃO ===
+    // ================================================================
     
     /**
      * Salva o endereço editado no modal.
@@ -187,7 +203,6 @@
     async function salvarEdicaoEndereco(e) {
         e.preventDefault();
         const telefone = window.app.clientePerfil.telefone;
-        // CORREÇÃO: Acessa window.AppUI diretamente
         const uiElementos = window.AppUI.elementos;
         const cep = uiElementos.modalCepInput.value.trim();
         const rua = uiElementos.modalRuaInput.value.trim();
@@ -196,7 +211,6 @@
         const cidade = uiElementos.modalCidadeInput.value.trim();
         const estado = uiElementos.modalEstadoInput.value.trim();
         
-        // CORREÇÃO: Valida se o CEP/Rua/Número estão presentes
         if (!rua || !numero || !bairro || !cep || !cidade || !estado) {
             return window.AppUI.mostrarMensagem('Preencha todos os campos do endereço (Rua, Número, Bairro, CEP, Cidade e Estado).', 'error');
         }
@@ -204,21 +218,18 @@
         const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
 
         try {
-            // CORREÇÃO CRÍTICA: Remove a desestruturação do retorno (que é undefined)
             await window.AppAPI.salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto);
             
             window.app.clientePerfil.endereco = enderecoCompleto;
             window.AppUI.mostrarMensagem('✅ Endereço atualizado com sucesso!', 'success');
             window.AppUI.fecharModal(uiElementos.modalEditarEndereco);
             
-            // Atualiza todas as telas que usam o endereço
             atualizarPerfilUI(); 
             window.AppCarrinho.atualizarCarrinho();
             window.app.Rastreamento.carregarStatusUltimoPedido(); 
 
         } catch (error) {
             console.error('Erro ao salvar endereço:', error);
-            // Captura o erro detalhado do throw em api.js
             window.AppUI.mostrarMensagem(`Erro ao salvar endereço: ${error.message || 'Verifique sua conexão.'}`, 'error'); 
         }
     }
