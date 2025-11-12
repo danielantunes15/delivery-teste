@@ -171,38 +171,85 @@
                                  </div>
                             </div>
                             
-                            <h4><i class="fas fa-money-bill-wave"></i> Taxas de Entrega por Bairro</h4>
-                            
-                            <form id="form-nova-taxa" class="form">
-                                <input type="hidden" id="taxa-id-edicao">
-                                <div class="form-row" style="align-items: flex-end; margin-bottom: 1rem;">
-                                    <div class="form-group" style="flex: 1;">
-                                        <label for="taxa-bairro">Nome do Bairro *</label>
-                                        <input type="text" id="taxa-bairro" required placeholder="Ex: Centro">
-                                    </div>
-                                    <div class="form-group" style="max-width: 150px;">
-                                        <label for="taxa-valor">Valor da Taxa (R$) *</label>
-                                        <input type="number" id="taxa-valor" step="0.01" min="0" required placeholder="5.00">
-                                    </div>
-                                    <div class="form-group">
-                                        <button type="submit" id="btn-salvar-taxa" class="btn btn-primary btn-sm"><i class="fas fa-plus-circle"></i> Adicionar/Salvar Taxa</button>
-                                    </div>
-                                </div>
-                            </form>
+                            <div class="tabs" style="margin-bottom: 1.5rem;">
+                                <button class="tab-btn active" data-tab="tab-gerenciar-bairros"><i class="fas fa-road"></i> Gerenciar Bairros/Taxas</button>
+                                <button class="tab-btn" data-tab="tab-gerenciar-cidades"><i class="fas fa-city"></i> Gerenciar Cidades</button>
+                            </div>
 
-                             <div class="table-container" style="margin-top: 1rem;">
-                                <table class="table-moderna">
-                                    <thead>
-                                        <tr>
-                                            <th>Bairro</th>
-                                            <th>Valor da Taxa (R$)</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="taxas-tabela-body">
-                                        <tr><td colspan="3" style="text-align: center; color: #666;">Carregando taxas...</td></tr>
-                                    </tbody>
-                                </table>
+                            <div id="tab-gerenciar-bairros" class="tab-content active" style="display: block;">
+                                <h4><i class="fas fa-money-bill-wave"></i> Taxas de Entrega por Bairro e Cidade</h4>
+                                
+                                <form id="form-nova-taxa" class="form">
+                                    <input type="hidden" id="taxa-id-edicao">
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="taxa-cidade-select">Cidade *</label>
+                                            <select id="taxa-cidade-select" required>
+                                                 <option value="">Carregando Cidades...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="taxa-bairro">Nome do Bairro *</label>
+                                            <input type="text" id="taxa-bairro" required placeholder="Ex: Centro">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="taxa-valor">Valor da Taxa (R$) *</label>
+                                            <input type="number" id="taxa-valor" step="0.01" min="0" required placeholder="5.00">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions" style="justify-content: flex-start;">
+                                        <button type="submit" id="btn-salvar-taxa" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Adicionar/Salvar Taxa</button>
+                                    </div>
+                                </form>
+
+                                 <div class="table-container" style="margin-top: 1rem;">
+                                    <table class="table-moderna">
+                                        <thead>
+                                            <tr>
+                                                <th>Cidade</th>
+                                                <th>Bairro</th>
+                                                <th>Valor da Taxa (R$)</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="taxas-tabela-body">
+                                            <tr><td colspan="4" style="text-align: center; color: #666;">Carregando taxas...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-gerenciar-cidades" class="tab-content" style="display: none;">
+                                <h4><i class="fas fa-city"></i> Cadastro de Cidades Atendidas</h4>
+                                
+                                <form id="form-nova-cidade" class="form">
+                                    <input type="hidden" id="cidade-id-edicao">
+                                    <div class="form-row" style="align-items: flex-end;">
+                                        <div class="form-group" style="flex: 1;">
+                                            <label for="cidade-nome-input">Nome da Cidade *</label>
+                                            <input type="text" id="cidade-nome-input" required placeholder="Ex: Nanuque">
+                                        </div>
+                                        <div class="form-group">
+                                             <button type="submit" id="btn-salvar-cidade" class="btn btn-primary"><i class="fas fa-save"></i> Salvar Cidade</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                
+                                <div class="table-container" style="margin-top: 1rem;">
+                                    <table class="table-moderna">
+                                        <thead>
+                                            <tr>
+                                                <th>Cidade</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cidades-tabela-body">
+                                            <tr><td colspan="2" style="text-align: center; color: #666;">Carregando cidades...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>

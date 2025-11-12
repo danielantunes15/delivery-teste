@@ -33,6 +33,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     const configEnderecoRetirada = document.getElementById('config-endereco-retirada');
     const salvarEnderecoRetiradaBtn = document.getElementById('salvar-endereco-retirada');
     const taxaIdEdicao = document.getElementById('taxa-id-edicao');
+    
+    // CAMPOS DE TAXA NOVOS (AGORA SELECT)
+    const taxaCidadeSelect = document.getElementById('taxa-cidade-select'); 
+    const taxaBairroInput = document.getElementById('taxa-bairro'); 
+    const taxaValorInput = document.getElementById('taxa-valor');
+    
+    // NOVOS ELEMENTOS DE GERENCIAMENTO DE CIDADES
+    const formNovaCidade = document.getElementById('form-nova-cidade');
+    const cidadeIdEdicao = document.getElementById('cidade-id-edicao');
+    const cidadeNomeInput = document.getElementById('cidade-nome-input');
+    const cidadesTabelaBody = document.getElementById('cidades-tabela-body');
+
 
     // Elementos da Aba Histórico
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -56,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let todosPedidosHistorico = []; // Pedidos INATIVOS (Histórico)
     let todosCupons = []; // Lista de Cupons
     let todasTaxas = []; // NOVO: Lista de Taxas de Entrega
+    let todasCidades = []; // NOVO: Lista de Cidades Atendidas
     let pedidoSelecionado = null;
     
     // Cache de configurações da loja
@@ -111,6 +124,388 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     };
 
+    /**
+     * Mover a função imprimirCanhotoDelivery para o escopo global do script
+     * para garantir que configurarEventListeners possa referenciá-la.
+     */
+    function imprimirCanhotoDelivery() {
+        if (!pedidoSelecionado) {
+            mostrarMensagem('Nenhum pedido selecionado.', 'error');
+            return;
+        }
+
+        const pedido = pedidoSelecionado;
+        const horaPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
+        const itens = parseItens(pedido.observacoes, false); 
+        const obsAdicionais = parseObsAdicionais(pedido.observacoes);
+        const troco = parseTroco(pedido.observacoes);
+        const pagamento = formatarFormaPagamento(pedido.forma_pagamento);
+
+        const thermalCss = `
+            <style>
+                body {
+                    width: 58mm;
+                    font-family: 'Arial', sans-serif;
+                    font-size: 10px;
+                    margin: 0;
+                    padding: 5px;
+                }
+                h4 {
+                    text-align: center;
+                    margin: 2px 0;
+                    font-size: 12px;
+                }
+                hr {
+                    border: 0;
+                    border-top: 1px dashed #000;
+                    margin: 5px 0;
+                }
+                p {
+                    margin: 2px 0;
+                }
+                .detalhes {
+                    font-size: 9px;
+                    white-space: pre-wrap; 
+                    margin-bottom: 5px;
+                }
+                .total {
+                    font-weight: bold;
+                    font-size: 12px;
+                    margin-top: 5px;
+                }
+                @page {
+                    margin: 0;
+                }
+            </style>
+        `;
+
+        const canhotoContent = `
+            <div id="canhoto-impressao">
+                <h4>Confeitaria Doces Criativos</h4>
+                <p><strong>Pedido:</strong> #${pedido.id}</p>
+                <p><strong>Data/Hora:</strong> ${horaPedido}</p>
+                <hr>
+                <p><strong>Cliente:</strong> ${pedido.nome_cliente}</p>
+                <p><strong>Telefone:</strong> ${pedido.telefone_cliente}</p>
+                <p><strong>Endereço:</strong> ${pedido.endereco_entrega}</p>
+                <hr>
+                <p><strong>Itens do Pedido:</strong></p>
+                <div class="detalhes">${itens}</div>
+                <hr>
+                ${obsAdicionais ? `<p><strong>Obs:</strong> ${obsAdicionais}</p><hr>` : ''}
+                <p><strong>Pagamento:</strong> ${pagamento}</p>
+                <p><strong>Troco:</strong> ${troco}</p>
+                <p class="total"><strong>TOTAL: ${formatarMoeda(pedido.total)}</strong></p>
+                <hr>
+                <p style="text-align: center; font-size: 9px;">Obrigado pela preferência!</p>
+            </div>`;
+
+        const printWindow = window.open('', 'PrintCanhoto', 'height=600,width=400');
+        
+        printWindow.document.write('<html><head><title>Canhoto do Pedido</title>' + thermalCss + '</head><body>');
+        printWindow.document.write(canhotoContent);
+        
+        const fixScript = `
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 1000); 
+                };
+            </script>
+        `;
+        printWindow.document.write(fixScript);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+    }
+    
+    // --- FUNÇÕES CRUD CUPONS (MOVIDAS PARA CIMA) ---
+    async function criarNovoCupom(e) {
+        e.preventDefault();
+        
+        const codigo = document.getElementById('cupom-codigo').value.trim().toUpperCase();
+        const tipo = document.getElementById('cupom-tipo').value;
+        const valor = parseFloat(document.getElementById('cupom-valor').value);
+        const validade = document.getElementById('cupom-validade').value || null;
+        const usosMaximos = parseInt(document.getElementById('cupom-usos-maximos').value) || 0;
+        const ativo = document.getElementById('cupom-ativo').checked;
+
+        if (!codigo || isNaN(valor) || valor <= 0) {
+            mostrarMensagem('Preencha o Código e o Valor corretamente.', 'error');
+            return;
+        }
+
+        try {
+            const { error } = await supabase.from('cupons')
+                .insert({
+                    codigo: codigo,
+                    tipo: tipo,
+                    valor: valor,
+                    data_validade: validade,
+                    usos_maximos: usosMaximos,
+                    ativo: ativo,
+                    usos_usados: 0 
+                });
+
+            if (error) throw error;
+
+            mostrarMensagem(`Cupom ${codigo} cadastrado com sucesso!`, 'success');
+            formNovoCupom.reset();
+            modalNovoCupom.style.display = 'none'; 
+            await carregarCupons();
+
+        } catch (error) {
+            console.error('❌ Erro ao criar cupom:', error);
+            let msg = 'Erro ao cadastrar cupom.';
+            if (error.code === '23505') {
+                msg = `Erro: O código **${codigo}** já existe.`;
+            } else if (error.message) {
+                msg += ' Detalhe: ' + error.message;
+            }
+            mostrarMensagem(msg, 'error');
+        }
+    }
+
+    window.editarCupom = function(cupomId) {
+        mostrarMensagem(`Funcionalidade de Edição do cupom #${cupomId} em desenvolvimento.`, 'info');
+    }
+
+    window.excluirCupom = async function(cupomId, codigo) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR o cupom "${codigo}"?\nEsta ação é irreversível!`)) return;
+
+        try {
+            const { error } = await supabase.from('cupons')
+                .delete()
+                .eq('id', cupomId);
+            
+            if (error) throw error;
+            
+            mostrarMensagem(`Cupom ${codigo} excluído com sucesso!`, 'success');
+            await carregarCupons();
+
+        } catch (error) {
+            console.error('❌ Erro ao excluir cupom:', error);
+            mostrarMensagem('Erro ao excluir cupom: ' + error.message, 'error');
+        }
+    }
+    // --- FIM: FUNÇÕES CRUD CUPONS ---
+
+    
+    // --- FUNÇÕES DE EXIBIÇÃO DE DADOS (MOVIDAS PARA CIMA) ---
+
+    function exibirCidadesNaTabela(cidades) {
+        if (!cidadesTabelaBody) return;
+        cidadesTabelaBody.innerHTML = '';
+        if (cidades.length === 0) {
+            cidadesTabelaBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #666;">Nenhuma cidade cadastrada.</td></tr>`;
+            return;
+        }
+        
+        cidades.forEach(cidade => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${cidade.nome}</strong></td>
+                <td>
+                    <button class="btn-edit btn-sm" onclick="editarCidade('${cidade.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-danger btn-sm" onclick="excluirCidade('${cidade.id}', '${cidade.nome}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            cidadesTabelaBody.appendChild(tr);
+        });
+    }
+
+    function exibirTaxasEntrega(taxas) {
+        if (!taxasTabelaBody) return;
+        taxasTabelaBody.innerHTML = '';
+        
+        if (taxas.length === 0) {
+            taxasTabelaBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #666;">Nenhuma taxa cadastrada.</td></tr>`;
+            return;
+        }
+
+        taxas.forEach(taxa => {
+            const tr = document.createElement('tr');
+            const nomeCidade = taxa.cidade?.nome || 'Cidade Removida';
+            tr.innerHTML = `
+                <td><strong>${nomeCidade}</strong></td>
+                <td><strong>${taxa.bairro}</strong></td>
+                <td>${formatarMoeda(taxa.valor)}</td>
+                <td>
+                    <button class="btn-edit btn-sm" onclick="editarTaxaEntrega('${taxa.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-danger btn-sm" onclick="excluirTaxaEntrega('${taxa.id}', '${taxa.bairro} em ${nomeCidade}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            taxasTabelaBody.appendChild(tr);
+        });
+    }
+
+    function exibirCupons(cupons) {
+        if (!cuponsTabelaBody) return;
+        cuponsTabelaBody.innerHTML = '';
+        
+        if (cupons.length === 0) {
+            cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Nenhum cupom cadastrado.</td></tr>`;
+            return;
+        }
+
+        const hoje = new Date().toISOString().split('T')[0];
+
+        cupons.forEach(cupom => {
+            const isExpirado = cupom.data_validade && cupom.data_validade < hoje;
+            const isEsgotado = cupom.usos_maximos > 0 && cupom.usos_usados >= cupom.usos_maximos;
+            const isAtivo = cupom.ativo && !isExpirado && !isEsgotado;
+
+            const statusClass = isAtivo ? 'success' : isExpirado ? 'danger' : isEsgotado ? 'warning' : 'info';
+            const statusText = isAtivo ? 'Ativo' : isExpirado ? 'Expirado' : isEsgotado ? 'Esgotado' : 'Inativo';
+            const valorDisplay = cupom.tipo === 'percentual' ? `${cupom.valor}%` : formatarMoeda(cupom.valor);
+            const validadeDisplay = cupom.data_validade ? new Date(cupom.data_validade + 'T00:00:00').toLocaleDateString('pt-BR') : 'Ilimitado';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${cupom.codigo}</strong></td>
+                <td>${valorDisplay}</td>
+                <td>${validadeDisplay}</td>
+                <td>${cupom.usos_usados} (${cupom.usos_maximos === 0 ? '∞' : cupom.usos_maximos})</td>
+                <td>
+                    <span class="status-badge status-${statusClass}">${statusText}</span>
+                </td>
+                <td>
+                    <button class="btn-edit btn-sm" onclick="editarCupom('${cupom.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-danger btn-sm" onclick="excluirCupom('${cupom.id}', '${cupom.codigo}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            cuponsTabelaBody.appendChild(tr);
+        });
+    }
+
+    function renderizarTabelaHistorico(pedidos) {
+        historicoTabelaBody.innerHTML = '';
+        if (pedidos.length === 0) {
+            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nenhum pedido encontrado no histórico${(histDataInicioInput.value || histDataFimInput.value) ? ' para este filtro' : ''}.</td></tr>`;
+            return;
+        }
+
+        pedidos.forEach(pedido => {
+            const tr = document.createElement('tr');
+            const data = new Date(pedido.created_at).toLocaleDateString('pt-BR');
+            const statusClasse = `status-${pedido.status}`;
+            
+            tr.innerHTML = `
+                <td><strong>#${pedido.id}</strong></td>
+                <td>${data}</td>
+                <td>${pedido.nome_cliente}</td>
+                <td>${formatarMoeda(pedido.total)}</td>
+                <td>${formatarFormaPagamento(pedido.forma_pagamento)}</td>
+                <td>
+                    <span class="status-badge ${statusClasse}">${STATUS_MAP[pedido.status].title}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-ver-detalhes-hist" onclick="abrirModalDetalhes(${pedido.id})">
+                        <i class="fas fa-eye"></i> Ver
+                    </button>
+                </td>
+            `;
+            historicoTabelaBody.appendChild(tr);
+        });
+    }
+    
+    // --- FUNÇÕES DE CARREGAMENTO DE DADOS (AGORA NO ESCOPO CORRETO) ---
+    
+    async function carregarPedidosOnline() {
+        if (!contentElement) return;
+        // ... (código para carregar pedidos online)
+        const board = document.getElementById('delivery-board');
+        board.querySelectorAll('.card-list').forEach(list => list.innerHTML = '');
+        
+        try {
+            const { data, error } = await supabase.from('pedidos_online')
+                .select('*')
+                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z')
+                .neq('status', 'entregue') 
+                .neq('status', 'cancelado') 
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+            
+            todosPedidos = data || [];
+            ultimoTotalDePedidos = todosPedidos.length;
+            exibirPedidosNoBoard(todosPedidos);
+            
+        } catch (error) {
+            console.error('❌ Erro ao carregar pedidos online:', error);
+            mostrarMensagem('Erro ao carregar o painel de pedidos. Verifique se a tabela `pedidos_online` existe.', 'error');
+        }
+    }
+
+    async function carregarHistoricoPedidos(pagina) {
+        if (!historicoTabelaBody) return;
+
+        paginaAtualHistorico = pagina;
+        const offset = (pagina - 1) * ITENS_POR_PAGINA;
+        
+        const dataInicio = histDataInicioInput.value;
+        const dataFim = histDataFimInput.value;
+
+        historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;"><div class="spinner"></div></td></tr>`;
+
+        try {
+            let query = supabase
+                .from('pedidos_online')
+                .select('*', { count: 'exact' }); 
+            
+            query = query.in('status', ['entregue', 'cancelado']);
+
+            if (dataInicio) query = query.gte('created_at', dataInicio + 'T00:00:00Z');
+            if (dataFim) query = query.lte('created_at', dataFim + 'T23:59:59Z');
+
+            // ================================================================
+            // === INÍCIO DA CORREÇÃO (ReferenceError) ===
+            // ================================================================
+            const { data: pedidos, error: pedidosError, count } = await query
+                .order('created_at', { ascending: false }) 
+                .range(offset, offset + ITENS_POR_PAGINA - 1); // <-- CORRIGIDO DE ITENS_POR_AGRUPAMENTO
+            // ================================================================
+            // === FIM DA CORREÇÃO ===
+            // ================================================================
+
+            if (pedidosError) throw pedidosError;
+
+            todosPedidosHistorico = pedidos || [];
+            totalPedidosHistorico = count || 0;
+
+            renderizarTabelaHistorico(todosPedidosHistorico);
+            renderizarPaginacao(); // Agora esta função será chamada
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar histórico:', error);
+            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--error-color);">Erro ao carregar histórico.</td></tr>`;
+        }
+    }
+    
+    async function carregarCupons() {
+        if (!cuponsTabelaBody) return;
+        cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Carregando cupons...</td></tr>`;
+
+        try {
+            const { data, error } = await supabase.from('cupons')
+                .select('*')
+                .order('codigo', { ascending: true });
+
+            if (error) throw error;
+            
+            todosCupons = data || [];
+            exibirCupons(todosCupons);
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar cupons:', error);
+            mostrarMensagem('Erro ao carregar cupons. Verifique se a tabela `cupons` existe.', 'error');
+            cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--error-color);">Falha ao carregar cupons.</td></tr>`;
+        }
+    }
+    
+    // --- FIM: FUNÇÕES DE CARREGAMENTO DE DADOS ---
+
 
     // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
     if (!window.sistemaAuth?.verificarAutenticacao()) {
@@ -120,8 +515,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     const usuario = window.sistemaAuth.usuarioLogado;
     const isAdminOrManager = ['administrador', 'admin', 'gerente', 'supervisor'].includes(usuario.tipo?.toLowerCase());
     
-    // A função window.atualizarStatusHeaderDelivery foi REMOVIDA daqui
-    // pois agora ela existe globalmente no js/layout-loader.js
 
     async function inicializar() {
         toggleDisplay(loadingElement, true);
@@ -130,11 +523,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         await carregarConfiguracoesDaLoja(); 
         
+        // CORREÇÃO: As funções de carregamento agora estão definidas antes
         await Promise.all([
-            carregarPedidosOnline(), // Carga inicial
+            carregarPedidosOnline(), 
             carregarHistoricoPedidos(paginaAtualHistorico),
             carregarCupons(),
-            carregarTaxasEntrega() // NOVO: Carrega as taxas de entrega
+            carregarCidades(), 
+            carregarTaxasEntrega() 
         ]);
         
         // Intervalo aumentado para 15s (notificação global cuida dos 10s)
@@ -154,7 +549,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 verificarNovosPedidos(); 
                 carregarHistoricoPedidos(paginaAtualHistorico);
                 carregarCupons();
-                carregarTaxasEntrega(); // NOVO:
+                carregarCidades(); // Recarrega cidades também
+                carregarTaxasEntrega(); 
             });
         }
         if (btnAvancarStatus) {
@@ -163,9 +559,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (btnCancelarPedido) {
             btnCancelarPedido.addEventListener('click', () => atualizarStatusPedido('cancelado', 'Tem certeza que deseja CANCELAR este pedido?'));
         }
+        
+        // A função imprimirCanhotoDelivery está definida acima
         if (btnImprimirCanhoto) {
             btnImprimirCanhoto.addEventListener('click', imprimirCanhotoDelivery);
         }
+        
         if (btnConfirmarPagamento) {
             btnConfirmarPagamento.addEventListener('click', confirmarPagamentoManual);
         }
@@ -217,6 +616,7 @@ document.addEventListener('DOMContentLoaded', async function () {
              });
         }
         
+        // A função criarNovoCupom está definida no escopo principal
         if (formNovoCupom) {
             formNovoCupom.addEventListener('submit', criarNovoCupom);
         }
@@ -228,6 +628,28 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (salvarEnderecoRetiradaBtn) {
              salvarEnderecoRetiradaBtn.addEventListener('click', salvarEnderecoRetirada);
         }
+        
+        // NOVO: Listeners para Gerenciamento de Cidades
+        if (formNovaCidade) {
+            formNovaCidade.addEventListener('submit', salvarCidade);
+        }
+        
+        // Adiciona o switch de sub-tabs dentro da aba Entrega
+        document.querySelectorAll('#tab-entrega .tabs .tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                 // Lógica para alternar as sub-abas de Gerenciamento de Entrega
+                 document.querySelectorAll('#tab-entrega .tabs .tab-btn').forEach(b => b.classList.remove('active'));
+                 document.querySelectorAll('#tab-entrega .tab-content').forEach(c => c.style.display = 'none');
+                 
+                 e.currentTarget.classList.add('active');
+                 const targetId = e.currentTarget.getAttribute('data-tab');
+                 document.getElementById(targetId).style.display = 'block';
+                 
+                 // Recarrega lista ao entrar nas sub-abas
+                 if (targetId === 'tab-gerenciar-cidades') carregarCidades();
+                 if (targetId === 'tab-gerenciar-bairros') carregarTaxasEntrega();
+            });
+        });
     }
 
     function switchTab(tabId) {
@@ -256,40 +678,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else if (tabId === 'tab-promocoes') {
              carregarCupons();
         } else if (tabId === 'tab-entrega') { // NOVO
+             // Ao entrar na aba Entrega, carrega as cidades e as taxas
+             carregarCidades(); 
              carregarTaxasEntrega();
-             // Preenche o campo de endereço com o valor carregado
              if (configEnderecoRetirada) configEnderecoRetirada.value = configLoja.endereco_retirada || '';
+             // Força a sub-aba de Bairros a ser a ativa
+             document.getElementById('tab-gerenciar-bairros').style.display = 'block';
+             document.querySelector('[data-tab="tab-gerenciar-bairros"]').classList.add('active');
         }
     }
     
     // --- LÓGICA DE PEDIDOS ONLINE (CRUD) ---
 
-    async function carregarPedidosOnline() {
-        if (!contentElement) return;
-
-        const board = document.getElementById('delivery-board');
-        board.querySelectorAll('.card-list').forEach(list => list.innerHTML = '');
-        
-        try {
-            const { data, error } = await supabase.from('pedidos_online')
-                .select('*')
-                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z')
-                .neq('status', 'entregue') 
-                .neq('status', 'cancelado') 
-                .order('created_at', { ascending: true });
-
-            if (error) throw error;
-            
-            todosPedidos = data || [];
-            ultimoTotalDePedidos = todosPedidos.length;
-            exibirPedidosNoBoard(todosPedidos);
-            
-        } catch (error) {
-            console.error('❌ Erro ao carregar pedidos online:', error);
-            mostrarMensagem('Erro ao carregar o painel de pedidos. Verifique se a tabela `pedidos_online` existe.', 'error');
-        }
-    }
-
+    
     function exibirPedidosNoBoard(pedidos) {
         const colunas = { novo: [], preparando: [], pronto: [], entregue: [], cancelado: [] };
         
@@ -679,7 +1080,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     async function carregarConfiguracoesDaLoja() {
         try {
-            // CORREÇÃO: Usar o wildcard '*' para simplificar a consulta e evitar o erro 406
+            // CORREÇÃO: Usar o wildcard '*' para simplificar a consulta e evitar o erro 406/401
             const { data, error } = await supabase
                 .from('config_loja')
                 .select('*') 
@@ -890,170 +1291,255 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
     
-    // --- Impressão, Histórico, Paginação e Cupons ---
+    // --- Funções Auxiliares de Exibição/Ação (omissas para brevidade) ---
+
+    // --- FUNÇÕES CRUD CIDADES ---
     
-    function imprimirCanhotoDelivery() {
-        if (!pedidoSelecionado) {
-            mostrarMensagem('Nenhum pedido selecionado.', 'error');
-            return;
-        }
-
-        const pedido = pedidoSelecionado;
-        const horaPedido = new Date(pedido.created_at).toLocaleString('pt-BR');
-        const itens = parseItens(pedido.observacoes, false); 
-        const obsAdicionais = parseObsAdicionais(pedido.observacoes);
-        const troco = parseTroco(pedido.observacoes);
-        const pagamento = formatarFormaPagamento(pedido.forma_pagamento);
-
-        const thermalCss = `
-            <style>
-                body {
-                    width: 58mm;
-                    font-family: 'Arial', sans-serif;
-                    font-size: 10px;
-                    margin: 0;
-                    padding: 5px;
-                }
-                h4 {
-                    text-align: center;
-                    margin: 2px 0;
-                    font-size: 12px;
-                }
-                hr {
-                    border: 0;
-                    border-top: 1px dashed #000;
-                    margin: 5px 0;
-                }
-                p {
-                    margin: 2px 0;
-                }
-                .detalhes {
-                    font-size: 9px;
-                    white-space: pre-wrap; 
-                    margin-bottom: 5px;
-                }
-                .total {
-                    font-weight: bold;
-                    font-size: 12px;
-                    margin-top: 5px;
-                }
-                @page {
-                    margin: 0;
-                }
-            </style>
-        `;
-
-        const canhotoContent = `
-            <div id="canhoto-impressao">
-                <h4>Confeitaria Doces Criativos</h4>
-                <p><strong>Pedido:</strong> #${pedido.id}</p>
-                <p><strong>Data/Hora:</strong> ${horaPedido}</p>
-                <hr>
-                <p><strong>Cliente:</strong> ${pedido.nome_cliente}</p>
-                <p><strong>Telefone:</strong> ${pedido.telefone_cliente}</p>
-                <p><strong>Endereço:</strong> ${pedido.endereco_entrega}</p>
-                <hr>
-                <p><strong>Itens do Pedido:</strong></p>
-                <div class="detalhes">${itens}</div>
-                <hr>
-                ${obsAdicionais ? `<p><strong>Obs:</strong> ${obsAdicionais}</p><hr>` : ''}
-                <p><strong>Pagamento:</strong> ${pagamento}</p>
-                <p><strong>Troco:</strong> ${troco}</p>
-                <p class="total"><strong>TOTAL: ${formatarMoeda(pedido.total)}</strong></p>
-                <hr>
-                <p style="text-align: center; font-size: 9px;">Obrigado pela preferência!</p>
-            </div>`;
-
-        const printWindow = window.open('', 'PrintCanhoto', 'height=600,width=400');
-        
-        printWindow.document.write('<html><head><title>Canhoto do Pedido</title>' + thermalCss + '</head><body>');
-        printWindow.document.write(canhotoContent);
-        
-        const fixScript = `
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() {
-                        window.close();
-                    }, 1000); 
-                };
-            </script>
-        `;
-        printWindow.document.write(fixScript);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-    }
-    
-    async function carregarHistoricoPedidos(pagina) {
-        if (!historicoTabelaBody) return;
-
-        paginaAtualHistorico = pagina;
-        const offset = (pagina - 1) * ITENS_POR_PAGINA;
-        
-        const dataInicio = histDataInicioInput.value;
-        const dataFim = histDataFimInput.value;
-
-        historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;"><div class="spinner"></div></td></tr>`;
-
+    async function carregarCidades() {
         try {
-            let query = supabase
-                .from('pedidos_online')
-                .select('*', { count: 'exact' }); 
+            const { data, error } = await supabase.from('cidades_entrega')
+                .select('*')
+                .order('nome', { ascending: true });
+
+            if (error) throw error;
             
-            query = query.in('status', ['entregue', 'cancelado']);
-
-            if (dataInicio) query = query.gte('created_at', dataInicio + 'T00:00:00Z');
-            if (dataFim) query = query.lte('created_at', dataFim + 'T23:59:59Z');
-
-            const { data: pedidos, error: pedidosError, count } = await query
-                .order('created_at', { ascending: false }) 
-                .range(offset, offset + ITENS_POR_PAGINA - 1);
-
-            if (pedidosError) throw pedidosError;
-
-            todosPedidosHistorico = pedidos || [];
-            totalPedidosHistorico = count || 0;
-
-            renderizarTabelaHistorico(todosPedidosHistorico);
-            renderizarPaginacao();
+            todasCidades = data || [];
+            preencherSelectCidades(todasCidades);
+            exibirCidadesNaTabela(todasCidades);
 
         } catch (error) {
-            console.error('❌ Erro ao carregar histórico:', error);
-            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--error-color);">Erro ao carregar histórico.</td></tr>`;
+            console.error('❌ Erro ao carregar cidades:', error);
+            mostrarMensagem('Erro ao carregar cidades. Verifique a tabela `cidades_entrega`.', 'error');
         }
     }
-
-    function renderizarTabelaHistorico(pedidos) {
-        historicoTabelaBody.innerHTML = '';
-        if (pedidos.length === 0) {
-            historicoTabelaBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nenhum pedido encontrado no histórico${(histDataInicioInput.value || histDataFimInput.value) ? ' para este filtro' : ''}.</td></tr>`;
+    
+    function preencherSelectCidades(cidades) {
+        if (!taxaCidadeSelect) return;
+        const valorAtual = taxaCidadeSelect.value;
+        taxaCidadeSelect.innerHTML = '<option value="">Selecione a Cidade</option>';
+        cidades.forEach(cidade => {
+            const option = document.createElement('option');
+            option.value = cidade.id;
+            option.textContent = cidade.nome;
+            taxaCidadeSelect.appendChild(option);
+        });
+        taxaCidadeSelect.value = valorAtual;
+    }
+    
+    function exibirCidadesNaTabela(cidades) {
+        if (!cidadesTabelaBody) return;
+        cidadesTabelaBody.innerHTML = '';
+        if (cidades.length === 0) {
+            cidadesTabelaBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #666;">Nenhuma cidade cadastrada.</td></tr>`;
             return;
         }
-
-        pedidos.forEach(pedido => {
+        
+        cidades.forEach(cidade => {
             const tr = document.createElement('tr');
-            const data = new Date(pedido.created_at).toLocaleDateString('pt-BR');
-            const statusClasse = `status-${pedido.status}`;
-            
             tr.innerHTML = `
-                <td><strong>#${pedido.id}</strong></td>
-                <td>${data}</td>
-                <td>${pedido.nome_cliente}</td>
-                <td>${formatarMoeda(pedido.total)}</td>
-                <td>${formatarFormaPagamento(pedido.forma_pagamento)}</td>
+                <td><strong>${cidade.nome}</strong></td>
                 <td>
-                    <span class="status-badge ${statusClasse}">${STATUS_MAP[pedido.status].title}</span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-ver-detalhes-hist" onclick="abrirModalDetalhes(${pedido.id})">
-                        <i class="fas fa-eye"></i> Ver
-                    </button>
+                    <button class="btn-edit btn-sm" onclick="editarCidade('${cidade.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-danger btn-sm" onclick="excluirCidade('${cidade.id}', '${cidade.nome}')"><i class="fas fa-trash"></i></button>
                 </td>
             `;
-            historicoTabelaBody.appendChild(tr);
+            cidadesTabelaBody.appendChild(tr);
         });
     }
 
+    async function salvarCidade(e) {
+        e.preventDefault();
+        const isEdicao = !!cidadeIdEdicao.value;
+        const id = cidadeIdEdicao.value;
+        const nome = cidadeNomeInput.value.trim();
+
+        if (!nome) return mostrarMensagem('O nome da cidade é obrigatório.', 'error');
+        
+        try {
+            if (isEdicao) {
+                const { error } = await supabase.from('cidades_entrega')
+                    .update({ nome: nome })
+                    .eq('id', id);
+                if (error) throw error;
+                mostrarMensagem(`Cidade ${nome} atualizada com sucesso!`, 'success');
+            } else {
+                const { error } = await supabase.from('cidades_entrega')
+                    .insert({ nome: nome });
+                if (error) throw error;
+                mostrarMensagem(`Cidade ${nome} cadastrada com sucesso!`, 'success');
+            }
+            
+            formNovaCidade.reset();
+            cidadeIdEdicao.value = '';
+            document.getElementById('btn-salvar-cidade').innerHTML = '<i class="fas fa-save"></i> Salvar Cidade';
+            await carregarCidades();
+
+        } catch (error) {
+            console.error('❌ Erro ao salvar cidade:', error);
+            let msg = 'Erro ao cadastrar/atualizar cidade.';
+            if (error.code === '23505') {
+                msg = `Erro: A cidade **${nome}** já existe.`;
+            } else if (error.message) {
+                msg += ' Detalhe: ' + error.message;
+            }
+            mostrarMensagem(msg, 'error');
+        }
+    }
+    
+    window.editarCidade = function(cidadeId) {
+        const cidade = todasCidades.find(c => c.id === cidadeId);
+        if (cidade) {
+            cidadeIdEdicao.value = cidade.id;
+            cidadeNomeInput.value = cidade.nome;
+            document.getElementById('btn-salvar-cidade').innerHTML = '<i class="fas fa-save"></i> Atualizar Cidade';
+            cidadeNomeInput.focus();
+        }
+    }
+
+    window.excluirCidade = async function(cidadeId, nome) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR a cidade "${nome}"?\nTodos os bairros associados a esta cidade TAMBÉM serão excluídos.`)) return;
+
+        try {
+            // A FK com CASCADE deve apagar os bairros automaticamente.
+            const { error } = await supabase.from('cidades_entrega')
+                .delete()
+                .eq('id', cidadeId);
+            
+            if (error) throw error;
+            
+            mostrarMensagem(`Cidade ${nome} excluída com sucesso!`, 'success');
+            await carregarCidades();
+            await carregarTaxasEntrega();
+
+        } catch (error) {
+            console.error('❌ Erro ao excluir cidade:', error);
+            mostrarMensagem('Erro ao excluir cidade: ' + error.message, 'error');
+        }
+    }
+    
+    // --- FUNÇÕES CRUD TAXAS (ATUALIZADAS COM FK) ---
+    
+    async function carregarTaxasEntrega() {
+        if (!taxasTabelaBody) return;
+
+        taxasTabelaBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Carregando taxas...</td></tr>`;
+
+        try {
+            // Consulta com JOIN para obter o nome da cidade
+            const { data, error } = await supabase.from('taxas_entrega')
+                .select(`
+                    id,
+                    bairro,
+                    valor,
+                    cidade:cidades_entrega(id, nome)
+                `)
+                .order('cidade_id', { ascending: true })
+                .order('bairro', { ascending: true });
+
+            if (error) throw error;
+            
+            todasTaxas = data || [];
+            exibirTaxasEntrega(todasTaxas);
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar taxas de entrega:', error);
+            mostrarMensagem('Erro ao carregar taxas de entrega. Verifique se a tabela `taxas_entrega` existe.', 'error');
+            taxasTabelaBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--error-color);">Falha ao carregar taxas.</td></tr>`;
+        }
+    }
+    
+
+    async function salvarTaxaEntrega(e) {
+        e.preventDefault();
+        
+        const isEdicao = !!taxaIdEdicao.value;
+        const id = taxaIdEdicao.value;
+        
+        // NOVO: Coleta o ID da cidade do SELECT
+        const cidadeId = taxaCidadeSelect.value;
+        
+        const bairro = taxaBairroInput.value.trim();
+        const valor = parseFloat(taxaValorInput.value);
+        
+        // ATUALIZADO: Validação para verificar se a Cidade foi selecionada
+        if (!cidadeId || !bairro || isNaN(valor) || valor < 0) {
+            mostrarMensagem('Selecione a Cidade e preencha o Bairro e o Valor corretamente.', 'error');
+            return;
+        }
+        
+        const dadosTaxa = {
+            cidade_id: cidadeId, // NOVO
+            bairro: bairro,
+            valor: valor,
+        };
+
+        try {
+            if (isEdicao) {
+                const { error } = await supabase.from('taxas_entrega')
+                    .update(dadosTaxa)
+                    .eq('id', id);
+                if (error) throw error;
+                mostrarMensagem(`Taxa atualizada com sucesso!`, 'success');
+            } else {
+                const { error } = await supabase.from('taxas_entrega')
+                    .insert(dadosTaxa);
+                if (error) throw error;
+                mostrarMensagem(`Taxa cadastrada com sucesso!`, 'success');
+            }
+            
+            formNovaTaxa.reset();
+            taxaIdEdicao.value = '';
+            document.getElementById('btn-salvar-taxa').innerHTML = '<i class="fas fa-plus-circle"></i> Adicionar/Salvar Taxa';
+            await carregarTaxasEntrega();
+
+        } catch (error) {
+            console.error('❌ Erro ao salvar taxa:', error);
+            let msg = 'Erro ao cadastrar/atualizar taxa.';
+            // ATUALIZADO: Mensagem de erro de unicidade (bairro já existe na mesma cidade)
+            if (error.code === '23505') {
+                const nomeCidade = todasCidades.find(c => c.id === cidadeId)?.nome || 'Cidade Desconhecida';
+                msg = `Erro: O bairro **${bairro}** na cidade **${nomeCidade}** já existe.`;
+            } else if (error.message) {
+                msg += ' Detalhe: ' + error.message;
+            }
+            mostrarMensagem(msg, 'error');
+        }
+    }
+
+    window.editarTaxaEntrega = function(taxaId) {
+        const taxa = todasTaxas.find(t => t.id === taxaId);
+        if (taxa) {
+            taxaIdEdicao.value = taxa.id;
+            // Usa o ID da cidade para preencher o select
+            document.getElementById('taxa-cidade-select').value = taxa.cidade?.id || ''; 
+            taxaBairroInput.value = taxa.bairro;
+            taxaValorInput.value = taxa.valor;
+            document.getElementById('btn-salvar-taxa').innerHTML = '<i class="fas fa-save"></i> Salvar Edição';
+            mostrarMensagem(`Editando taxa para ${taxa.bairro} (${taxa.cidade?.nome || 'N/A'})`, 'info');
+            document.getElementById('taxa-cidade-select').focus();
+        }
+    }
+
+    window.excluirTaxaEntrega = async function(taxaId, nomeCompleto) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR a taxa de entrega para "${nomeCompleto}"?\nEsta ação é irreversível!`)) return;
+
+        try {
+            const { error } = await supabase.from('taxas_entrega')
+                .delete()
+                .eq('id', taxaId);
+            
+            if (error) throw error;
+            
+            mostrarMensagem(`Taxa para ${nomeCompleto} excluída com sucesso!`, 'success');
+            await carregarTaxasEntrega();
+
+        } catch (error) {
+            console.error('❌ Erro ao excluir taxa:', error);
+            mostrarMensagem('Erro ao excluir taxa: ' + error.message, 'error');
+        }
+    }
+
+    // --- FUNÇÕES DE PAGINAÇÃO (MOVIDAS PARA CÁ) ---
     function renderizarPaginacao() {
         if (!historicoPaginacao) return;
 
@@ -1086,265 +1572,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 carregarHistoricoPedidos(paginaAtualHistorico + 1);
             }
         });
-    }
-
-    async function carregarCupons() {
-        if (!cuponsTabelaBody) return;
-        cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Carregando cupons...</td></tr>`;
-
-        try {
-            const { data, error } = await supabase.from('cupons')
-                .select('*')
-                .order('codigo', { ascending: true });
-
-            if (error) throw error;
-            
-            todosCupons = data || [];
-            exibirCupons(todosCupons);
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar cupons:', error);
-            mostrarMensagem('Erro ao carregar cupons. Verifique se a tabela `cupons` existe.', 'error');
-            cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--error-color);">Falha ao carregar cupons.</td></tr>`;
-        }
-    }
-
-    function exibirCupons(cupons) {
-        if (!cuponsTabelaBody) return;
-        cuponsTabelaBody.innerHTML = '';
-        
-        if (cupons.length === 0) {
-            cuponsTabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666;">Nenhum cupom cadastrado.</td></tr>`;
-            return;
-        }
-
-        const hoje = new Date().toISOString().split('T')[0];
-
-        cupons.forEach(cupom => {
-            const isExpirado = cupom.data_validade && cupom.data_validade < hoje;
-            const isEsgotado = cupom.usos_maximos > 0 && cupom.usos_usados >= cupom.usos_maximos;
-            const isAtivo = cupom.ativo && !isExpirado && !isEsgotado;
-
-            const statusClass = isAtivo ? 'success' : isExpirado ? 'danger' : isEsgotado ? 'warning' : 'info';
-            const statusText = isAtivo ? 'Ativo' : isExpirado ? 'Expirado' : isEsgotado ? 'Esgotado' : 'Inativo';
-            const valorDisplay = cupom.tipo === 'percentual' ? `${cupom.valor}%` : formatarMoeda(cupom.valor);
-            const validadeDisplay = cupom.data_validade ? new Date(cupom.data_validade + 'T00:00:00').toLocaleDateString('pt-BR') : 'Ilimitado';
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${cupom.codigo}</strong></td>
-                <td>${valorDisplay}</td>
-                <td>${validadeDisplay}</td>
-                <td>${cupom.usos_usados} (${cupom.usos_maximos === 0 ? '∞' : cupom.usos_maximos})</td>
-                <td>
-                    <span class="status-badge status-${statusClass}">${statusText}</span>
-                </td>
-                <td>
-                    <button class="btn-edit btn-sm" onclick="editarCupom('${cupom.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-danger btn-sm" onclick="excluirCupom('${cupom.id}', '${cupom.codigo}')"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-            cuponsTabelaBody.appendChild(tr);
-        });
-    }
-
-    async function criarNovoCupom(e) {
-        e.preventDefault();
-        
-        const codigo = document.getElementById('cupom-codigo').value.trim().toUpperCase();
-        const tipo = document.getElementById('cupom-tipo').value;
-        const valor = parseFloat(document.getElementById('cupom-valor').value);
-        const validade = document.getElementById('cupom-validade').value || null;
-        const usosMaximos = parseInt(document.getElementById('cupom-usos-maximos').value) || 0;
-        const ativo = document.getElementById('cupom-ativo').checked;
-
-        if (!codigo || isNaN(valor) || valor <= 0) {
-            mostrarMensagem('Preencha o Código e o Valor corretamente.', 'error');
-            return;
-        }
-
-        try {
-            const { error } = await supabase.from('cupons')
-                .insert({
-                    codigo: codigo,
-                    tipo: tipo,
-                    valor: valor,
-                    data_validade: validade,
-                    usos_maximos: usosMaximos,
-                    ativo: ativo,
-                    usos_usados: 0 
-                });
-
-            if (error) throw error;
-
-            mostrarMensagem(`Cupom ${codigo} cadastrado com sucesso!`, 'success');
-            formNovoCupom.reset();
-            modalNovoCupom.style.display = 'none'; 
-            await carregarCupons();
-
-        } catch (error) {
-            console.error('❌ Erro ao criar cupom:', error);
-            let msg = 'Erro ao cadastrar cupom.';
-            if (error.code === '23505') {
-                msg = `Erro: O código **${codigo}** já existe.`;
-            } else if (error.message) {
-                msg += ' Detalhe: ' + error.message;
-            }
-            mostrarMensagem(msg, 'error');
-        }
-    }
-
-    window.editarCupom = function(cupomId) {
-        mostrarMensagem(`Funcionalidade de Edição do cupom #${cupomId} em desenvolvimento.`, 'info');
-    }
-
-    window.excluirCupom = async function(cupomId, codigo) {
-        if (!confirm(`Tem certeza que deseja EXCLUIR o cupom "${codigo}"?\nEsta ação é irreversível!`)) return;
-
-        try {
-            const { error } = await supabase.from('cupons')
-                .delete()
-                .eq('id', cupomId);
-            
-            if (error) throw error;
-            
-            mostrarMensagem(`Cupom ${codigo} excluído com sucesso!`, 'success');
-            await carregarCupons();
-
-        } catch (error) {
-            console.error('❌ Erro ao excluir cupom:', error);
-            mostrarMensagem('Erro ao excluir cupom: ' + error.message, 'error');
-        }
-    }
-
-    // ----------------------------------------------------------------------
-    // --- MÓDULO: TAXAS DE ENTREGA POR BAIRRO (NOVAS FUNÇÕES CRUD) ---
-    // ----------------------------------------------------------------------
-    
-    async function carregarTaxasEntrega() {
-        if (!taxasTabelaBody) return;
-
-        taxasTabelaBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Carregando taxas...</td></tr>`;
-
-        try {
-            // Assumindo a existência da tabela 'taxas_entrega'
-            const { data, error } = await supabase.from('taxas_entrega')
-                .select('*')
-                .order('bairro', { ascending: true });
-
-            if (error) throw error;
-            
-            todasTaxas = data || [];
-            exibirTaxasEntrega(todasTaxas);
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar taxas de entrega:', error);
-            mostrarMensagem('Erro ao carregar taxas de entrega. Verifique se a tabela `taxas_entrega` existe.', 'error');
-            taxasTabelaBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--error-color);">Falha ao carregar taxas.</td></tr>`;
-        }
-    }
-
-    function exibirTaxasEntrega(taxas) {
-        if (!taxasTabelaBody) return;
-        taxasTabelaBody.innerHTML = '';
-        
-        if (taxas.length === 0) {
-            taxasTabelaBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #666;">Nenhuma taxa cadastrada.</td></tr>`;
-            return;
-        }
-
-        taxas.forEach(taxa => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${taxa.bairro}</strong></td>
-                <td>${formatarMoeda(taxa.valor)}</td>
-                <td>
-                    <button class="btn-edit btn-sm" onclick="editarTaxaEntrega('${taxa.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-danger btn-sm" onclick="excluirTaxaEntrega('${taxa.id}', '${taxa.bairro}')"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-            taxasTabelaBody.appendChild(tr);
-        });
-    }
-
-    async function salvarTaxaEntrega(e) {
-        e.preventDefault();
-        
-        const isEdicao = !!taxaIdEdicao.value;
-        const id = taxaIdEdicao.value;
-        const bairro = document.getElementById('taxa-bairro').value.trim();
-        const valor = parseFloat(document.getElementById('taxa-valor').value);
-
-        if (!bairro || isNaN(valor) || valor < 0) {
-            mostrarMensagem('Preencha o Bairro e o Valor corretamente.', 'error');
-            return;
-        }
-
-        const dadosTaxa = {
-            bairro: bairro,
-            valor: valor,
-        };
-
-        try {
-            if (isEdicao) {
-                const { error } = await supabase.from('taxas_entrega')
-                    .update(dadosTaxa)
-                    .eq('id', id);
-                if (error) throw error;
-                mostrarMensagem(`Taxa para ${bairro} atualizada com sucesso!`, 'success');
-            } else {
-                const { error } = await supabase.from('taxas_entrega')
-                    .insert(dadosTaxa);
-                if (error) throw error;
-                mostrarMensagem(`Taxa para ${bairro} cadastrada com sucesso!`, 'success');
-            }
-            
-            formNovaTaxa.reset();
-            taxaIdEdicao.value = '';
-            document.getElementById('btn-salvar-taxa').innerHTML = '<i class="fas fa-plus-circle"></i> Adicionar/Salvar Taxa';
-            await carregarTaxasEntrega();
-
-        } catch (error) {
-            console.error('❌ Erro ao salvar taxa:', error);
-            let msg = 'Erro ao cadastrar/atualizar taxa.';
-            if (error.code === '23505') {
-                msg = `Erro: O bairro **${bairro}** já existe.`;
-            } else if (error.message) {
-                msg += ' Detalhe: ' + error.message;
-            }
-            mostrarMensagem(msg, 'error');
-        }
-    }
-
-    window.editarTaxaEntrega = function(taxaId) {
-        const taxa = todasTaxas.find(t => t.id === taxaId);
-        if (taxa) {
-            taxaIdEdicao.value = taxa.id;
-            document.getElementById('taxa-bairro').value = taxa.bairro;
-            document.getElementById('taxa-valor').value = taxa.valor;
-            document.getElementById('btn-salvar-taxa').innerHTML = '<i class="fas fa-save"></i> Salvar Edição';
-            mostrarMensagem(`Editando taxa para o bairro ${taxa.bairro}`, 'info');
-            document.getElementById('taxa-bairro').focus();
-        }
-    }
-
-    window.excluirTaxaEntrega = async function(taxaId, bairro) {
-        if (!confirm(`Tem certeza que deseja EXCLUIR a taxa de entrega para o bairro "${bairro}"?\nEsta ação é irreversível!`)) return;
-
-        try {
-            const { error } = await supabase.from('taxas_entrega')
-                .delete()
-                .eq('id', taxaId);
-            
-            if (error) throw error;
-            
-            mostrarMensagem(`Taxa para ${bairro} excluída com sucesso!`, 'success');
-            await carregarTaxasEntrega();
-
-        } catch (error) {
-            console.error('❌ Erro ao excluir taxa:', error);
-            mostrarMensagem('Erro ao excluir taxa: ' + error.message, 'error');
-        }
     }
 
     inicializar();
