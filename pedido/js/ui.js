@@ -117,12 +117,20 @@
         elementos.modais = document.querySelectorAll('.modal');
         elementos.modalEditarEndereco = document.getElementById('modal-editar-endereco');
         elementos.formEditarEndereco = document.getElementById('form-editar-endereco');
-        elementos.modalCepInput = document.getElementById('modal-cep');
+        
+        // === INÍCIO DA ALTERAÇÃO (MODAL EDITAR ENDEREÇO) ===
+        // Remove CEP e campos de texto
+        // elementos.modalCepInput = document.getElementById('modal-cep'); // Removido
+        // elementos.modalBairroInput = document.getElementById('modal-bairro'); // Removido
+        // elementos.modalCidadeInput = document.getElementById('modal-cidade'); // Removido
+        // elementos.modalEstadoInput = document.getElementById('modal-estado'); // Removido
+        
+        // Adiciona os novos campos
+        elementos.modalCidadeSelect = document.getElementById('modal-cidade-select');
+        elementos.modalBairroSelect = document.getElementById('modal-bairro-select');
         elementos.modalRuaInput = document.getElementById('modal-rua');
         elementos.modalNumeroInput = document.getElementById('modal-numero');
-        elementos.modalBairroInput = document.getElementById('modal-bairro');
-        elementos.modalCidadeInput = document.getElementById('modal-cidade');
-        elementos.modalEstadoInput = document.getElementById('modal-estado');
+        // === FIM DA ALTERAÇÃO ===
         
         elementos.modalDetalhesPedido = document.getElementById('modal-detalhes-pedido');
         elementos.detalhesPedidoId = document.getElementById('detalhes-pedido-id');
@@ -206,10 +214,12 @@
         }
     }
 
+    // === INÍCIO DA ALTERAÇÃO (LÓGICA DO MODAL) ===
     /**
-     * Abre o modal de edição de endereço e preenche com dados do perfil.
+     * Abre o modal de edição de endereço e preenche com dados.
+     * REMOVE A LÓGICA DE CEP E ADICIONA LÓGICA DE DROPDOWNS
      */
-    function abrirModalEditarEndereco() {
+    async function abrirModalEditarEndereco() {
         if (!window.app.clienteLogado) {
              alternarView('auth-screen');
              mostrarMensagem('Faça login para editar seu endereço.', 'error');
@@ -217,33 +227,49 @@
         }
         
         const perfil = window.app.clientePerfil;
-        const enderecoSalvo = perfil.endereco || '';
+        const enderecoSalvo = perfil.endereco || ''; // Ex: "Rua ABC, 123, Bairro XYZ - Cidade Z"
         
-        const cepMatch = enderecoSalvo.match(/\(CEP:\s?(\d{5}-?\d{3})\)/);
-        const cidadeEstadoMatch = enderecoSalvo.match(/\s-\s(.*?)\/([A-Z]{2})\s/);
-        
-        elementos.modalCepInput.value = cepMatch ? cepMatch[1] : '';
-        elementos.modalCidadeInput.value = cidadeEstadoMatch ? cidadeEstadoMatch[1].trim() : '';
-        elementos.modalEstadoInput.value = cidadeEstadoMatch ? cidadeEstadoMatch[2].trim() : '';
-        
-        const parteInicial = enderecoSalvo.split(' - ')[0];
-        const partesEndereco = parteInicial.split(',').map(p => p.trim());
-        
-        if (partesEndereco.length >= 3) {
-            elementos.modalRuaInput.value = partesEndereco[0] || '';
-            elementos.modalNumeroInput.value = partesEndereco[1] || '';
-            elementos.modalBairroInput.value = partesEndereco[2] || '';
-        } else {
-            elementos.modalRuaInput.value = '';
-            elementos.modalNumeroInput.value = '';
-            elementos.modalBairroInput.value = '';
+        // 1. Limpar e popular cidades no modal
+        const selectCidade = elementos.modalCidadeSelect;
+        const selectBairro = elementos.modalBairroSelect;
+        if (!selectCidade || !selectBairro) {
+            console.error("Elementos select do modal não encontrados.");
+            return;
         }
         
+        selectBairro.innerHTML = '<option value="">Selecione uma cidade primeiro</option>';
+        selectCidade.innerHTML = '<option value="">Carregando...</option>';
+        
+        try {
+            // Re-usa a função da API para carregar cidades
+            const cidades = await window.AppAPI.carregarCidadesEntrega();
+            // Re-usa a função de popular, mas passa o elemento do MODAL
+            popularCidadesDropdown(cidades, selectCidade); 
+        } catch (e) {
+            mostrarMensagem('Erro ao carregar cidades.', 'error');
+            selectCidade.innerHTML = '<option value="">Erro ao carregar</option>';
+        }
+
+        // 2. Tentar preencher Rua e Número a partir do endereço salvo
+        // Este parse é simples e assume o formato "Rua, Numero, ..."
+        const partesEndereco = enderecoSalvo.split(',');
+        if (partesEndereco.length >= 2) {
+            elementos.modalRuaInput.value = partesEndereco[0]?.trim() || '';
+            elementos.modalNumeroInput.value = partesEndereco[1]?.trim() || '';
+            // Não vamos tentar pré-selecionar Bairro/Cidade, pois a string é frágil
+            // É melhor o usuário re-selecionar nos dropdowns.
+        } else {
+             elementos.modalRuaInput.value = '';
+             elementos.modalNumeroInput.value = '';
+        }
+
+        // 3. Abrir o modal
         elementos.modalEditarEndereco.style.display = 'flex';
         if (elementos.formEditarEndereco) {
-            elementos.formEditarEndereco.reset(); // Limpa erros de validação anteriores
+             // Não usamos reset() aqui para manter os valores preenchidos de rua/numero
         }
     }
+    // === FIM DA ALTERAÇÃO ===
     
     /**
      * Fecha um modal específico.
@@ -254,11 +280,13 @@
         }
     }
     
+    // === INÍCIO DA ALTERAÇÃO (REATORAÇÃO) ===
     /**
      * Preenche o dropdown de Cidades no formulário de cadastro.
+     * Modificado para aceitar qual <select> deve preencher.
      */
-    function popularCidadesDropdown(cidades) {
-        const select = elementos.cadastroCidadeSelect;
+    function popularCidadesDropdown(cidades, selectElement) { // Modificado
+        const select = selectElement; // Modificado
         if (!select) return;
         
         select.innerHTML = '<option value="">Selecione sua cidade *</option>';
@@ -276,9 +304,10 @@
 
     /**
      * Preenche o dropdown de Bairros com base na cidade selecionada.
+     * Modificado para aceitar qual <select> deve preencher.
      */
-    function popularBairrosDropdown(bairros) {
-        const select = elementos.cadastroBairroSelect;
+    function popularBairrosDropdown(bairros, selectElement) { // Modificado
+        const select = selectElement; // Modificado
         if (!select) return;
 
         select.innerHTML = '<option value="">Selecione seu bairro *</option>';
@@ -293,6 +322,7 @@
             select.innerHTML = '<option value="">Nenhum bairro cadastrado para esta cidade</option>';
         }
     }
+    // === FIM DA ALTERAÇÃO ===
 
     // Expõe os elementos e funções para o objeto global AppUI
     window.AppUI = {

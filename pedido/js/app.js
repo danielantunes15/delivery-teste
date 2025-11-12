@@ -143,19 +143,35 @@ document.addEventListener('DOMContentLoaded', async function() {
         setupDeliveryOptions(); // Chama a função que acabamos de criar
         // **** FIM DA MODIFICAÇÃO ****
 
-        // **** NOVO LISTENER: Carregar bairros ao mudar a cidade ****
+        // === INÍCIO DA ALTERAÇÃO (LISTENERS DE DROPDOWN) ===
+        // Listener para o dropdown de CIDADES no CADASTRO
         if (ui.cadastroCidadeSelect) {
             ui.cadastroCidadeSelect.addEventListener('change', async () => {
                 const cidadeId = ui.cadastroCidadeSelect.value;
                 if (cidadeId) {
                     const bairros = await app.API.carregarBairrosPorCidade(cidadeId);
-                    app.UI.popularBairrosDropdown(bairros);
+                    app.UI.popularBairrosDropdown(bairros, ui.elementos.cadastroBairroSelect); // Passa o elemento
                 } else {
-                    app.UI.popularBairrosDropdown([]); // Limpa os bairros
+                    app.UI.popularBairrosDropdown([], ui.elementos.cadastroBairroSelect); // Limpa os bairros
                 }
             });
         }
-        // **** FIM DO NOVO LISTENER ****
+        
+        // NOVO LISTENER: Listener para o dropdown de CIDADES no MODAL
+        if (ui.modalCidadeSelect) {
+            ui.modalCidadeSelect.addEventListener('change', async () => {
+                const cidadeId = ui.modalCidadeSelect.value;
+                if (cidadeId) {
+                    const bairros = await app.API.carregarBairrosPorCidade(cidadeId);
+                    // Passa o elemento do MODAL
+                    app.UI.popularBairrosDropdown(bairros, ui.elementos.modalBairroSelect); 
+                } else {
+                    // Limpa os bairros do MODAL
+                    app.UI.popularBairrosDropdown([], ui.elementos.modalBairroSelect); 
+                }
+            });
+        }
+        // === FIM DA ALTERAÇÃO ===
         
         // Listeners de Modais (Fechar)
         if (ui.modais) {
@@ -169,9 +185,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Listeners de Busca de CEP (AGORA SÓ PARA O MODAL DE EDIÇÃO)
-        // if (ui.cadastroCepInput) ui.cadastroCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value)); // REMOVIDO
-        if (ui.modalCepInput) ui.modalCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
+        // REMOVIDO: Listener de blur do CEP do cadastro
+        // if (ui.cadastroCepInput) ...
+        
+        // REMOVIDO: Listener de blur do CEP do modal (agora o campo não existe mais)
+        // if (ui.modalCepInput) ...
         
         /* --- Listeners do Header v2 --- */
         if (ui.headerSearchInput) ui.headerSearchInput.addEventListener('input', app.Cardapio.setupSearch);
@@ -219,13 +237,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 5. Carrega o carrinho persistido
             app.Carrinho.carregarCarrinhoLocalmente();
 
-            // **** NOVA ETAPA 5B: CARREGAR CIDADES PARA CADASTRO ****
+            // === INÍCIO DA ALTERAÇÃO (PASSAR ELEMENTO) ===
+            // 5B. CARREGAR CIDADES PARA CADASTRO
             const cidades = await app.API.carregarCidadesEntrega();
             if (cidades && app.UI.popularCidadesDropdown) {
-                app.UI.popularCidadesDropdown(cidades);
+                // Passa o elemento DOM correto
+                app.UI.popularCidadesDropdown(cidades, app.UI.elementos.cadastroCidadeSelect);
                 console.log("Cidades de entrega carregadas para o formulário.");
             }
-            // **** FIM DA NOVA ETAPA ****
+            // === FIM DA ALTERAÇÃO ===
             
             // ================================================================
             // === INÍCIO DA NOVA ETAPA (CARREGAR TAXAS) ===

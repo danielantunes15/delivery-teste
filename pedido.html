@@ -427,24 +427,6 @@
         </button>
     </nav>
 
-
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
-        window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
-    
-    <script src="js/supabase-vendas.js" defer></script> 
-    <script src="pedido/js/ui.js" defer></script>         
-    <script src="pedido/js/api.js" defer></script>         
-    <script src="pedido/js/auth.js" defer></script>        
-    <script src="pedido/js/carrinho.js" defer></script>    
-    <script src="pedido/js/cardapio.js" defer></script>    
-    <script src="pedido/js/checkout.js" defer></script>    
-    <script src="pedido/js/rastreamento.js" defer></script> 
-    <script src="pedido/js/app.js" defer></script>
-    
     <div id="modal-editar-endereco" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 400px; margin-top: 10vh;">
             <div class="modal-header">
@@ -452,26 +434,28 @@
                 <span class="close">&times;</span> </div>
             <form id="form-editar-endereco" class="modal-body">
                 <div class="form-group">
-                    <label for="modal-cep">CEP *</label>
-                    <input type="text" id="modal-cep" placeholder="99999-999" required onblur="buscarCep(this.value)">
+                    <label for="modal-cidade-select">Cidade (Onde você mora) *</label>
+                    <select id="modal-cidade-select" required>
+                        <option value="">Carregando cidades...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modal-bairro-select">Bairro (Onde entregaremos) *</label>
+                    <select id="modal-bairro-select" required>
+                        <option value="">Selecione uma cidade primeiro</option>
+                    </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="modal-rua">Rua/Avenida *</label>
-                    <input type="text" id="modal-rua" required>
-                </div>
                 <div class="form-row-cadastro">
+                    <div class="form-group">
+                        <label for="modal-rua">Rua/Avenida *</label>
+                        <input type="text" id="modal-rua" required>
+                    </div>
                     <div class="form-group" style="max-width: 100px;">
                         <label for="modal-numero">Nº *</label>
                         <input type="text" id="modal-numero" required>
                     </div>
-                     <div class="form-group" style="flex: 1;">
-                        <label for="modal-bairro">Bairro *</label>
-                        <input type="text" id="modal-bairro" required>
-                    </div>
                 </div>
-                <input type="hidden" id="modal-cidade">
-                <input type="hidden" id="modal-estado">
                 
                 <button type="submit" class="btn-login-app">Salvar Novo Endereço</button>
             </form>
@@ -530,6 +514,23 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://easqngndzkyfbvagnoec.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc3FuZ25kemt5ZmJ2YWdub2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyOTA2MjIsImV4cCI6MjA3Nzg2NjYyMn0.gj6q3Z9dKawHWfyDiWek82YXUAGE5FCVw-1CC92fRrw';
+        window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    
+    <script src="js/supabase-vendas.js" defer></script> 
+    <script src="pedido/js/ui.js" defer></script>         
+    <script src="pedido/js/api.js" defer></script>         
+    <script src="pedido/js/auth.js" defer></script>        
+    <script src="pedido/js/carrinho.js" defer></script>    
+    <script src="pedido/js/cardapio.js" defer></script>    
+    <script src="pedido/js/checkout.js" defer></script>    
+    <script src="pedido/js/rastreamento.js" defer></script> 
+    <script src="pedido/js/app.js" defer></script>
 
 </body>
 </html>

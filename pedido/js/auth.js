@@ -212,6 +212,7 @@
     // === FIM DA CORREÇÃO ===
     // ================================================================
     
+    // === INÍCIO DA ALTERAÇÃO (SALVAR ENDEREÇO SEM CEP) ===
     /**
      * Salva o endereço editado no modal.
      */
@@ -219,18 +220,25 @@
         e.preventDefault();
         const telefone = window.app.clientePerfil.telefone;
         const uiElementos = window.AppUI.elementos;
-        const cep = uiElementos.modalCepInput.value.trim();
+        
+        // Novos campos
         const rua = uiElementos.modalRuaInput.value.trim();
         const numero = uiElementos.modalNumeroInput.value.trim();
-        const bairro = uiElementos.modalBairroInput.value.trim();
-        const cidade = uiElementos.modalCidadeInput.value.trim();
-        const estado = uiElementos.modalEstadoInput.value.trim();
         
-        if (!rua || !numero || !bairro || !cep || !cidade || !estado) {
-            return window.AppUI.mostrarMensagem('Preencha todos os campos do endereço (Rua, Número, Bairro, CEP, Cidade e Estado).', 'error');
+        const cidadeSelect = uiElementos.modalCidadeSelect;
+        const bairroSelect = uiElementos.modalBairroSelect;
+        
+        // Pega o TEXTO selecionado dos dropdowns
+        const cidade = (cidadeSelect && cidadeSelect.value) ? cidadeSelect.options[cidadeSelect.selectedIndex].text : '';
+        const bairro = (bairroSelect && bairroSelect.value) ? bairroSelect.options[bairroSelect.selectedIndex].text : '';
+
+        // Validação igual ao do cadastro
+        if (!rua || !numero || !bairro || !cidade) {
+            return window.AppUI.mostrarMensagem('Preencha a Cidade, Bairro, Rua e Número.', 'error');
         }
         
-        const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
+        // Formato idêntico ao do cadastro
+        const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}`;
 
         try {
             await window.AppAPI.salvarEdicaoEnderecoNoSupabase(telefone, enderecoCompleto);
@@ -248,6 +256,7 @@
             window.AppUI.mostrarMensagem(`Erro ao salvar endereço: ${error.message || 'Verifique sua conexão.'}`, 'error'); 
         }
     }
+    // === FIM DA ALTERAÇÃO ===
 
     // Expõe as funções para o objeto global AppAuth
     window.AppAuth = {
