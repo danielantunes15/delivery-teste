@@ -141,6 +141,20 @@ document.addEventListener('DOMContentLoaded', async function() {
         };
         setupDeliveryOptions(); // Chama a função que acabamos de criar
         // **** FIM DA MODIFICAÇÃO ****
+
+        // **** NOVO LISTENER: Carregar bairros ao mudar a cidade ****
+        if (ui.cadastroCidadeSelect) {
+            ui.cadastroCidadeSelect.addEventListener('change', async () => {
+                const cidadeId = ui.cadastroCidadeSelect.value;
+                if (cidadeId) {
+                    const bairros = await app.API.carregarBairrosPorCidade(cidadeId);
+                    app.UI.popularBairrosDropdown(bairros);
+                } else {
+                    app.UI.popularBairrosDropdown([]); // Limpa os bairros
+                }
+            });
+        }
+        // **** FIM DO NOVO LISTENER ****
         
         // Listeners de Modais (Fechar)
         if (ui.modais) {
@@ -154,8 +168,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Listeners de Busca de CEP
-        if (ui.cadastroCepInput) ui.cadastroCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
+        // Listeners de Busca de CEP (AGORA SÓ PARA O MODAL DE EDIÇÃO)
+        // if (ui.cadastroCepInput) ui.cadastroCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value)); // REMOVIDO
         if (ui.modalCepInput) ui.modalCepInput.addEventListener('blur', (e) => app.API.buscarCep(e.target.value));
         
         /* --- Listeners do Header v2 --- */
@@ -203,6 +217,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // 5. Carrega o carrinho persistido
             app.Carrinho.carregarCarrinhoLocalmente();
+
+            // **** NOVA ETAPA 5B: CARREGAR CIDADES PARA CADASTRO ****
+            const cidades = await app.API.carregarCidadesEntrega();
+            if (cidades && app.UI.popularCidadesDropdown) {
+                app.UI.popularCidadesDropdown(cidades);
+                console.log("Cidades de entrega carregadas para o formulário.");
+            }
+            // **** FIM DA NOVA ETAPA ****
 
             if (app.clienteLogado) {
                  console.log(`Cliente ${app.clientePerfil.nome} carregado.`);

@@ -58,20 +58,35 @@
     async function finalizarCadastro(e) {
         e.preventDefault();
         const uiElementos = window.AppUI.elementos;
+        
+        // --- LEITURA DOS NOVOS CAMPOS ---
         const nome = uiElementos.cadastroNomeInput.value.trim();
         const telefone = uiElementos.cadastroTelefoneHidden.value;
-        const cep = uiElementos.cadastroCepInput.value.trim();
         const rua = uiElementos.cadastroRuaInput.value.trim();
         const numero = uiElementos.cadastroNumeroInput.value.trim();
-        const bairro = uiElementos.cadastroBairroInput.value.trim();
-        const cidade = uiElementos.cadastroCidadeInput.value.trim();
-        const estado = uiElementos.cadastroEstadoInput.value.trim();
+        
+        // Pega o TEXTO selecionado dos dropdowns
+        const cidadeSelect = uiElementos.cadastroCidadeSelect;
+        const bairroSelect = uiElementos.cadastroBairroSelect;
+        
+        // Verifica se os selects existem antes de tentar ler
+        const cidade = (cidadeSelect && cidadeSelect.value) ? cidadeSelect.options[cidadeSelect.selectedIndex].text : '';
+        const bairro = (bairroSelect && bairroSelect.value) ? bairroSelect.options[bairroSelect.selectedIndex].text : '';
+        
+        // --- NOVA STRING DE ENDEREÇO (SEM CEP E ESTADO) ---
+        const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}`;
 
-        const enderecoCompleto = `${rua}, ${numero}, ${bairro} - ${cidade}/${estado} (CEP: ${cep})`;
-
-        if (!nome || !rua || !numero || !bairro || !cidade || !estado) {
-            return window.AppUI.mostrarMensagem('Preencha o Nome e todos os campos de Endereço.', 'error');
+        // --- NOVA VALIDAÇÃO ---
+        if (!nome || !rua || !numero || !bairro || !cidade) {
+            return window.AppUI.mostrarMensagem('Preencha o Nome, Rua, Número, Cidade e Bairro.', 'error');
         }
+        if (!cidadeSelect || !cidadeSelect.value) {
+            return window.AppUI.mostrarMensagem('Por favor, selecione uma Cidade válida.', 'error');
+        }
+        if (!bairroSelect || !bairroSelect.value) {
+             return window.AppUI.mostrarMensagem('Por favor, selecione um Bairro válido.', 'error');
+        }
+        // --- FIM DA VALIDAÇÃO ---
         
         uiElementos.btnFinalizarCadastro.disabled = true;
         uiElementos.btnFinalizarCadastro.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando...';

@@ -40,10 +40,20 @@
                         <label for="cadastro-nome">Nome Completo *</label>
                         <input type="text" id="cadastro-nome" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="cadastro-cep">CEP *</label>
-                        <input type="text" id="cadastro-cep" placeholder="99999-999" required>
+                        <label for="cadastro-cidade-select">Cidade (Onde você mora) *</label>
+                        <select id="cadastro-cidade-select" required>
+                            <option value="">Carregando cidades...</option>
+                        </select>
                     </div>
+                    <div class="form-group">
+                        <label for="cadastro-bairro-select">Bairro (Onde entregaremos) *</label>
+                        <select id="cadastro-bairro-select" required>
+                            <option value="">Selecione uma cidade primeiro</option>
+                        </select>
+                    </div>
+                    
                     <div class="form-row-cadastro">
                         <div class="form-group">
                             <label for="cadastro-rua">Rua/Avenida *</label>
@@ -54,20 +64,7 @@
                             <input type="text" id="cadastro-numero" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="cadastro-bairro">Bairro *</label>
-                        <input type="text" id="cadastro-bairro" required>
-                    </div>
-                    <div class="form-row-cadastro">
-                        <div class="form-group">
-                            <label for="cadastro-cidade">Cidade *</label>
-                            <input type="text" id="cadastro-cidade" required>
-                        </div>
-                        <div class="form-group" style="max-width: 100px;">
-                            <label for="cadastro-estado">UF *</label>
-                            <input type="text" id="cadastro-estado" required>
-                        </div>
-                    </div>
+                    
                     <button type="submit" id="btn-finalizar-cadastro" class="btn-login-app">
                         Finalizar Cadastro
                     </button>
@@ -321,36 +318,29 @@
                             </button>
                         </div>
                         
-                        <!-- **** INÍCIO DA MODIFICAÇÃO **** -->
                         <h3 style="margin-top: 2rem;"><i class="fas fa-truck"></i> Opção de Entrega</h3>
 
-                        <!-- NOVO: Container para opções de entrega -->
                         <div id="delivery-options-container" class="delivery-options-group">
                             
-                            <!-- Opção 1: Entrega Padrão (Delivery) -->
                             <label class="delivery-option-radio selected" for="delivery-option-entrega">
-                                <!-- O input de radio real fica escondido -->
                                 <input type="radio" name="delivery-option" id="delivery-option-entrega" value="entrega" checked>
                                 
                                 <div class="delivery-option-content">
                                     <i class="fas fa-motorcycle"></i>
                                     <div>
                                         <span class="delivery-option-title">Entrega Padrão</span>
-                                        <!-- Estes spans serão atualizados pelo JS -->
                                         <span class="delivery-option-detail">Tempo: <span id="tempo-entrega-display">...</span></span>
                                         <span class="delivery-option-detail">Taxa: <span id="taxa-entrega-display">...</span></span>
                                     </div>
                                 </div>
                             </label>
 
-                            <!-- Opção 2: Retirada na Loja (Nova) -->
                             <label class="delivery-option-radio" for="delivery-option-retirada">
                                 <input type="radio" name="delivery-option" id="delivery-option-retirada" value="retirada">
                                 <div class="delivery-option-content">
                                     <i class="fas fa-store"></i>
                                     <div>
                                         <span class="delivery-option-title">Retirar na Loja</span>
-                                        <!-- Informações fixas da sua loja -->
                                         <span class="delivery-option-detail">Tempo: Entre 10 - 30 min</span>
                                         <span class="delivery-option-detail" style="color: #2e7d32; font-weight: bold;">Taxa: Grátis</span>
                                     </div>
@@ -358,14 +348,10 @@
                             </label>
                         </div>
 
-                        <!-- Endereço de Retirada (só aparece se "Retirar" for selecionado) -->
                         <div id="retirada-address-info" style="display: none; font-size: 0.9rem; background: #fff0f5; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px dashed #ffb6c1;">
                             <strong><i class="fas fa-map-marker-alt"></i> Endereço de Retirada:</strong><br>
                             Rua São Lourenço, 326, Rua do Meu salgado Favorito, Centro, NANUQUE - MG
                         </div>
-                        <!-- **** FIM DA MODIFICAÇÃO **** -->
-
-
                         <h3 style="margin-top: 2rem;"><i class="fas fa-credit-card"></i> Pagamento</h3>
 
                         <h4 style="font-size: 1.1rem; color: #db7093;">Forma de Pagamento</h4>
@@ -467,7 +453,7 @@
             <form id="form-editar-endereco" class="modal-body">
                 <div class="form-group">
                     <label for="modal-cep">CEP *</label>
-                    <input type="text" id="modal-cep" placeholder="99999-999" required>
+                    <input type="text" id="modal-cep" placeholder="99999-999" required onblur="buscarCep(this.value)">
                 </div>
                 
                 <div class="form-group">

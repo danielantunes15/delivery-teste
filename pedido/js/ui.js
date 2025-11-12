@@ -34,12 +34,14 @@
         elementos.cadastroForm = document.getElementById('cadastro-form');
         elementos.cadastroTelefoneHidden = document.getElementById('cadastro-telefone-hidden');
         elementos.cadastroNomeInput = document.getElementById('cadastro-nome');
-        elementos.cadastroCepInput = document.getElementById('cadastro-cep');
+        
+        // --- CAMPOS DE CADASTRO MODIFICADOS ---
+        elementos.cadastroCidadeSelect = document.getElementById('cadastro-cidade-select');
+        elementos.cadastroBairroSelect = document.getElementById('cadastro-bairro-select');
         elementos.cadastroRuaInput = document.getElementById('cadastro-rua');
         elementos.cadastroNumeroInput = document.getElementById('cadastro-numero');
-        elementos.cadastroBairroInput = document.getElementById('cadastro-bairro');
-        elementos.cadastroCidadeInput = document.getElementById('cadastro-cidade');
-        elementos.cadastroEstadoInput = document.getElementById('cadastro-estado');
+        // --- FIM DA MODIFICAÇÃO ---
+
         elementos.btnFinalizarCadastro = document.getElementById('btn-finalizar-cadastro');
         elementos.loginFormGroup = document.getElementById('login-form-group');
 
@@ -251,6 +253,46 @@
             modalElement.style.display = 'none';
         }
     }
+    
+    /**
+     * Preenche o dropdown de Cidades no formulário de cadastro.
+     */
+    function popularCidadesDropdown(cidades) {
+        const select = elementos.cadastroCidadeSelect;
+        if (!select) return;
+        
+        select.innerHTML = '<option value="">Selecione sua cidade *</option>';
+        if (cidades && cidades.length > 0) {
+            cidades.forEach(cidade => {
+                const option = document.createElement('option');
+                option.value = cidade.id;
+                option.textContent = cidade.nome;
+                select.appendChild(option);
+            });
+        } else {
+            select.innerHTML = '<option value="">Nenhuma cidade de entrega cadastrada</option>';
+        }
+    }
+
+    /**
+     * Preenche o dropdown de Bairros com base na cidade selecionada.
+     */
+    function popularBairrosDropdown(bairros) {
+        const select = elementos.cadastroBairroSelect;
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Selecione seu bairro *</option>';
+        if (bairros && bairros.length > 0) {
+            bairros.forEach(bairro => {
+                const option = document.createElement('option');
+                option.value = bairro.bairro; // O valor é o próprio nome do bairro
+                option.textContent = bairro.bairro;
+                select.appendChild(option);
+            });
+        } else {
+            select.innerHTML = '<option value="">Nenhum bairro cadastrado para esta cidade</option>';
+        }
+    }
 
     // Expõe os elementos e funções para o objeto global AppUI
     window.AppUI = {
@@ -260,6 +302,8 @@
         alternarView,
         abrirModalEditarEndereco,
         fecharModal,
+        popularCidadesDropdown, // <-- Exporta nova função
+        popularBairrosDropdown, // <-- Exporta nova função
         formatarMoeda,
         formatarTelefone
     };

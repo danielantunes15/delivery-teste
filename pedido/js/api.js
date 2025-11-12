@@ -427,6 +427,42 @@
         return true; // Cancelamento bem-sucedido
     }
 
+    /**
+     * Busca as cidades cadastradas para entrega.
+     */
+    async function carregarCidadesEntrega() {
+        try {
+            const { data, error } = await supabase
+                .from('cidades_entrega')
+                .select('id, nome')
+                .order('nome', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Erro ao carregar cidades de entrega:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Busca os bairros (taxas_entrega) com base no ID da cidade.
+     */
+    async function carregarBairrosPorCidade(cidadeId) {
+        if (!cidadeId) return [];
+        try {
+            const { data, error } = await supabase
+                .from('taxas_entrega')
+                .select('bairro') // Seleciona apenas o nome do bairro
+                .eq('cidade_id', cidadeId)
+                .order('bairro', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Erro ao carregar bairros por cidade:', error);
+            return [];
+        }
+    }
+
 
     // Expõe as funções para o objeto global AppAPI
     window.AppAPI = {
@@ -446,6 +482,8 @@
         buscarHistoricoPedidos,
         buscarPedidoParaRastreamento,
         buscarDetalhesPedidoPorId, // <-- ADICIONADO
+        carregarCidadesEntrega, // <-- ADICIONADO
+        carregarBairrosPorCidade, // <-- ADICIONADO
         finalizarPedidoNoSupabase,
         atualizarEstoqueNoSupabase,
         cancelarPedidoNoSupabase
