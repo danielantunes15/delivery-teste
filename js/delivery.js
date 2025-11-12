@@ -26,6 +26,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     const modalConfig = document.getElementById('modal-configuracoes');
     const formConfig = document.getElementById('form-config-delivery');
     const btnFecharConfig = document.getElementById('fechar-modal-config');
+    
+    // NOVO: Elementos da Aba Entrega
+    const formNovaTaxa = document.getElementById('form-nova-taxa');
+    const taxasTabelaBody = document.getElementById('taxas-tabela-body');
+    const configEnderecoRetirada = document.getElementById('config-endereco-retirada');
+    const salvarEnderecoRetiradaBtn = document.getElementById('salvar-endereco-retirada');
+    const taxaIdEdicao = document.getElementById('taxa-id-edicao');
 
     // Elementos da Aba Histórico
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -48,10 +55,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     let todosPedidos = []; // Pedidos ATIVOS (Kanban)
     let todosPedidosHistorico = []; // Pedidos INATIVOS (Histórico)
     let todosCupons = []; // Lista de Cupons
+    let todasTaxas = []; // NOVO: Lista de Taxas de Entrega
     let pedidoSelecionado = null;
     
     // Cache de configurações da loja
-    let configLoja = { tempo_entrega: 60 };
+    let configLoja = { tempo_entrega: 60, endereco_retirada: '' }; // NOVO CAMPO ADICIONADO AQUI
     let timerInterval = null;
     
     const audioNotificacao = new Audio("audio/sompedido.mp3");
@@ -125,7 +133,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         await Promise.all([
             carregarPedidosOnline(), // Carga inicial
             carregarHistoricoPedidos(paginaAtualHistorico),
-            carregarCupons() 
+            carregarCupons(),
+            carregarTaxasEntrega() // NOVO: Carrega as taxas de entrega
         ]);
         
         // Intervalo aumentado para 15s (notificação global cuida dos 10s)
@@ -145,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 verificarNovosPedidos(); 
                 carregarHistoricoPedidos(paginaAtualHistorico);
                 carregarCupons();
+                carregarTaxasEntrega(); // NOVO:
             });
         }
         if (btnAvancarStatus) {
@@ -210,6 +220,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (formNovoCupom) {
             formNovoCupom.addEventListener('submit', criarNovoCupom);
         }
+        
+        // NOVO: Listeners para a Aba Entrega
+        if (formNovaTaxa) {
+             formNovaTaxa.addEventListener('submit', salvarTaxaEntrega);
+        }
+        if (salvarEnderecoRetiradaBtn) {
+             salvarEnderecoRetiradaBtn.addEventListener('click', salvarEnderecoRetirada);
+        }
     }
 
     function switchTab(tabId) {
@@ -237,6 +255,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             carregarHistoricoPedidos(1);
         } else if (tabId === 'tab-promocoes') {
              carregarCupons();
+        } else if (tabId === 'tab-entrega') { // NOVO
+             carregarTaxasEntrega();
+             // Preenche o campo de endereço com o valor carregado
+             if (configEnderecoRetirada) configEnderecoRetirada.value = configLoja.endereco_retirada || '';
         }
     }
     
@@ -657,9 +679,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     async function carregarConfiguracoesDaLoja() {
         try {
+            // CORREÇÃO: Usar o wildcard '*' para simplificar a consulta e evitar o erro 406
             const { data, error } = await supabase
                 .from('config_loja')
-                .select('*')
+                .select('*') 
                 .eq('id', 1) 
                 .single();
             
@@ -672,7 +695,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
             
             if (data) {
-                configLoja = data; 
+                configLoja = { ...configLoja, ...data }; // Mescla com os defaults, se necessário
                 console.log('Configurações da loja carregadas:', configLoja);
             }
         } catch (error) {
@@ -717,6 +740,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 id: 1, 
                 taxa_entrega: parseFloat(document.getElementById('config-taxa-entrega').value) || 0,
                 tempo_entrega: parseInt(document.getElementById('config-tempo-entrega').value) || 60
+                // O campo 'endereco_retirada' é salvo por outra função
             };
 
             dias.forEach(dia => {
@@ -735,7 +759,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (error) throw error;
             
-            configLoja = updateData; 
+            configLoja = { ...configLoja, ...updateData }; // Atualiza o cache da configLoja
             
             mostrarMensagem('Configurações salvas com sucesso!', 'success');
             fecharModalConfiguracoes();
@@ -744,6 +768,37 @@ document.addEventListener('DOMContentLoaded', async function () {
         } catch (error) {
             console.error('❌ Erro ao salvar configurações:', error);
             mostrarMensagem('Erro ao salvar configurações: ' + error.message, 'error');
+        }
+    }
+    
+    // NOVO: Salvar o Endereço de Retirada
+    async function salvarEnderecoRetirada() {
+        const novoEndereco = configEnderecoRetirada.value.trim();
+        if (!novoEndereco) {
+             mostrarMensagem('O endereço de retirada não pode ser vazio.', 'error');
+             return;
+        }
+        
+        mostrarMensagem('Salvando endereço...', 'info');
+
+        try {
+            const updateData = {
+                id: 1, 
+                endereco_retirada: novoEndereco,
+            };
+
+            const { error } = await supabase
+                .from('config_loja')
+                .upsert(updateData, { onConflict: 'id' });
+
+            if (error) throw error;
+            
+            configLoja.endereco_retirada = novoEndereco; 
+            
+            mostrarMensagem('Endereço de retirada salvo com sucesso!', 'success');
+        } catch (error) {
+            console.error('❌ Erro ao salvar endereço de retirada:', error);
+            mostrarMensagem('Erro ao salvar endereço de retirada: ' + error.message, 'error');
         }
     }
     
@@ -839,7 +894,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     function imprimirCanhotoDelivery() {
         if (!pedidoSelecionado) {
-            mostrarMensagem('Nenhum pedido selecionado', 'error');
+            mostrarMensagem('Nenhum pedido selecionado.', 'error');
             return;
         }
 
@@ -1159,6 +1214,136 @@ document.addEventListener('DOMContentLoaded', async function () {
         } catch (error) {
             console.error('❌ Erro ao excluir cupom:', error);
             mostrarMensagem('Erro ao excluir cupom: ' + error.message, 'error');
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // --- MÓDULO: TAXAS DE ENTREGA POR BAIRRO (NOVAS FUNÇÕES CRUD) ---
+    // ----------------------------------------------------------------------
+    
+    async function carregarTaxasEntrega() {
+        if (!taxasTabelaBody) return;
+
+        taxasTabelaBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Carregando taxas...</td></tr>`;
+
+        try {
+            // Assumindo a existência da tabela 'taxas_entrega'
+            const { data, error } = await supabase.from('taxas_entrega')
+                .select('*')
+                .order('bairro', { ascending: true });
+
+            if (error) throw error;
+            
+            todasTaxas = data || [];
+            exibirTaxasEntrega(todasTaxas);
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar taxas de entrega:', error);
+            mostrarMensagem('Erro ao carregar taxas de entrega. Verifique se a tabela `taxas_entrega` existe.', 'error');
+            taxasTabelaBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--error-color);">Falha ao carregar taxas.</td></tr>`;
+        }
+    }
+
+    function exibirTaxasEntrega(taxas) {
+        if (!taxasTabelaBody) return;
+        taxasTabelaBody.innerHTML = '';
+        
+        if (taxas.length === 0) {
+            taxasTabelaBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #666;">Nenhuma taxa cadastrada.</td></tr>`;
+            return;
+        }
+
+        taxas.forEach(taxa => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${taxa.bairro}</strong></td>
+                <td>${formatarMoeda(taxa.valor)}</td>
+                <td>
+                    <button class="btn-edit btn-sm" onclick="editarTaxaEntrega('${taxa.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-danger btn-sm" onclick="excluirTaxaEntrega('${taxa.id}', '${taxa.bairro}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            taxasTabelaBody.appendChild(tr);
+        });
+    }
+
+    async function salvarTaxaEntrega(e) {
+        e.preventDefault();
+        
+        const isEdicao = !!taxaIdEdicao.value;
+        const id = taxaIdEdicao.value;
+        const bairro = document.getElementById('taxa-bairro').value.trim();
+        const valor = parseFloat(document.getElementById('taxa-valor').value);
+
+        if (!bairro || isNaN(valor) || valor < 0) {
+            mostrarMensagem('Preencha o Bairro e o Valor corretamente.', 'error');
+            return;
+        }
+
+        const dadosTaxa = {
+            bairro: bairro,
+            valor: valor,
+        };
+
+        try {
+            if (isEdicao) {
+                const { error } = await supabase.from('taxas_entrega')
+                    .update(dadosTaxa)
+                    .eq('id', id);
+                if (error) throw error;
+                mostrarMensagem(`Taxa para ${bairro} atualizada com sucesso!`, 'success');
+            } else {
+                const { error } = await supabase.from('taxas_entrega')
+                    .insert(dadosTaxa);
+                if (error) throw error;
+                mostrarMensagem(`Taxa para ${bairro} cadastrada com sucesso!`, 'success');
+            }
+            
+            formNovaTaxa.reset();
+            taxaIdEdicao.value = '';
+            document.getElementById('btn-salvar-taxa').innerHTML = '<i class="fas fa-plus-circle"></i> Adicionar/Salvar Taxa';
+            await carregarTaxasEntrega();
+
+        } catch (error) {
+            console.error('❌ Erro ao salvar taxa:', error);
+            let msg = 'Erro ao cadastrar/atualizar taxa.';
+            if (error.code === '23505') {
+                msg = `Erro: O bairro **${bairro}** já existe.`;
+            } else if (error.message) {
+                msg += ' Detalhe: ' + error.message;
+            }
+            mostrarMensagem(msg, 'error');
+        }
+    }
+
+    window.editarTaxaEntrega = function(taxaId) {
+        const taxa = todasTaxas.find(t => t.id === taxaId);
+        if (taxa) {
+            taxaIdEdicao.value = taxa.id;
+            document.getElementById('taxa-bairro').value = taxa.bairro;
+            document.getElementById('taxa-valor').value = taxa.valor;
+            document.getElementById('btn-salvar-taxa').innerHTML = '<i class="fas fa-save"></i> Salvar Edição';
+            mostrarMensagem(`Editando taxa para o bairro ${taxa.bairro}`, 'info');
+            document.getElementById('taxa-bairro').focus();
+        }
+    }
+
+    window.excluirTaxaEntrega = async function(taxaId, bairro) {
+        if (!confirm(`Tem certeza que deseja EXCLUIR a taxa de entrega para o bairro "${bairro}"?\nEsta ação é irreversível!`)) return;
+
+        try {
+            const { error } = await supabase.from('taxas_entrega')
+                .delete()
+                .eq('id', taxaId);
+            
+            if (error) throw error;
+            
+            mostrarMensagem(`Taxa para ${bairro} excluída com sucesso!`, 'success');
+            await carregarTaxasEntrega();
+
+        } catch (error) {
+            console.error('❌ Erro ao excluir taxa:', error);
+            mostrarMensagem('Erro ao excluir taxa: ' + error.message, 'error');
         }
     }
 

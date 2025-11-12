@@ -60,6 +60,9 @@
                             <button class="tab-btn" data-tab="tab-promocoes">
                                 <i class="fas fa-tag"></i> Promoções & Cupons
                             </button>
+                            <button class="tab-btn" data-tab="tab-entrega">
+                                <i class="fas fa-motorcycle"></i> Entrega
+                            </button>
                         </div>
                     </header>
                     
@@ -150,6 +153,57 @@
                             
                             <div class="paginacao-controls" id="historico-paginacao">
                                 </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="tab-entrega" style="display: none;">
+                        <div class="card" style="margin-top: 1.5rem;">
+                            
+                            <h3><i class="fas fa-map-marker-alt"></i> Configurações de Entrega</h3>
+                            
+                            <div class="form-row" style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1.5rem;">
+                                 <div class="form-group" style="flex: 1;">
+                                     <label for="config-endereco-retirada"><i class="fas fa-store"></i> Endereço para Retirada na Loja</label>
+                                     <textarea id="config-endereco-retirada" rows="2" placeholder="Rua, número, bairro, cidade..."></textarea>
+                                 </div>
+                                 <div class="form-group" style="align-self: flex-end;">
+                                     <button id="salvar-endereco-retirada" class="btn btn-success btn-sm"><i class="fas fa-save"></i> Salvar Endereço</button>
+                                 </div>
+                            </div>
+                            
+                            <h4><i class="fas fa-money-bill-wave"></i> Taxas de Entrega por Bairro</h4>
+                            
+                            <form id="form-nova-taxa" class="form">
+                                <input type="hidden" id="taxa-id-edicao">
+                                <div class="form-row" style="align-items: flex-end; margin-bottom: 1rem;">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label for="taxa-bairro">Nome do Bairro *</label>
+                                        <input type="text" id="taxa-bairro" required placeholder="Ex: Centro">
+                                    </div>
+                                    <div class="form-group" style="max-width: 150px;">
+                                        <label for="taxa-valor">Valor da Taxa (R$) *</label>
+                                        <input type="number" id="taxa-valor" step="0.01" min="0" required placeholder="5.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" id="btn-salvar-taxa" class="btn btn-primary btn-sm"><i class="fas fa-plus-circle"></i> Adicionar/Salvar Taxa</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                             <div class="table-container" style="margin-top: 1rem;">
+                                <table class="table-moderna">
+                                    <thead>
+                                        <tr>
+                                            <th>Bairro</th>
+                                            <th>Valor da Taxa (R$)</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="taxas-tabela-body">
+                                        <tr><td colspan="3" style="text-align: center; color: #666;">Carregando taxas...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
