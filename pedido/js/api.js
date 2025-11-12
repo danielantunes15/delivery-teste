@@ -352,7 +352,6 @@
         return pedido;
     }
     
-    // --- INÍCIO DA NOVA FUNÇÃO ---
     /**
      * Busca os detalhes completos de um único pedido pelo ID.
      * @param {string} pedidoId - ID do pedido.
@@ -371,7 +370,6 @@
             return null;
         }
     }
-    // --- FIM DA NOVA FUNÇÃO ---
     
     /**
      * Salva o pedido finalizado no banco.
@@ -427,6 +425,7 @@
         return true; // Cancelamento bem-sucedido
     }
 
+
     /**
      * Busca as cidades cadastradas para entrega.
      */
@@ -463,6 +462,47 @@
         }
     }
 
+    // ================================================================
+    // === INÍCIO DA NOVA FUNÇÃO (BUSCAR TODAS AS TAXAS) ===
+    // ================================================================
+    /**
+     * Busca TODAS as taxas de entrega (bairros e cidades) de uma só vez.
+     */
+    async function carregarTodasTaxasEntrega() {
+        try {
+            const { data, error } = await supabase
+                .from('taxas_entrega')
+                .select(`
+                    bairro,
+                    valor,
+                    cidade:cidades_entrega(nome)
+                `);
+            
+            if (error) throw error;
+
+            // Transforma os dados para um formato mais fácil de pesquisar:
+            // { "NOME DO BAIRRO-NOME DA CIDADE": valor }
+            const taxasMapeadas = (data || []).reduce((acc, taxa) => {
+                if (taxa.bairro && taxa.cidade && taxa.cidade.nome) {
+                    const bairroUpper = taxa.bairro.toUpperCase().trim();
+                    const cidadeUpper = taxa.cidade.nome.toUpperCase().trim();
+                    const chave = `${bairroUpper}-${cidadeUpper}`;
+                    acc[chave] = taxa.valor;
+                }
+                return acc;
+            }, {});
+            
+            return taxasMapeadas;
+
+        } catch (error) {
+            console.error('Erro ao carregar todas as taxas de entrega:', error);
+            return {}; // Retorna um objeto vazio em caso de erro
+        }
+    }
+    // ================================================================
+    // === FIM DA NOVA FUNÇÃO ===
+    // ================================================================
+
 
     // Expõe as funções para o objeto global AppAPI
     window.AppAPI = {
@@ -473,17 +513,18 @@
         buscarCep,
         carregarCategorias,
         carregarProdutos,
-        buscarProdutosPorTermo, // <-- ADICIONADO
-        validarCupom, // <-- ADICIONADO
-        incrementarUsoCupom, // <-- ADICIONADO
+        buscarProdutosPorTermo,
+        validarCupom,
+        incrementarUsoCupom,
         buscarOpcoesProduto,
         buscarComplementosProduto,
         carregarMaisPedidos,
         buscarHistoricoPedidos,
         buscarPedidoParaRastreamento,
-        buscarDetalhesPedidoPorId, // <-- ADICIONADO
-        carregarCidadesEntrega, // <-- ADICIONADO
-        carregarBairrosPorCidade, // <-- ADICIONADO
+        buscarDetalhesPedidoPorId,
+        carregarCidadesEntrega,
+        carregarBairrosPorCidade,
+        carregarTodasTaxasEntrega, // <-- ADICIONADO
         finalizarPedidoNoSupabase,
         atualizarEstoqueNoSupabase,
         cancelarPedidoNoSupabase

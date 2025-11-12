@@ -13,6 +13,7 @@ window.app = {
     // **NOVAS PROPRIEDADES DE ESTADO GLOBAL ADICIONADAS AQUI**
     passoAtual: 1, 
     cupomAplicado: null, // Estado do cupom
+    taxasEntrega: {}, // <-- ADICIONADO: Cache para taxas por bairro
     
     // Estado dos Módulos (serão preenchidos por eles)
     carrinho: [],
@@ -225,6 +226,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.log("Cidades de entrega carregadas para o formulário.");
             }
             // **** FIM DA NOVA ETAPA ****
+            
+            // ================================================================
+            // === INÍCIO DA NOVA ETAPA (CARREGAR TAXAS) ===
+            // ================================================================
+            // 5C. Carrega TODAS as taxas de entrega para o cache global
+            app.taxasEntrega = await app.API.carregarTodasTaxasEntrega();
+            console.log("Taxas de entrega por bairro carregadas:", app.taxasEntrega);
+            // ================================================================
+            // === FIM DA NOVA ETAPA ===
+            // ================================================================
 
             if (app.clienteLogado) {
                  console.log(`Cliente ${app.clientePerfil.nome} carregado.`);

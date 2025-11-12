@@ -137,23 +137,53 @@
         window.AppUI.mostrarMensagem("Carrinho limpo!", "info");
     }
 
+    // ================================================================
+    // === INÍCIO DA MODIFICAÇÃO (CÁLCULO DINÂMICO DE TAXA) ===
+    // ================================================================
     /**
      * Calcula o total do carrinho com desconto e taxa.
      */
     function calcularTotalComAjustes(subTotal) {
         const ajustes = window.app.cupomAplicado;
-        
-        // **** INÍCIO DA MODIFICAÇÃO (Taxa de Entrega) ****
         let taxaEntrega = 0;
         
-        // Verifica se a UI e a opção de ENTREGA existem e estão marcadas
+        // 1. Verifica se a opção de ENTREGA está marcada
         if (window.AppUI && window.AppUI.elementos.deliveryOptionEntrega && window.AppUI.elementos.deliveryOptionEntrega.checked) {
-            // Se a entrega estiver marcada, aplica a taxa
-            taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+            
+            // 2. Se for entrega, tenta encontrar a taxa do bairro
+            const endereco = window.app.clientePerfil.endereco;
+            if (endereco) {
+                // 3. Extrai o Bairro e a Cidade do endereço (Ex: "Rua..., N..., Bairro - Cidade")
+                // Esta regex captura o último texto depois de ", " antes do " - " (Bairro)
+                // E o texto depois do " - " (Cidade)
+                const regex = /,\s*([^,]+?)\s*-\s*([^,]+?)$/;
+                const match = endereco.match(regex);
+                
+                if (match && match[1] && match[2]) {
+                    const bairro = match[1].toUpperCase().trim();
+                    const cidade = match[2].toUpperCase().trim();
+                    const chave = `${bairro}-${cidade}`;
+                    
+                    // 4. Busca no cache de taxas carregado pelo app.js
+                    if (window.app.taxasEntrega[chave] !== undefined) {
+                        taxaEntrega = window.app.taxasEntrega[chave];
+                    } else {
+                        // Bairro não encontrado no cache de taxas
+                        console.warn(`Taxa não encontrada para ${bairro} - ${cidade}. Taxa padrão (R$ 0) será aplicada.`);
+                        taxaEntrega = 0; // Ou você pode usar uma taxa padrão: window.app.configLoja.taxa_entrega
+                    }
+                } else {
+                    // Endereço mal formatado, usa a taxa global (fallback)
+                    taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+                }
+            } else {
+                // Cliente sem endereço cadastrado, usa a taxa global (fallback)
+                taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+            }
         }
-        // Se "Retirada" estiver marcada, a taxaEntrega permanece 0.
-        // **** FIM DA MODIFICAÇÃO ****
+        // Se a "Retirada" estiver marcada, a taxaEntrega permanece 0.
         
+        // 5. Calcula o resto...
         let totalAjustado = subTotal;
         let valorDesconto = 0;
         
@@ -165,7 +195,6 @@
                 valorDesconto = ajustes.valor;
                 totalAjustado -= valorDesconto;
             }
-            // Garante que o total não seja negativo
             totalAjustado = Math.max(0, totalAjustado);
         }
         
@@ -175,10 +204,13 @@
             subTotal: subTotal,
             totalAjustado: totalAjustado,
             valorDesconto: valorDesconto,
-            taxaEntregaAplicada: taxaEntrega, // Exporta a taxa usada
+            taxaEntregaAplicada: taxaEntrega, // Retorna a taxa que foi de fato usada
             totalFinal: totalFinal
         };
     }
+    // ================================================================
+    // === FIM DA MODIFICAÇÃO ===
+    // ================================================================
     
     /**
      * Atualiza todo o display do carrinho (itens, totais, badges).
@@ -198,6 +230,7 @@
         });
         
         // 2. Aplica ajustes e calcula totais finais
+        // ESTA FUNÇÃO AGORA RETORNA A TAXA DINÂMICA
         const calculo = calcularTotalComAjustes(subTotal);
 
         // 3. Renderiza Itens
@@ -270,20 +303,20 @@
         // 4. Renderiza Resumo de Valores
         if (elementos.subtotalCarrinho) elementos.subtotalCarrinho.textContent = formatarMoeda(calculo.subTotal);
         
-        // --- NOVO: Renderiza Subtotal Ajustado (após desconto) ---
         const temDesconto = calculo.valorDesconto > 0;
         
         if (elementos.resumoSubtotalLiquidoLinha) {
-            // Exibe a linha do subtotal ajustado apenas se houver desconto
             elementos.resumoSubtotalLiquidoLinha.style.display = temDesconto ? 'flex' : 'none';
         }
         
         if (elementos.subtotalAjustadoCarrinho) {
             elementos.subtotalAjustadoCarrinho.textContent = formatarMoeda(calculo.totalAjustado);
         }
-        // --- FIM NOVO ---
         
-        if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(calculo.taxaEntregaAplicada); // <-- MODIFICADO
+        // ATUALIZA AMBOS OS CAMPOS DE TAXA (O do resumo e o da opção de entrega)
+        if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(calculo.taxaEntregaAplicada);
+        if (elementos.taxaEntregaDisplay) elementos.taxaEntregaDisplay.textContent = formatarMoeda(calculo.taxaEntregaAplicada); // <-- ADICIONADO
+        
         if (elementos.totalCarrinho) elementos.totalCarrinho.textContent = calculo.totalFinal.toFixed(2).replace('.', ',');
         
         // 5. Renderiza Desconto 
@@ -332,21 +365,21 @@
      * Atualiza a UI do perfil e do carrinho com dados do cliente.
      */
     function atualizarCarrinhoDisplay() {
-        // **** INÍCIO DA MODIFICAÇÃO (Atualização dos spans corretos) ****
+        // ATUALIZA OS DADOS DO PERFIL (Nome, Endereço)
         window.app.Auth.atualizarPerfilUI(); 
         
         const elementos = window.AppUI.elementos;
         
-        // Atualiza os spans dentro da opção "Entrega"
+        // ATUALIZA O TEMPO DE ENTREGA (DA config_loja)
         if (elementos.tempoEntregaDisplay) {
             elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
         }
-        if (elementos.taxaEntregaDisplay) { // <-- MODIFICADO DE taxaEntregaStep
-            elementos.taxaEntregaDisplay.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
-        }
+        
+        // REMOVIDA A ATUALIZAÇÃO DA TAXA DE ENTREGA DAQUI
+        // (Será feito dinamicamente pelo 'atualizarCarrinho()')
 
+        // ATUALIZA O CARRINHO (QUE AGORA VAI CALCULAR A TAXA CERTA)
         atualizarCarrinho();
-        // **** FIM DA MODIFICAÇÃO ****
     }
     
     /**
