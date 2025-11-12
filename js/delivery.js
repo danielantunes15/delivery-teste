@@ -109,26 +109,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const usuario = window.sistemaAuth.usuarioLogado;
     const isAdminOrManager = ['administrador', 'admin', 'gerente', 'supervisor'].includes(usuario.tipo?.toLowerCase());
     
-    window.atualizarStatusHeaderDelivery = async function() {
-        try {
-            const { count, error } = await supabase.from('pedidos_online')
-                .select('*', { count: 'exact', head: true })
-                .eq('status', 'novo')
-                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z');
-
-            if (error) throw error;
-            if (window.totalPedidosNovos !== undefined) {
-                window.totalPedidosNovos = count || 0;
-            }
-
-        } catch (error) {
-            console.error("Erro ao buscar contagem de pedidos novos:", error);
-            if (window.totalPedidosNovos !== undefined) {
-                 window.totalPedidosNovos = -1;
-            }
-            throw error;
-        }
-    };
+    // A função window.atualizarStatusHeaderDelivery foi REMOVIDA daqui
+    // pois agora ela existe globalmente no js/layout-loader.js
 
     async function inicializar() {
         toggleDisplay(loadingElement, true);
@@ -143,8 +125,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             carregarCupons() 
         ]);
         
-        setInterval(verificarNovosPedidos, 5000); // 5000ms = 5 segundos
-        console.log('🔄 Polling de pedidos iniciado. Verificando a cada 05 segundos.');
+        // Intervalo aumentado para 15s (notificação global cuida dos 10s)
+        setInterval(verificarNovosPedidos, 15000); 
+        console.log('🔄 Polling de pedidos (local) iniciado. Verificando a cada 15 segundos.');
         
         iniciarAtualizadorDeTimers();
 
@@ -668,7 +651,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     async function verificarNovosPedidos() {
-        console.log(`Verificando pedidos... (Última contagem: ${ultimoTotalDePedidos})`);
+        // Esta verificação local é para o KANBAN. A notificação sonora
+        // global é controlada pelo layout-loader.js
+        console.log(`(Local) Verificando pedidos... (Última contagem: ${ultimoTotalDePedidos})`);
         
         try {
             const { data, error } = await supabase.from('pedidos_online')
@@ -679,29 +664,34 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .order('created_at', { ascending: true });
 
             if (error) {
-                console.error("Erro ao verificar novos pedidos:", error.message);
+                console.error("(Local) Erro ao verificar novos pedidos:", error.message);
                 return; 
             }
 
             const pedidosAtuais = data || [];
             
-            // --- CORREÇÃO: Verificar apenas se há NOVOS pedidos, não substituir tudo ---
+            // Se a contagem mudou, atualiza o board
             if (pedidosAtuais.length > ultimoTotalDePedidos) {
-                console.log('NOVOS PEDIDOS DETECTADOS!');
-                tocarNotificacao(); 
-                mostrarMensagem(`🔔 ${pedidosAtuais.length - ultimoTotalDePedidos} novo(s) pedido(s) chegaram!`, 'success');
+                console.log('(Local) NOVOS PEDIDOS DETECTADOS!');
                 
-                // Atualizar apenas os pedidos que realmente mudaram
+                // O som é controlado globalmente, não precisa tocar aqui
+                // tocarNotificacao(); // <-- COMENTADO
+                
+                mostrarMensagem(`🔔 (Local) ${pedidosAtuais.length - ultimoTotalDePedidos} novo(s) pedido(s) chegaram!`, 'success');
+                
                 todosPedidos = pedidosAtuais;
                 exibirPedidosNoBoard(todosPedidos);
+            } else if (pedidosAtuais.length < ultimoTotalDePedidos) {
+                 // Alguém cancelou ou moveu um pedido
+                 console.log('(Local) Pedidos removidos ou finalizados.');
+                 todosPedidos = pedidosAtuais;
+                 exibirPedidosNoBoard(todosPedidos);
             }
-            
-            // --- FIM DA CORREÇÃO ---
             
             ultimoTotalDePedidos = pedidosAtuais.length;
 
         } catch (err) {
-            console.error("Erro no polling:", err);
+            console.error("(Local) Erro no polling:", err);
         }
     }
 

@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------
 const navLinks = [
     { href: "index.html", icon: "fa-shopping-cart", text: "Vendas" },
-    { href: "delivery.html", icon: "fa-motorcycle", text: "Delivery" },
+    { href: "delivery.html", icon: "fa-motorcycle", text: "Delivery" }, // <- ALVO
     { href: "caixa-fechamento.html", icon: "fa-cash-register", text: "Caixa" },
     { href: "encomendas.html", icon: "fa-receipt", text: "Encomendas" },
     { href: "producao.html", icon: "fa-sitemap", text: "Produção" },
@@ -17,6 +17,17 @@ const navLinks = [
     { href: "administracao.html", icon: "fa-cog", text: "Administração" },
     { href: "contas-a-pagar.html", icon: "fa-chart-line", text: "Gerencial" }
 ];
+
+// --- INÍCIO DAS NOVAS ADIÇÕES GLOBAIS ---
+
+// Cache global para o total de pedidos e controle de som
+let globalTotalPedidosNovos = 0;
+let isPrimeiraCarga = true; // Evita tocar o som no carregamento da página
+const audioNotificacao = new Audio('audio/sompedido.mp3');
+audioNotificacao.load(); // Pré-carrega o áudio
+
+// --- FIM DAS NOVAS ADIÇÕES GLOBAIS ---
+
 
 // -----------------------------------------------------------------
 // 2. TEMPLATES HTML
@@ -27,12 +38,16 @@ const navLinks = [
  * @param {string} currentPage - O nome do arquivo atual (ex: "index.html")
  */
 function getSidebarHTML(currentPage) {
+    // --- INÍCIO DA MODIFICAÇÃO (Adiciona o emblema de notificação) ---
     const linksHTML = navLinks.map(link => `
         <a href="${link.href}" class="nav-link ${link.href === currentPage ? 'active' : ''}">
             <i class="fas ${link.icon}"></i>
             <span>${link.text}</span>
+            ${/* Adiciona o emblema apenas no link de Delivery */''}
+            ${link.href === 'delivery.html' ? '<span class="nav-badge" id="delivery-nav-badge" style="display: none;">0</span>' : ''}
         </a>
     `).join('');
+    // --- FIM DA MODIFICAÇÃO ---
 
     return `
     <div id="mainSidebar" class="sidebar">
@@ -67,7 +82,7 @@ function getSidebarHTML(currentPage) {
  * Gera o HTML do Header (Cabeçalho Superior)
  */
 function getHeaderHTML() {
-    // Pega o título da tag <title> do HTML
+    // ... (função getHeaderHTML original sem modificações)
     const pageTitle = document.title.split('-')[0].trim() || 'Dashboard';
 
     return `
@@ -99,13 +114,12 @@ function getHeaderHTML() {
 /**
  * Lógica do Relógio e Status (era do header-data.js)
  */
-let totalPedidosNovos = 0; // Cache
+// let totalPedidosNovos = 0; // Removido, usaremos globalTotalPedidosNovos
 
 const formatarTituloHeader = () => {
-    // A tag H1 tem o nome da página
+    // ... (função formatarTituloHeader original sem modificações)
     const headerH1 = document.getElementById('page-title-header');
     if (headerH1) {
-        // Encontra o ícone do link ativo para usar no header
         const activeLink = navLinks.find(link => link.href === (window.location.pathname.split('/').pop() || 'index.html'));
         const iconClass = activeLink ? activeLink.icon : 'fa-chart-line';
         
@@ -113,9 +127,12 @@ const formatarTituloHeader = () => {
     }
 };
 
+// --- INÍCIO DA MODIFICAÇÃO (Função principal de verificação global) ---
 const atualizarRelogioEStatus = async () => {
     const relogioElement = document.getElementById('header-relogio');
     const statusDeliveryElement = document.getElementById('status-delivery-icon');
+    // 1. Busca o novo emblema da barra lateral
+    const deliveryNavBadge = document.getElementById('delivery-nav-badge');
 
     if (relogioElement) {
         const agora = new Date();
@@ -123,43 +140,73 @@ const atualizarRelogioEStatus = async () => {
         relogioElement.textContent = horaFormatada;
     }
 
-    if (statusDeliveryElement && window.atualizarStatusHeaderDelivery) {
+    // 2. Verifica se o Supabase (window.supabase) e os elementos da UI existem
+    // Esta lógica agora roda em TODAS as páginas, não apenas em delivery.js
+    if (statusDeliveryElement && deliveryNavBadge && window.supabase) {
         try {
-            await window.atualizarStatusHeaderDelivery();
+            // 3. Faz a consulta de contagem de pedidos 'novos'
+            const { count, error } = await window.supabase.from('pedidos_online')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'novo')
+                .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z');
+
+            if (error) throw error;
             
+            const novosPedidosCount = count || 0;
+            
+            // 4. Atualiza o ÍCONE DO SINO (header)
             let statusIcone = 'fa-check-circle';
             let statusCor = '#28a745';
             let statusTitulo = 'Sem pedidos novos';
+            let badgeHtml = '';
 
-            if (totalPedidosNovos > 0) {
+            if (novosPedidosCount > 0) {
                 statusIcone = 'fa-exclamation-circle';
                 statusCor = '#ff9800';
-                statusTitulo = `${totalPedidosNovos} Pedido(s) Novo(s)!`;
+                statusTitulo = `${novosPedidosCount} Pedido(s) Novo(s)!`;
+                badgeHtml = `<span class="delivery-badge">${novosPedidosCount}</span>`;
             }
             
             statusDeliveryElement.className = `fas ${statusIcone}`;
             statusDeliveryElement.style.color = statusCor;
             statusDeliveryElement.title = statusTitulo;
-
-            let badgeHtml = '';
-            if (totalPedidosNovos > 0) {
-                badgeHtml = `<span class="delivery-badge" style="background: #f44336; color: white; border-radius: 50%; font-size: 0.7rem; padding: 2px 5px; position: absolute; top: -5px; right: -5px;">${totalPedidosNovos}</span>`;
-            }
             statusDeliveryElement.innerHTML = badgeHtml;
 
+            // 5. Atualiza o EMBLEMA DA BARRA LATERAL (seu pedido)
+            if (novosPedidosCount > 0) {
+                deliveryNavBadge.textContent = novosPedidosCount;
+                deliveryNavBadge.style.display = 'flex';
+            } else {
+                deliveryNavBadge.style.display = 'none';
+            }
+
+            // 6. TOCA O SOM (seu pedido)
+            // Se não for a primeira carga E o número de pedidos aumentou
+            if (!isPrimeiraCarga && novosPedidosCount > globalTotalPedidosNovos) {
+                audioNotificacao.play().catch(e => console.warn("Não foi possível tocar o som de notificação:", e.message));
+            }
+            
+            // 7. Atualiza os contadores globais
+            globalTotalPedidosNovos = novosPedidosCount;
+            if (isPrimeiraCarga) isPrimeiraCarga = false; // Marca que a primeira carga já passou
+
         } catch (error) {
-            console.error("Erro ao atualizar status do delivery no header:", error);
+            console.error("Erro ao atualizar status global de delivery:", error);
             statusDeliveryElement.className = 'fas fa-plug';
             statusDeliveryElement.style.color = '#6c757d';
             statusDeliveryElement.title = 'Erro de Conexão Delivery';
+            if (deliveryNavBadge) deliveryNavBadge.style.display = 'none';
         }
     }
 };
+// --- FIM DA MODIFICAÇÃO ---
+
 
 /**
  * Lógica do Menu Hamburger (era inline no HTML)
  */
 function initSidebarToggle() {
+    // ... (função initSidebarToggle original sem modificações)
     const menuToggle = document.getElementById('menuToggle');
     const mainSidebar = document.getElementById('mainSidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -179,6 +226,7 @@ function initSidebarToggle() {
  * Lógica do Menu de Perfil (era do auth.js)
  */
 function initSidebarFooter() {
+    // ... (função initSidebarFooter original sem modificações)
     const userProfileToggle = document.getElementById('user-profile-toggle');
     const logoutMenu = document.getElementById('logout-menu');
     const globalLogoutLink = document.getElementById('global-logout-link');
@@ -224,6 +272,7 @@ function initSidebarFooter() {
 // 4. FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
 // -----------------------------------------------------------------
 function initLayout() {
+    // ... (Início da initLayout original)
     const sidebarPlaceholder = document.getElementById('sidebar-placeholder');
     const headerPlaceholder = document.getElementById('header-placeholder');
     
@@ -232,21 +281,22 @@ function initLayout() {
         return;
     }
 
-    // Identifica a página atual
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
-    // Injeta o HTML
     sidebarPlaceholder.innerHTML = getSidebarHTML(currentPage);
     headerPlaceholder.innerHTML = getHeaderHTML();
 
-    // Ativa toda a lógica
     initSidebarToggle();
     initSidebarFooter();
     
-    // Lógica do header-data.js
     formatarTituloHeader();
-    atualizarRelogioEStatus();
-    setInterval(atualizarRelogioEStatus, 10000); // Atualiza a cada 10 seg
+    
+    // --- INÍCIO DA MODIFICAÇÃO (Garante que a primeira verificação ocorra logo) ---
+    // Roda a primeira vez imediatamente
+    setTimeout(atualizarRelogioEStatus, 500); 
+    // Continua rodando a cada 10 segundos
+    setInterval(atualizarRelogioEStatus, 10000);
+    // --- FIM DA MODIFICAÇÃO ---
 }
 
 // Dispara a inicialização do layout quando o DOM estiver pronto

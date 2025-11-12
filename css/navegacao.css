@@ -376,3 +376,75 @@
         display: none;
     }
 }
+
+/* css/navegacao.css */
+
+/* ... (Estilos existentes de .nav-link) ... */
+.nav-link, .btn-logout {
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    /* ... (outros estilos) ... */
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+/* --- INÍCIO DAS NOVAS REGRAS --- */
+
+/* 1. Faz o texto (ex: "Delivery") crescer para empurrar o emblema */
+.nav-link span:first-of-type {
+    flex-grow: 1;
+}
+
+/* 2. Estilo do emblema de notificação */
+.nav-badge {
+    background-color: var(--error-color); /* Vermelho */
+    color: white;
+    font-size: 0.75rem; /* 12px */
+    font-weight: 700;
+    border-radius: 50%;
+    width: 22px;  /* Tamanho fixo */
+    height: 22px; /* Tamanho fixo */
+    display: flex; /* Usado para centralizar o número */
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex-shrink: 0; /* Impede que o emblema seja "espremido" */
+    transition: all 0.3s ease;
+    transform: scale(0.9);
+    opacity: 0.9;
+    
+    /* Padrão é escondido (controlado pelo JS) */
+    display: none; 
+}
+
+/* 3. Destaque do emblema quando o link "Delivery" está ativo */
+.nav-link.active .nav-badge {
+    background-color: white;
+    color: var(--error-color); /* Inverte as cores */
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* 4. Estilo do emblema do SINO (no header) */
+/* (Já existia no seu css/navegacao.css, mas garanto que esteja correto) */
+.delivery-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--error-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+/* --- FIM DAS NOVAS REGRAS --- */
+
+
+/* ... (Restante do css/navegacao.css) ... */
