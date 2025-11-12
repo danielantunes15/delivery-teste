@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
     // Elementos da Aba Histórico
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+    const tabButtons = document.querySelectorAll('header.card .tabs .tab-btn'); // <-- CORRIGIDO
+    const tabContents = document.querySelectorAll('#tab-kanban, #tab-historico, #tab-promocoes, #tab-entrega'); // <-- CORRIGIDO
     const historicoTabelaBody = document.getElementById('historico-tabela-body');
     const historicoPaginacao = document.getElementById('historico-paginacao');
     
