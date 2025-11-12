@@ -11,8 +11,18 @@
     function obterDadosCliente() {
         const elementos = window.AppUI.elementos;
         
-        // Assume que o endereço vem do perfil/estado (que é atualizado pelo modal de edição)
-        const endereco = window.app.clientePerfil.endereco.trim();
+        // **** INÍCIO DA MODIFICAÇÃO (Endereço e Retirada) ****
+        let endereco;
+        let isRetirada = false;
+        
+        // Verifica qual opção está marcada
+        if (window.AppUI && window.AppUI.elementos.deliveryOptionRetirada && window.AppUI.elementos.deliveryOptionRetirada.checked) {
+            isRetirada = true;
+            endereco = "RETIRADA NA LOJA: Rua São Lourenço, 326, Rua do Meu salgado Favorito, Centro, NANUQUE - MG";
+        } else {
+            endereco = window.app.clientePerfil.endereco ? window.app.clientePerfil.endereco.trim() : 'Endereço não informado';
+        }
+        // **** FIM DA MODIFICAÇÃO ****
         
         const trocoPara = parseFloat(elementos.trocoParaInput?.value) || 0; 
         const observacoes = elementos.pedidoObservacoes?.value.trim() || ''; 
@@ -27,14 +37,17 @@
                 return null;
              }
              
+             // **** INÍCIO DA MODIFICAÇÃO (Adiciona isRetirada) ****
              return {
                  nome: nome,
                  telefone: telefone,
                  endereco: endereco,
+                 isRetirada: isRetirada, // <-- Adicionado
                  authId: window.app.clienteLogado.id,
                  trocoPara: trocoPara,
                  observacoes: observacoes
              };
+             // **** FIM DA MODIFICAÇÃO ****
         } else {
              window.AppUI.alternarView('auth-screen');
              window.AppUI.mostrarMensagem('🚨 Você precisa estar logado para enviar o pedido.', 'error');
@@ -68,8 +81,8 @@
         
         if (!dadosCliente) return null;
         
-        // Validação de Endereço Mínima
-        if (!dadosCliente.endereco || dadosCliente.endereco.length < 10) {
+        // Validação de Endereço Mínima (só se não for retirada)
+        if (!dadosCliente.isRetirada && (!dadosCliente.endereco || dadosCliente.endereco.length < 10 || dadosCliente.endereco === 'Endereço não informado')) {
             window.AppUI.mostrarMensagem('O endereço de entrega está incompleto. Use o botão "Trocar Endereço" para corrigir.', 'error');
             return null;
         }
@@ -105,7 +118,25 @@
 
     function montarObservacoes(dadosCliente, totalPedido, subTotalProdutos, valorDesconto) {
         const formatarMoeda = window.AppUI.formatarMoeda;
-        const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        
+        // **** INÍCIO DA MODIFICAÇÃO (Observações de Entrega/Retirada) ****
+        let taxaEntrega = 0;
+        let tipoEntregaInfo = "";
+
+        // dadosCliente.isRetirada foi definido na função obterDadosCliente()
+        if (dadosCliente.isRetirada) {
+            taxaEntrega = 0;
+            tipoEntregaInfo = `\n\n--- OPÇÃO DE ENTREGA ---
+Tipo: RETIRADA NA LOJA
+Horário: Entre 10 - 30 min
+Endereço: Rua São Lourenço, 326, Centro, NANUQUE - MG`;
+        } else {
+            taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+            tipoEntregaInfo = `\n\n--- OPÇÃO DE ENTREGA ---
+Tipo: ENTREGA PADRÃO
+Tempo: ${window.app.configLoja.tempo_entrega || 60} min`;
+        }
+        // **** FIM DA MODIFICAÇÃO ****
         
         let listaItens = "Itens:\n";
         window.app.carrinho.forEach(item => {
@@ -136,14 +167,17 @@
              cupomInfo = `\nCUPOM APLICADO: ${cupom.codigo} (${valorDisplay})`;
         }
         
+        // **** INÍCIO DA MODIFICAÇÃO (Resumo de Valores) ****
         let resumoValores = `
 Subtotal: ${formatarMoeda(subTotalProdutos)}
 ${valorDesconto > 0 ? `Desconto: -${formatarMoeda(valorDesconto)}` : ''}
-Taxa Entrega: ${formatarMoeda(taxaEntrega)}
+Taxa: ${formatarMoeda(taxaEntrega)}
 Total: ${formatarMoeda(totalPedido)}
 `;
 
-        return `${listaItens}${cupomInfo}${resumoValores}\nOBSERVAÇÕES ADICIONAIS:\n${obsCompleta}`; // <-- INCLUI CUPOM INFO
+        // Adiciona o bloco de tipoEntregaInfo na mensagem final
+        return `${listaItens}${cupomInfo}${resumoValores}${tipoEntregaInfo}\n\nOBSERVAÇÕES ADICIONAIS:\n${obsCompleta}`;
+        // **** FIM DA MODIFICAÇÃO ****
     }
 
     /**
@@ -231,7 +265,12 @@ Total: ${formatarMoeda(totalPedido)}
             let mensagem = `*PEDIDO ONLINE - DOCE CRIATIVO - #${novoPedido.id}*\n\n`;
             mensagem += `*Cliente:* ${dados.nome}\n`;
             mensagem += `*Telefone:* ${dados.telefone}\n`;
-            mensagem += `*Endereço:* ${dados.endereco}\n`;
+            
+            // **** INÍCIO DA MODIFICAÇÃO (Mensagem WhatsApp) ****
+            // Endereço já vem formatado como "ENTREGA..." ou "RETIRADA..."
+            mensagem += `*Endereço:* ${dados.endereco}\n`; 
+            // **** FIM DA MODIFICAÇÃO ****
+            
             mensagem += `*Pagamento:* ${dados.formaPagamento}\n`;
             mensagem += `*TOTAL:* ${window.AppUI.formatarMoeda(dados.total)}\n\n`;
             mensagem += `--- DETALHES ---\n`;

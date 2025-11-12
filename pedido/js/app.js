@@ -112,6 +112,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (ui.opcoesBtnRemover) ui.opcoesBtnRemover.addEventListener('click', app.Cardapio.diminuirQtdModal);
         if (ui.btnAdicionarOpcoes) ui.btnAdicionarOpcoes.addEventListener('click', app.Cardapio.adicionarItemComOpcoes);
         
+        // **** INÍCIO DA MODIFICAÇÃO (Opções de Entrega) ****
+        // Listeners para as novas Opções de Entrega
+        const setupDeliveryOptions = () => {
+            const radios = [ui.deliveryOptionEntrega, ui.deliveryOptionRetirada];
+            const labels = document.querySelectorAll('.delivery-option-radio');
+            
+            radios.forEach(radio => {
+                if (radio) {
+                    radio.addEventListener('change', () => {
+                        // Atualiza a UI (classes 'selected')
+                        labels.forEach(label => {
+                            if (label) {
+                                label.classList.toggle('selected', label.htmlFor === radio.id);
+                            }
+                        });
+
+                        // Mostra/Esconde o endereço de retirada
+                        if (ui.retiradaAddressInfo) {
+                            ui.retiradaAddressInfo.style.display = radio.id === 'delivery-option-retirada' ? 'block' : 'none';
+                        }
+                        
+                        // Recalcula o carrinho (isso é o mais importante)
+                        app.Carrinho.atualizarCarrinho();
+                    });
+                }
+            });
+        };
+        setupDeliveryOptions(); // Chama a função que acabamos de criar
+        // **** FIM DA MODIFICAÇÃO ****
+        
         // Listeners de Modais (Fechar)
         if (ui.modais) {
             ui.modais.forEach(modal => {

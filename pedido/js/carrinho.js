@@ -142,7 +142,18 @@
      */
     function calcularTotalComAjustes(subTotal) {
         const ajustes = window.app.cupomAplicado;
-        const taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        
+        // **** INÍCIO DA MODIFICAÇÃO (Taxa de Entrega) ****
+        let taxaEntrega = 0;
+        
+        // Verifica se a UI e a opção de ENTREGA existem e estão marcadas
+        if (window.AppUI && window.AppUI.elementos.deliveryOptionEntrega && window.AppUI.elementos.deliveryOptionEntrega.checked) {
+            // Se a entrega estiver marcada, aplica a taxa
+            taxaEntrega = window.app.configLoja.taxa_entrega || 0;
+        }
+        // Se "Retirada" estiver marcada, a taxaEntrega permanece 0.
+        // **** FIM DA MODIFICAÇÃO ****
+        
         let totalAjustado = subTotal;
         let valorDesconto = 0;
         
@@ -164,6 +175,7 @@
             subTotal: subTotal,
             totalAjustado: totalAjustado,
             valorDesconto: valorDesconto,
+            taxaEntregaAplicada: taxaEntrega, // Exporta a taxa usada
             totalFinal: totalFinal
         };
     }
@@ -198,7 +210,6 @@
             `;
             // Desabilita botões de passo
             if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = true;
-            // if (elementos.btnContinuar) elementos.btnContinuar.disabled = true; // Removido na tela única
         } else {
             elementos.carrinhoItens.innerHTML = '';
             carrinho.forEach((item, index) => {
@@ -253,7 +264,6 @@
             const isReady = window.app.clienteLogado && isLojaAberta; 
 
             if (elementos.finalizarPedidoDireto) elementos.finalizarPedidoDireto.disabled = !isReady;
-            // if (elementos.btnContinuar) elementos.btnContinuar.disabled = !isReady; // Removido na tela única
         }
         
         // ================== BLOCO ALTERADO ==================
@@ -273,7 +283,7 @@
         }
         // --- FIM NOVO ---
         
-        if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(window.app.configLoja.taxa_entrega || 0);
+        if (elementos.taxaEntregaCarrinho) elementos.taxaEntregaCarrinho.textContent = formatarMoeda(calculo.taxaEntregaAplicada); // <-- MODIFICADO
         if (elementos.totalCarrinho) elementos.totalCarrinho.textContent = calculo.totalFinal.toFixed(2).replace('.', ',');
         
         // 5. Renderiza Desconto 
@@ -322,14 +332,21 @@
      * Atualiza a UI do perfil e do carrinho com dados do cliente.
      */
     function atualizarCarrinhoDisplay() {
+        // **** INÍCIO DA MODIFICAÇÃO (Atualização dos spans corretos) ****
         window.app.Auth.atualizarPerfilUI(); 
         
-        // Renderiza dados de entrega no Step 2
         const elementos = window.AppUI.elementos;
-        if (elementos.tempoEntregaDisplay) elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
-        if (elementos.taxaEntregaStep) elementos.taxaEntregaStep.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
+        
+        // Atualiza os spans dentro da opção "Entrega"
+        if (elementos.tempoEntregaDisplay) {
+            elementos.tempoEntregaDisplay.textContent = `${window.app.configLoja.tempo_entrega || 60} min`;
+        }
+        if (elementos.taxaEntregaDisplay) { // <-- MODIFICADO DE taxaEntregaStep
+            elementos.taxaEntregaDisplay.textContent = window.AppUI.formatarMoeda(window.app.configLoja.taxa_entrega || 0);
+        }
 
         atualizarCarrinho();
+        // **** FIM DA MODIFICAÇÃO ****
     }
     
     /**

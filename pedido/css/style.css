@@ -1368,3 +1368,63 @@ body {
 }
 
 /* --- FIM NOVO BLOCO --- */
+
+
+/* --- INÍCIO: NOVOS ESTILOS OPÇÕES DE ENTREGA --- */
+.delivery-options-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.delivery-option-radio {
+    display: block;
+    background: #fdfdff;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Estilo para a opção selecionada */
+.delivery-option-radio.selected {
+    border-color: var(--primary-color, #ff69b4);
+    background: #fff0f5;
+    box-shadow: 0 2px 5px rgba(255,105,180,0.1);
+}
+
+.delivery-option-radio input[type="radio"] {
+    display: none; /* Esconde o radio button real */
+}
+
+.delivery-option-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.delivery-option-content i {
+    font-size: 1.5rem;
+    color: var(--primary-dark, #db7093);
+    width: 30px;
+    text-align: center;
+}
+
+.delivery-option-content div {
+    display: flex;
+    flex-direction: column;
+}
+
+.delivery-option-title {
+    font-weight: bold;
+    font-size: 1.05rem;
+    color: #333;
+}
+
+.delivery-option-detail {
+    font-size: 0.9rem;
+    color: #666;
+}
+/* --- FIM: NOVOS ESTILOS OPÇÕES DE ENTREGA --- */
