@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const btnCancelarPedido = document.getElementById('btn-cancelar-pedido');
     const btnImprimirCanhoto = document.getElementById('btn-imprimir-canhoto');
     const btnConfirmarPagamento = document.getElementById('btn-confirmar-pagamento'); 
+    
+    // NOVO BOTÃO WHATSAPP
+    const btnConfirmarWhatsApp = document.getElementById('btn-confirmar-whatsapp');
 
     // Elementos de Configurações
     const btnAbrirConfig = document.getElementById('btn-abrir-config');
@@ -155,6 +158,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         if (btnConfirmarPagamento) {
             btnConfirmarPagamento.addEventListener('click', confirmarPagamentoManual);
+        }
+        // NOVO LISTENER
+        if (btnConfirmarWhatsApp) {
+            btnConfirmarWhatsApp.addEventListener('click', enviarConfirmacaoWhatsApp);
         }
 
         if (btnAbrirConfig) {
@@ -421,6 +428,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         btnCancelarPedido.style.display = isFinal ? 'none' : 'inline-flex';
         
         btnConfirmarPagamento.style.display = (isFinal || isConfirmed) ? 'none' : 'inline-flex';
+
+        // NOVO: Mostrar/Esconder botão do WhatsApp
+        if (btnConfirmarWhatsApp) {
+            btnConfirmarWhatsApp.style.display = isFinal ? 'none' : 'inline-flex';
+        }
         
         btnAvancarStatus.style.background = STATUS_MAP[statusInfo.next]?.color || 'var(--primary-color)';
         
@@ -547,6 +559,97 @@ document.addEventListener('DOMContentLoaded', async function () {
         } catch (error) {
             console.error('❌ Erro completo ao atualizar status:', error);
             mostrarMensagem('Erro ao atualizar status: ' + error.message, 'error');
+        }
+    }
+    
+    // ================================================================
+    // === NOVAS FUNÇÕES (WHATSAPP E HELPER DE STATUS) ===
+    // ================================================================
+
+    /**
+     * Helper para atualizar o status sem prompt de confirmação.
+     * Usado pela função de WhatsApp.
+     */
+    async function _atualizarStatusSemPrompt(novoStatus) {
+        if (!pedidoSelecionado) return;
+        
+        console.log(`(Auto) Atualizando pedido #${pedidoSelecionado.id} para ${novoStatus}`);
+        try {
+            const { data, error } = await supabase.from('pedidos_online')
+                .update({ status: novoStatus })
+                .eq('id', pedidoSelecionado.id)
+                .select();
+            
+            if (error) throw error;
+
+            modalDetalhes.style.display = 'none';
+            
+            const pedidoAtualizado = todosPedidos.find(p => p.id === pedidoSelecionado.id);
+            if (pedidoAtualizado) {
+                pedidoAtualizado.status = novoStatus;
+            }
+            
+            exibirPedidosNoBoard(todosPedidos);
+            
+        } catch (error) {
+            console.error('Erro ao auto-avançar status:', error);
+            mostrarMensagem('Erro ao auto-avançar status: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Envia a confirmação do pedido para o WhatsApp do cliente.
+     */
+    function enviarConfirmacaoWhatsApp() {
+        if (!pedidoSelecionado) {
+            mostrarMensagem('Nenhum pedido selecionado.', 'error');
+            return;
+        }
+
+        const telefoneRaw = pedidoSelecionado.telefone_cliente;
+        if (!telefoneRaw) {
+            mostrarMensagem('Cliente não possui telefone cadastrado.', 'error');
+            return;
+        }
+
+        // Formata o número: remove não-dígitos e garante o 55
+        let telefoneFormatado = telefoneRaw.replace(/\D/g, '');
+        // Remove o 55 se já tiver (ex: 5533...) para evitar 555533...
+        if (telefoneFormatado.length > 11 && telefoneFormatado.startsWith('55')) {
+             telefoneFormatado = telefoneFormatado.substring(2);
+        }
+        // Adiciona o 55 (código do país)
+        telefoneFormatado = '55' + telefoneFormatado;
+
+        const nomeCliente = pedidoSelecionado.nome_cliente.split(' ')[0];
+        const pedidoId = pedidoSelecionado.id;
+        const total = formatarMoeda(pedidoSelecionado.total);
+        const tempoEntrega = configLoja.tempo_entrega || 60;
+
+        let mensagem = `Olá, ${nomeCliente}! 👋\n\n`;
+        mensagem += `Somos da *Confeitaria Doce Criativo* e recebemos seu pedido *#${pedidoId}* no valor de *${total}*.\n\n`;
+        
+        if (pedidoSelecionado.status === 'novo') {
+            mensagem += `Seu pedido foi *confirmado* e já vamos começar a prepará-lo! 👩‍🍳\n\n`;
+        } else {
+             mensagem += `Seu pedido já está *em preparação*! 👩‍🍳\n\n`;
+        }
+        
+        mensagem += `O tempo médio de entrega é de ${tempoEntrega} minutos.\n\n`;
+        mensagem += `Agradecemos pela preferência! 😊`;
+
+        const urlWhatsApp = `https://wa.me/${telefoneFormatado}?text=${encodeURIComponent(mensagem)}`;
+        window.open(urlWhatsApp, '_blank');
+
+        mostrarMensagem('WhatsApp pronto para envio!', 'success');
+        
+        // BÔNUS: Se o pedido era "Novo", avança automaticamente para "Preparando"
+        if (pedidoSelecionado.status === 'novo') {
+            setTimeout(async () => {
+                mostrarMensagem('Pedido movido para "Preparando"...', 'info');
+                // Chama a função helper que atualiza o status sem pedir confirmação
+                await _atualizarStatusSemPrompt('preparando');
+            }, 1000); // Delay de 1s para dar tempo da janela do WhatsApp abrir
         }
     }
 
