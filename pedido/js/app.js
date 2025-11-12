@@ -113,8 +113,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (ui.opcoesBtnRemover) ui.opcoesBtnRemover.addEventListener('click', app.Cardapio.diminuirQtdModal);
         if (ui.btnAdicionarOpcoes) ui.btnAdicionarOpcoes.addEventListener('click', app.Cardapio.adicionarItemComOpcoes);
         
-        // **** INÍCIO DA MODIFICAÇÃO (Opções de Entrega) ****
-        // Listeners para as novas Opções de Entrega
+        // === INÍCIO DA ALTERAÇÃO (LÓGICA DE VISIBILIDADE) ===
         const setupDeliveryOptions = () => {
             const radios = [ui.deliveryOptionEntrega, ui.deliveryOptionRetirada];
             const labels = document.querySelectorAll('.delivery-option-radio');
@@ -129,19 +128,30 @@ document.addEventListener('DOMContentLoaded', async function() {
                             }
                         });
 
-                        // Mostra/Esconde o endereço de retirada
+                        // Verifica qual radio está checado
+                        const isRetirada = ui.deliveryOptionRetirada.checked;
+                        
+                        // Mostra/Esconde os blocos de endereço corretos
                         if (ui.retiradaAddressInfo) {
-                            ui.retiradaAddressInfo.style.display = radio.id === 'delivery-option-retirada' ? 'block' : 'none';
+                            ui.retiradaAddressInfo.style.display = isRetirada ? 'block' : 'none';
+                        }
+                        if (ui.entregaAddressInfo) { 
+                            ui.entregaAddressInfo.style.display = isRetirada ? 'none' : 'block';
                         }
                         
-                        // Recalcula o carrinho (isso é o mais importante)
+                        // Recalcula o carrinho (para atualizar a taxa)
                         app.Carrinho.atualizarCarrinho();
                     });
                 }
             });
+
+            // Define o estado inicial correto no carregamento da página
+            // (Assumindo que "Entrega" está checado por padrão no HTML)
+            if (ui.retiradaAddressInfo) ui.retiradaAddressInfo.style.display = 'none';
+            if (ui.entregaAddressInfo) ui.entregaAddressInfo.style.display = 'block';
         };
-        setupDeliveryOptions(); // Chama a função que acabamos de criar
-        // **** FIM DA MODIFICAÇÃO ****
+        setupDeliveryOptions();
+        // === FIM DA ALTERAÇÃO ===
 
         // === INÍCIO DA ALTERAÇÃO (LISTENERS DE DROPDOWN) ===
         // Listener para o dropdown de CIDADES no CADASTRO
@@ -163,15 +173,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const cidadeId = ui.modalCidadeSelect.value;
                 if (cidadeId) {
                     const bairros = await app.API.carregarBairrosPorCidade(cidadeId);
-                    // === INÍCIO DA CORREÇÃO ===
-                    // Passa o elemento do MODAL usando a variável 'ui'
+                    // Passa o elemento do MODAL
                     app.UI.popularBairrosDropdown(bairros, ui.modalBairroSelect); 
-                    // === FIM DA CORREÇÃO ===
                 } else {
-                    // === INÍCIO DA CORREÇÃO ===
-                    // Limpa os bairros do MODAL usando a variável 'ui'
+                    // Limpa os bairros do MODAL
                     app.UI.popularBairrosDropdown([], ui.modalBairroSelect); 
-                    // === FIM DA CORREÇÃO ===
                 }
             });
         }
@@ -189,8 +195,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // REMOVIDO: Listener de blur do CEP do cadastro
-        // REMOVIDO: Listener de blur do CEP do modal
+        // REMOVIDO: Listeners de CEP
         
         /* --- Listeners do Header v2 --- */
         if (ui.headerSearchInput) ui.headerSearchInput.addEventListener('input', app.Cardapio.setupSearch);

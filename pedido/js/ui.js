@@ -111,6 +111,9 @@
         elementos.deliveryOptionEntrega = document.getElementById('delivery-option-entrega');
         elementos.deliveryOptionRetirada = document.getElementById('delivery-option-retirada');
         elementos.retiradaAddressInfo = document.getElementById('retirada-address-info');
+        // --- INÍCIO DA ALTERAÇÃO ---
+        elementos.entregaAddressInfo = document.getElementById('entrega-address-info'); // Adicionado
+        // --- FIM DA ALTERAÇÃO ---
         // **** FIM DA CORREÇÃO ****
 
         // Modais
@@ -119,13 +122,6 @@
         elementos.formEditarEndereco = document.getElementById('form-editar-endereco');
         
         // === INÍCIO DA ALTERAÇÃO (MODAL EDITAR ENDEREÇO) ===
-        // Remove CEP e campos de texto
-        // elementos.modalCepInput = document.getElementById('modal-cep'); // Removido
-        // elementos.modalBairroInput = document.getElementById('modal-bairro'); // Removido
-        // elementos.modalCidadeInput = document.getElementById('modal-cidade'); // Removido
-        // elementos.modalEstadoInput = document.getElementById('modal-estado'); // Removido
-        
-        // Adiciona os novos campos
         elementos.modalCidadeSelect = document.getElementById('modal-cidade-select');
         elementos.modalBairroSelect = document.getElementById('modal-bairro-select');
         elementos.modalRuaInput = document.getElementById('modal-rua');

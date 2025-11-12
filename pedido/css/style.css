@@ -1428,3 +1428,35 @@ body {
     color: #666;
 }
 /* --- FIM: NOVOS ESTILOS OPÇÕES DE ENTREGA --- */
+
+/* --- INÍCIO: NOVOS ESTILOS (AJUSTE FLUXO ENTREGA) --- */
+.delivery-option-radio {
+    /* (styles already exist) */
+    padding-bottom: 1.5rem; /* Aumenta o padding inferior */
+}
+
+#entrega-address-info {
+    /* Este é o novo container do endereço de entrega */
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #ffb6c1; /* Linha pontilhada rosa */
+}
+
+#entrega-address-info .carrinho-list-card {
+     /* Remove a sombra e a borda externa do card aninhado */
+    box-shadow: none;
+    border: 1px dashed #ffb6c1; /* Borda pontilhada rosa */
+    background: #fff; /* Fundo branco (para contrastar com o rosa do 'selected') */
+    padding: 10px; /* Padding menor */
+    margin-top: 0.5rem;
+}
+
+#entrega-address-info h4 {
+    /* "Seu Endereço" */
+    font-size: 1.1rem; 
+    color: #db7093; 
+    margin: 0;
+    padding: 0 5px; /* Alinhamento leve */
+}
+
+/* --- FIM: NOVOS ESTILOS (AJUSTE FLUXO ENTREGA) --- */

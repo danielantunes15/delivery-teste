@@ -300,23 +300,6 @@
                                 <strong>R$ <span id="total-carrinho">0,00</span></strong>
                             </div>
                         </div>
-                        <h3 style="margin-top: 2rem;"><i class="fas fa-map-marker-alt"></i> Entrega</h3>
-
-                        <h4 style="font-size: 1.1rem; color: #db7093;">Seu Endereço</h4>
-                        <div class="carrinho-list-card" style="padding: 15px;">
-                            <p style="font-size: 1rem;">
-                                Entregar em: 
-                                <strong id="carrinho-endereco-display">N/A</strong>
-                            </p>
-                            <p style="font-size: 0.9rem; color: #666;">
-                                Cliente: <span id="carrinho-cliente-nome">N/A</span>
-                            </p>
-                            <input type="hidden" id="carrinho-endereco-input" value="">
-
-                            <button id="trocar-endereco-btn" class="btn-link" style="margin-top: 5px; font-size: 0.9rem;">
-                                <i class="fas fa-edit"></i> Trocar Endereço
-                            </button>
-                        </div>
                         
                         <h3 style="margin-top: 2rem;"><i class="fas fa-truck"></i> Opção de Entrega</h3>
 
@@ -333,6 +316,24 @@
                                         <span class="delivery-option-detail">Taxa: <span id="taxa-entrega-display">...</span></span>
                                     </div>
                                 </div>
+
+                                <div id="entrega-address-info" style="display: block;"> <h4 style="font-size: 1.1rem; color: #db7093; margin-top: 1rem;">Seu Endereço</h4>
+                                    <div class="carrinho-list-card" style="padding: 15px; margin-top: 0.5rem; border: 1px dashed #ffb6c1;">
+                                        <p style="font-size: 1rem;">
+                                            Entregar em: 
+                                            <strong id="carrinho-endereco-display">N/A</strong>
+                                        </p>
+                                        <p style="font-size: 0.9rem; color: #666;">
+                                            Cliente: <span id="carrinho-cliente-nome">N/A</span>
+                                        </p>
+                                        <input type="hidden" id="carrinho-endereco-input" value="">
+
+                                        <button id="trocar-endereco-btn" class="btn-link" style="margin-top: 5px; font-size: 0.9rem;">
+                                            <i class="fas fa-edit"></i> Trocar Endereço
+                                        </button>
+                                    </div>
+                                </div>
+
                             </label>
 
                             <label class="delivery-option-radio" for="delivery-option-retirada">
@@ -352,6 +353,7 @@
                             <strong><i class="fas fa-map-marker-alt"></i> Endereço de Retirada:</strong><br>
                             Rua São Lourenço, 326, Rua do Meu salgado Favorito, Centro, NANUQUE - MG
                         </div>
+                        
                         <h3 style="margin-top: 2rem;"><i class="fas fa-credit-card"></i> Pagamento</h3>
 
                         <h4 style="font-size: 1.1rem; color: #db7093;">Forma de Pagamento</h4>
