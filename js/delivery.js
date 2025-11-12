@@ -72,7 +72,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     let pedidoSelecionado = null;
     
     // Cache de configurações da loja
-    let configLoja = { tempo_entrega: 60, endereco_retirada: '' }; // NOVO CAMPO ADICIONADO AQUI
+    // <-- OBJETO MODIFICADO -->
+    let configLoja = { tempo_entrega: 60, endereco_retirada: '', chave_pix: '' }; 
     let timerInterval = null;
     
     const audioNotificacao = new Audio("audio/sompedido.mp3");
@@ -1022,6 +1023,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     /**
      * Envia a confirmação do pedido para o WhatsApp do cliente.
+     * (VERSÃO ATUALIZADA COM DETALHES DO PEDIDO E INFO DE PIX)
      */
     function enviarConfirmacaoWhatsApp() {
         if (!pedidoSelecionado) {
@@ -1049,17 +1051,41 @@ document.addEventListener('DOMContentLoaded', async function () {
         const total = formatarMoeda(pedidoSelecionado.total);
         const tempoEntrega = configLoja.tempo_entrega || 60;
 
+        // --- INÍCIO DAS MODIFICAÇÕES ---
+
+        // 1. Extrair a lista de itens (usando a função 'parseItens' que já existe no delivery.js)
+        // Passar 'false' para não formatar como HTML (usar \n para quebra de linha)
+        const itensDoPedido = parseItens(pedidoSelecionado.observacoes, false); 
+        
+        // 2. Busca a chave PIX das configurações da loja
+        // O valor é carregado pela função carregarConfiguracoesDaLoja()
+        // <-- LINHA MODIFICADA -->
+        const SUA_CHAVE_PIX = configLoja.chave_pix || "[NENHUMA CHAVE PIX CADASTRADA]"; 
+        
+        // 3. Monta a mensagem do PIX
+        // <-- LINHA MODIFICADA -->
+        const MENSAGEM_PIX = `Seu pedido foi *confirmado*! 👩‍🍳\n\nCaso prefira pagar via *PIX* (Chave: ${SUA_CHAVE_PIX}), por favor, envie o *comprovante de pagamento* aqui mesmo no WhatsApp para confirmarmos o pagamento.`;
+
+        // 3. Montar a nova mensagem
         let mensagem = `Olá, ${nomeCliente}! 👋\n\n`;
-        mensagem += `Somos da *Confeitaria Doce Criativo* e recebemos seu pedido *#${pedidoId}* no valor de *${total}*.\n\n`;
+        mensagem += `Somos da *Confeitaria Doce Criativo* e recebemos seu pedido *#${pedidoId}*.\n\n`;
         
+        // Adiciona os itens
+        mensagem += `*Resumo do Pedido:*\n`;
+        mensagem += `${itensDoPedido}\n`; // <-- Isso é novo
+        mensagem += `*Total:* ${total}\n\n`;
+        
+        // Adiciona a mensagem do PIX (se o pedido for 'novo')
         if (pedidoSelecionado.status === 'novo') {
-            mensagem += `Seu pedido foi *confirmado* e já vamos começar a prepará-lo! 👩‍🍳\n\n`;
+            mensagem += `${MENSAGEM_PIX}\n\n`; // <-- Isso é novo
         } else {
-             mensagem += `Seu pedido já está *em preparação*! 👩‍🍳\n\n`;
+             mensagem += `Seu pedido já está *em preparação*!\n\n`;
         }
-        
-        mensagem += `O tempo médio de entrega é de ${tempoEntrega} minutos.\n\n`;
+
+        mensagem += `O tempo médio de entrega é de ${tempoEntrega} minutos.\n`;
         mensagem += `Agradecemos pela preferência! 😊`;
+        
+        // --- FIM DAS MODIFICAÇÕES ---
 
         const urlWhatsApp = `https://wa.me/${telefoneFormatado}?text=${encodeURIComponent(mensagem)}`;
         window.open(urlWhatsApp, '_blank');
@@ -1075,6 +1101,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }, 1000); // Delay de 1s para dar tempo da janela do WhatsApp abrir
         }
     }
+
 
     // --- Configurações da Loja ---
     
@@ -1120,6 +1147,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.getElementById('config-taxa-entrega').value = data.taxa_entrega || '';
             document.getElementById('config-tempo-entrega').value = data.tempo_entrega || '60';
             
+            // <-- LINHA ADICIONADA -->
+            document.getElementById('config-chave-pix').value = data.chave_pix || '';
+            
             const dias = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
             dias.forEach(dia => {
                 document.getElementById(`${dia}-abertura`).value = data[`${dia}_abertura`] || '';
@@ -1137,10 +1167,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         try {
             const dias = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+            // <-- OBJETO MODIFICADO -->
             const updateData = {
                 id: 1, 
                 taxa_entrega: parseFloat(document.getElementById('config-taxa-entrega').value) || 0,
-                tempo_entrega: parseInt(document.getElementById('config-tempo-entrega').value) || 60
+                tempo_entrega: parseInt(document.getElementById('config-tempo-entrega').value) || 60,
+                chave_pix: document.getElementById('config-chave-pix').value.trim() // <-- LINHA ADICIONADA
                 // O campo 'endereco_retirada' é salvo por outra função
             };
 
