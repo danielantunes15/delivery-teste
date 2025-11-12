@@ -219,11 +219,19 @@
             if (error && error.code !== 'PGRST116') throw error; // Ignora 'not found'
             
             if (data) {
-                // Lógica de validação de data
-                const hoje = new Date().toISOString().split('T')[0];
+                
+                // --- INÍCIO DA CORREÇÃO (FUSO HORÁRIO) ---
+                // Lógica de validação de data (CORRIGIDA para Fuso Horário Local)
+                const hojeDate = new Date();
+                const ano = hojeDate.getFullYear();
+                const mes = (hojeDate.getMonth() + 1).toString().padStart(2, '0');
+                const dia = hojeDate.getDate().toString().padStart(2, '0');
+                const hoje = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD local
+
                 if (data.data_validade && data.data_validade < hoje) {
                      return { error: 'Cupom expirado.', codigo: codigo };
                 }
+                // --- FIM DA CORREÇÃO ---
                 
                 // Lógica de validação de uso
                 if (data.usos_maximos > 0 && data.usos_usados >= data.usos_maximos) {

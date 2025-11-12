@@ -49,7 +49,7 @@
         const dadosCliente = obterDadosCliente();
         const formaPagamentoEl = document.querySelector('.opcoes-pagamento input[name="pagamento"]:checked');
         
-        // --- INÍCIO DA CORREÇÃO ---
+        // --- INÍCIO DA CORREÇÃO (DO BUG ANTERIOR) ---
         // 1. Calcular o subtotal dos produtos PRIMEIRO
         const subTotalProdutos = window.app.carrinho.reduce((sum, item) => sum + (item.precoFinalItem * item.quantidade), 0);
         
@@ -86,7 +86,6 @@
         }
         
         // Monta observações
-        // Passamos o subTotalProdutos real que calculamos
         let obsCompleta = montarObservacoes(dadosCliente, totalPedido, subTotalProdutos, calculo.valorDesconto);
 
 
@@ -324,14 +323,10 @@ Total: ${formatarMoeda(totalPedido)}
         obterDadosCliente,
         validarDados,
         finalizarPedidoEEnviarWhatsApp,
-        configurarListenersSingleScreen 
+        configurarListenersSingleScreen, 
+        aplicarCupom // <-- EXPORTAR A FUNÇÃO
     };
 
-    // Adiciona o listener principal ao app.js
-    document.addEventListener('DOMContentLoaded', () => {
-         if(window.app.Checkout && window.app.Checkout.configurarListenersSingleScreen) {
-            window.app.Checkout.configurarListenersSingleScreen();
-         }
-    });
+    // REMOVIDO: O listener 'DOMContentLoaded' que estava aqui.
 
 })();

@@ -87,12 +87,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         // Listeners do Checkout (Single Screen)
-        if (ui.finalizarPedidoDireto) ui.finalizarPedidoDireto.addEventListener('click', app.Checkout.finalizarPedidoEEnviarWhatsApp);
+        // REMOVIDO: O listener do 'finalizarPedidoDireto' foi movido para configurarListenersSingleScreen
         
         // Botões Limpar, Adicionar mais, Trocar Endereço
-        if (ui.limparCarrinhoBtn) ui.limparCarrinhoBtn.addEventListener('click', app.Carrinho.limparCarrinho);
-        if (ui.addMoreItemsBtn) ui.addMoreItemsBtn.addEventListener('click', () => app.UI.alternarView('view-cardapio'));
-        if (ui.trocarEnderecoBtn) ui.trocarEnderecoBtn.addEventListener('click', app.UI.abrirModalEditarEndereco);
+        // REMOVIDO: Listeners de checkout movidos para configurarListenersSingleScreen
         
         // Lógica de Pagamento
         if (ui.opcoesPagamento) {
@@ -202,6 +200,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // 7. Configura todos os botões e cliques
             configurarEventListenersGlobais();
+            
+            // --- INÍCIO DA CORREÇÃO ---
+            // 7b. Configura os listeners do checkout (incluindo o botão de cupom)
+            if (app.Checkout && app.Checkout.configurarListenersSingleScreen) {
+                app.Checkout.configurarListenersSingleScreen();
+                console.log("Listeners de Checkout (incluindo cupom) configurados.");
+            } else {
+                console.error("Falha ao configurar listeners do Checkout.");
+            }
+            // --- FIM DA CORREÇÃO ---
             
             // 8. Atualiza o carrinho
             app.Carrinho.atualizarCarrinho();
